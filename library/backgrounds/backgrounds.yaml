@@ -1,0 +1,189 @@
+# Every background in the library. id = <setting folder>/<file name without .png>; the picture is
+# backgrounds/<id>.png. All are empty sets (no characters). orientation: landscape fits the 16:9 episodes as
+# is; portrait (941x1672) needs a landscape version or a crop before it can be a full-frame set.
+# 'source' is the original file name in the delivered packs.
+club/dressing-room:
+  title: Empty Red Football Dressing Room
+  size: [1672, 941]
+  orientation: landscape
+  source: Empty Red Football Dressing Room.png
+club/managers-office:
+  title: Sunlit Empty Football Manager’s Office
+  size: [1672, 941]
+  orientation: landscape
+  source: Sunlit Empty Football Manager’s Office.png
+club/players-lounge-table-tennis:
+  title: Carrington players' lounge table tennis
+  size: [941, 1672]
+  orientation: portrait
+  source: Carrington players' lounge table tennis.png
+club/table-tennis-practice-room:
+  title: Ronaldo's Table Tennis Practice Room
+  size: [941, 1672]
+  orientation: portrait
+  source: Ronaldo's Table Tennis Practice Room.png
+concert/arena-audience-view-of-stage:
+  title: Manchester Arena audience view of stage
+  size: [941, 1672]
+  orientation: portrait
+  source: image-gen-7.png
+concert/arena-backstage-corridor:
+  title: Manchester Arena backstage corridor
+  size: [941, 1672]
+  orientation: portrait
+  source: image-gen-5.png
+concert/arena-exterior-50-cent-night:
+  title: Manchester Arena, 50 Cent concert night
+  size: [941, 1672]
+  orientation: portrait
+  source: Manchester Arena, 50 Cent concert night.png
+concert/arena-exterior-night:
+  title: Manchester Arena exterior night
+  size: [941, 1672]
+  orientation: portrait
+  source: image-gen-4.png
+concert/arena-stage-floor-close:
+  title: Manchester Arena stage floor close view
+  size: [941, 1672]
+  orientation: portrait
+  source: image-gen-9.png
+concert/arena-stage-view-of-audience:
+  title: Manchester Arena stage view of audience
+  size: [941, 1672]
+  orientation: portrait
+  source: image-gen-8.png
+concert/arena-stage-wings:
+  title: Manchester Arena stage wings
+  size: [941, 1672]
+  orientation: portrait
+  source: image-gen-6.png
+home/dining-room-2000s:
+  title: Late-2000s Footballer's Empty Dining Room
+  size: [941, 1672]
+  orientation: portrait
+  source: Late-2000s Footballer's Empty Dining Room.png
+home/garden:
+  title: Overcast Manchester Football Garden
+  size: [941, 1672]
+  orientation: portrait
+  source: Overcast Manchester Football Garden.png
+home/house-exterior:
+  title: Cloudy Manchester Footballer’s Home
+  size: [941, 1672]
+  orientation: portrait
+  source: Cloudy Manchester Footballer’s Home.png
+home/living-room:
+  title: Empty footballer living room
+  size: [1672, 941]
+  orientation: landscape
+  source: Empty footballer living room.png
+nightlife/mediterranean-holiday-disco:
+  title: Neon Mediterranean Holiday Disco
+  size: [1672, 941]
+  orientation: landscape
+  source: Neon Mediterranean Holiday Disco.png
+nightlife/neon-disco-dance-floor:
+  title: Empty neon disco dance floor
+  size: [1672, 941]
+  orientation: landscape
+  source: Empty neon disco dance floor.png
+nightlife/neon-nightclub-stage:
+  title: Neon football nightclub stage
+  size: [1672, 941]
+  orientation: landscape
+  source: Neon football nightclub stage.png
+nightlife/nightclub-dj-booth:
+  title: Empty nightclub dance floor with DJ booth
+  size: [1672, 941]
+  orientation: landscape
+  source: Empty nightclub dance floor with DJ booth.png
+pub-and-restaurant/pub:
+  title: Empty Cozy British Football Pub
+  size: [1672, 941]
+  orientation: landscape
+  source: Empty Cozy British Football Pub.png
+pub-and-restaurant/restaurant:
+  title: Empty warm restaurant interior
+  size: [1672, 941]
+  orientation: landscape
+  source: Empty warm restaurant interior.png
+spa-and-pool/indoor-pool:
+  title: Warm Wood-Beamed Indoor Pool
+  size: [941, 1672]
+  orientation: portrait
+  source: Warm Wood-Beamed Indoor Pool.png
+spa-and-pool/jacuzzi-room:
+  title: Warm private jacuzzi room
+  size: [941, 1672]
+  orientation: portrait
+  source: Warm private jacuzzi room.png
+spa-and-pool/sauna:
+  title: Warm amber sauna bench cabin
+  size: [941, 1672]
+  orientation: portrait
+  source: Warm amber sauna bench cabin.png
+stadiums/anfield:
+  title: Empty Anfield-Inspired Stadium Backdrop
+  size: [1672, 941]
+  orientation: landscape
+  source: Empty Anfield-Inspired Stadium Backdrop.png
+stadiums/barcelona:
+  title: Empty Barcelona Football Stadium Bowl
+  size: [1672, 940]
+  orientation: landscape
+  source: Empty Barcelona Football Stadium Bowl.png
+stadiums/old-trafford:
+  title: Empty Old Trafford stadium backdrop
+  size: [1672, 941]
+  orientation: landscape
+  source: Empty Old Trafford stadium backdrop.png
+stadiums/red-seated:
+  title: Empty Red-Seated Football Stadium
+  size: [1672, 941]
+  orientation: landscape
+  source: Empty Red-Seated Football Stadium.png
+stadiums/santiago-bernabeu:
+  title: Empty Santiago Bernabéu Stadium
+  size: [1672, 941]
+  orientation: landscape
+  source: Empty Santiago Bernabéu Stadium.png
+stadiums/sky-blue:
+  title: Empty sky-blue football stadium
+  size: [1672, 941]
+  orientation: landscape
+  source: Empty sky-blue football stadium.png
+street/manchester-matchday:
+  title: Empty Manchester Street, Matchday Ready
+  size: [1672, 941]
+  orientation: landscape
+  source: Empty Manchester Street, Matchday Ready.png
+training-ground/carrington-2008:
+  title: Carrington Training Ground, 2008
+  size: [941, 1672]
+  orientation: portrait
+  source: Carrington Training Ground, 2008.png
+training-ground/carrington-quiet:
+  title: Quiet Carrington Training Ground
+  size: [1672, 941]
+  orientation: landscape
+  source: Quiet Carrington Training Ground.png
+training-ground/cartoon-pitches:
+  title: Cartoon football training ground
+  size: [1672, 940]
+  orientation: landscape
+  source: Cartoon football training ground.png
+tv-and-media/crisis-control-room:
+  title: Lavish football crisis control room
+  size: [1672, 941]
+  orientation: landscape
+  source: Lavish football crisis control room.png
+tv-and-media/podcast-studio:
+  title: Empty Football Podcast Studio
+  size: [1672, 941]
+  orientation: landscape
+  source: Empty Football Podcast Studio.png
+tv-and-media/press-conference-room:
+  title: Empty Football Press Conference Room
+  size: [1672, 941]
+  orientation: landscape
+  source: Empty Football Press Conference Room.png
