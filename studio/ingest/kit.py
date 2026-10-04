@@ -12,6 +12,7 @@ Optional per-sheet fixes in the same YAML:
     split:  [[x0, y0, x1, y1], ...]      cut a drawing in two along this line (touching drawings)
     erase:  [[[x, y], [x, y], ...], ...]  polygons painted out before slicing (a doubled nose, a stray label)"""
 import argparse
+import functools
 import sys
 
 import cv2
@@ -57,6 +58,7 @@ def prepare(png, spec=None):
     return rgba, sheet.pieces(rgba, gap=3)
 
 
+@functools.lru_cache(maxsize=None)
 def skin_of(cid, outfit):
     hp = CHARACTERS / cid / "kit" / outfit / "hands.png"
     if not hp.exists():
