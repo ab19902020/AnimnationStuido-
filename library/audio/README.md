@@ -36,5 +36,10 @@ recording sets the timing, so don't trim or retime it before it goes in.
 
 ## Sound effects and music
 
-- `sfx/<category>/<what-it-is>.wav`, lower-case kebab-case: `sfx/crowd/stadium-roar.wav`.
+- `sfx/<category>/<what-it-is>.ogg` (or `.wav`), lower-case kebab-case: `sfx/creaks/creak-short.ogg`. The
+  library's clips are real recordings under CC0 (BigSoundBank, Wikimedia Commons); `sfx/manifest.json` records
+  where each one came from and the seconds it was trimmed to. To add one, add its entry and run
+  `python3 tools/get_sfx.py <category/name>`. Categories so far: ambience, cloth, creaks, crowd, doors, foley,
+  footsteps, impacts, paper, sport. Episodes use them by name (`studio/film/audio.py`: `ev(bus, "creaks/creak-short",
+  ...)`).
 - `music/<artist>-<title>.mp3`. If a track needs a credit or a licence note, put it in `music/CREDITS.md`.

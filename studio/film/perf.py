@@ -19,6 +19,7 @@ An episode's perf.py builds one Performance with its data:
   EXPR   {who: [(t0, t1, brow, smile, ease-in)]}  reactions outside their own lines
   NODS   {who: [(t, count, amplitude %)]};  TURN {who: [(t0, t1, turn, tilt deg)]}
   FORCED {who: [t]} blinks on cue;  NOBLINK {who: [(t0, t1)]} no blinks in holds (looks into the lens)
+  cuts   the shot list's cut times: automatic blinks keep clear of the first 0.4 s after a cut
   BODY   {who: [(t0, t1, lean, sink, ease-in)]}"""
 import math
 
@@ -60,7 +61,8 @@ def bump(u):
 
 class Performance:
     def __init__(self, TL, lines, who, spk, meta, line_wav, base=None, gaze=None, expr=None, nods=None, turn=None,
-                 forced=None, noblink=None, body=None, smile_bias=None, tags=None, rest_target=None, seed=200):
+                 forced=None, noblink=None, body=None, smile_bias=None, tags=None, rest_target=None, seed=200,
+                 cuts=()):
         self.TL, self.L, self.WHO, self.SPK = TL, lines, list(who), spk
         self.META = meta
         self.line_wav = line_wav
@@ -77,6 +79,7 @@ class Performance:
         self.rest_target = rest_target or {}
         self.N = int(math.ceil(TL["total"] * FPS)) + 2
         self.seed = seed
+        self.CUTS = sorted(cuts)
         self.VIS, self.AMP, self.TALK = self._speech()
         self.BLINKS = self._blinks()
         self.EMPH = self._emph()
@@ -116,6 +119,10 @@ class Performance:
             rng = np.random.default_rng(self.seed + k)
             t, ts = rng.uniform(0.4, 2.5), []
             while t < self.TL["total"]:
+                # never in the first frames after a cut (it reads as a bad edit): wait until the shot settles
+                c = next((c for c in self.CUTS if c - 0.08 <= t < c + 0.4), None)
+                if c is not None:
+                    t = c + 0.4 + rng.uniform(0.0, 0.3)
                 if not any(a <= t <= b for a, b in self.NOBLINK[w]):
                     ts.append(t)
                 t += rng.uniform(2.2, 4.8)

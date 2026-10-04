@@ -57,37 +57,85 @@ def sign_image(w):
     return im.rotate(-2.2, expand=True, resample=Image.BICUBIC)
 
 
-RIM = (842.3, 583.4, 267.0, 34.6)       # the low table's far rim, an ellipse (centre x, centre y, a, b; 1x plate px)
 PLANT_HOLE = [(791, 546), (915, 546), (915, 571), (922, 571), (922, 577), (848, 577), (843, 590), (841, 603),
               (828, 610), (776, 610), (776, 577), (791, 577)]           # the plant and its shadows, down to the book
 WOOD = ((708, 738), (966, 1000))       # clean table top either side of it, between the mugs
+AROUND = (760, 540, 940, 620)          # the part of the table the repair is blended into (1x plate px)
 
 
 def rim_y(x):
-    xc, yc, a, b = RIM
-    u = np.clip((np.asarray(x, np.float64) - xc) / a, -0.9999, 0.9999)
-    return yc - b * np.sqrt(1 - u * u)
+    """the table's far rim (1x plate px), as traced in direction.py"""
+    from film.direction import RIM
+    xs, ys = zip(*RIM)
+    return np.interp(x, xs, ys)
+
+
+def _wood(rgb):
+    r, g, b = (rgb[..., i].astype(np.int16) for i in range(3))
+    return (r > 150) & (r - b > 90) & (g > 70)
+
+
+def _membrane(diff, known, free, iters=1500):
+    """spread `diff` (given where `known`) smoothly over the pixels `free`: a relaxed membrane, each free pixel
+    the average of its neighbours inside the domain (pixels outside it, like a mug next to the hole, don't pull)"""
+    dom = (known | free).astype(np.float32)
+    shifts = ((1, 0), (-1, 0), (0, 1), (0, -1))
+    cnt = sum(np.roll(dom, s, (0, 1)) for s in shifts)
+    u = np.where(known[..., None], diff, 0.0).astype(np.float32) * dom[..., None]
+    for _ in range(iters):
+        v = sum(np.roll(u, s, (0, 1)) for s in shifts) / np.maximum(cnt, 1)[..., None]
+        u = np.where(free[..., None], v, u)
+    return u
 
 
 def plate_image(k):
     """the 4x studio with the sign added (RGB uint8); "T" is the same with the plant taken off the low table (its
     edge is the foreground of the close singles, where the plant would sit in front of a chest): the table top is
-    rebuilt row by row from the clean wood either side, following the rim's curve"""
+    rebuilt row by row from the clean wood either side, each side's rows lined up with the rim, then blended into
+    the wood round it so no edge shows"""
     if k == "T":
         big = plate_image("S").copy()
         H = big.shape[0]
+        f = big.astype(np.float32)
+
+        def band(xa, xb):
+            """the mean column of a stretch of clean table, every column first lined up on its own rim outline
+            (its darkest row near the traced rim) so the outline stays crisp -> (column, the outline's row)"""
+            ref = int(round(rim_y((xa + xb) / 2) * 4))
+            acc = np.zeros((H, 3), np.float32)
+            for c in range(xa * 4, xb * 4):
+                r0_ = int(round((rim_y(c / 4) - 4) * 4))
+                o = r0_ + int(np.argmin(f[r0_:r0_ + 32, c].sum(1)))
+                acc += np.roll(f[:, c], ref - o, axis=0)
+            return acc / ((xb - xa) * 4), ref
+
+        (l0, l1), (r0, r1) = WOOD
+        (left, ol), (right, orr) = band(l0, l1), band(r0, r1)
+        xl, xr = (l0 + l1) / 2, (r0 + r1) / 2
+        # the repair, worked out over the whole stretch of table round the hole
+        x0, y0, x1, y1 = AROUND
+        ys, xs = np.mgrid[y0 * 4:y1 * 4, x0 * 4:x1 * 4]
+        X = xs / 4.0
+        u = (X - xl) / (xr - xl)
+        here = ol + (orr - ol) * u                     # where the rim runs through the repair (4x rows)
+        yl = np.clip(np.round(ys + ol - here).astype(int), 0, H - 1)
+        yr = np.clip(np.round(ys + orr - here).astype(int), 0, H - 1)
+        u = u[..., None]
+        rep = left[yl] * (1 - u) + right[yr] * u
+        # blend it in: where the hole's edge is wood (below the rim), the difference between the table and the
+        # repair is spread smoothly across the hole (at 1x) and added
+        sl = (slice(y0 * 4, y1 * 4), slice(x0 * 4, x1 * 4))
         hole = np.zeros(big.shape[:2], np.uint8)
         cv2.fillPoly(hole, [np.int32(np.float32(PLANT_HOLE) * 4)], 1)
-        f = big.astype(np.float32)
-        (l0, l1), (r0, r1) = WOOD
-        left, right = f[:, l0 * 4:l1 * 4].mean(1), f[:, r0 * 4:r1 * 4].mean(1)
-        xl, xr = (l0 + l1) / 2, (r0 + r1) / 2
-        ys, xs = np.nonzero(hole)
-        x1 = xs / 4.0
-        yl = np.clip(np.round(ys + (rim_y(xl) - rim_y(x1)) * 4).astype(int), 0, H - 1)
-        yr = np.clip(np.round(ys + (rim_y(xr) - rim_y(x1)) * 4).astype(int), 0, H - 1)
-        u = ((x1 - xl) / (xr - xl))[:, None]
-        big[ys, xs] = np.clip(left[yl] * (1 - u) + right[yr] * u, 0, 255).astype(np.uint8)
+        small = lambda a: cv2.resize(a, (x1 - x0, y1 - y0), interpolation=cv2.INTER_AREA)
+        o1, r1 = small(f[sl]), small(rep.astype(np.float32))
+        h1 = small(hole[sl].astype(np.float32)) > 0.5
+        ring = (cv2.dilate(h1.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0) & ~h1
+        below = np.arange(y0, y1)[:, None] > rim_y(np.arange(x0, x1))[None, :] + 2.5
+        corr = _membrane(o1 - r1, ring & _wood(o1) & below, h1)
+        rep += cv2.resize(corr, ((x1 - x0) * 4, (y1 - y0) * 4), interpolation=cv2.INTER_CUBIC)
+        m = hole[sl] > 0
+        big[sl][m] = np.clip(rep[m], 0, 255).astype(np.uint8)
         return big
     if k != "S":
         return None

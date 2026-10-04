@@ -1,24 +1,32 @@
 # Animation Studio
 
-A South Park-style cut-out animation studio. You upload character kits, backgrounds and voiceovers and give a
-directive; Claude cuts the puppets, lip-syncs the voices, acts, stages and shoots the scenes, and renders the
-episode (landscape 16:9).
+A cartoon studio for football comedy. You upload character kits, backgrounds and voiceovers and give a director's
+script; Claude produces the episode (16:9, 1920 x 1080, 30 fps): the dialogue edit, the acting, the camera, the
+sound and the finish. Give Claude the script and say "produce it" (the `produce` skill).
 
-**Status: being built.** Done: the character library and kit ingest, the puppet rigs, and a first end-to-end
-episode pipeline, run as a test on *The Appeals Department* with text-to-speech voices (see "Making an episode"). Not
-done: limb animation that looks right (the rigs' joints show; walks need art drawn for it), real recordings in
-place of the stand-in voices, final props.
+**Status.** Done: the character library and kit ingest, and the film engine (`studio/film`, the method All or
+Something was made with). A 60-second test of *The Appeals Department* is made with the actors' recordings:
+`episodes/the-appeals-department/the-appeals-department.mp4` (Scene 1 and the start of Scene 2). Not done: the rest
+of that episode. Gary Neville, Roy Keane and Jamie Carragher are still on off-style stand-in kits.
 
-## How it works (the South Park way)
+## How it works (the All or Something method)
 
-- **One library, reused everywhere.** Every character is a puppet built once from their kit and kept in
-  `library/characters/`. Episodes only reference them, like South Park's character library.
-- **Every body part moves.** Each view (front, three-quarter, side) is a separate puppet: head, neck, torso,
-  pelvis, upper arms, forearms, hands, thighs, shins and feet, each on its own joint.
-- **Replacement animation.** Mouths, eyes, brows and hands are swapped instantly, the way South Park's rigs swap
-  drawings with a slider; the joints move smoothly, with anticipation and settle.
-- **Voices first.** The recordings set the timing: Whisper hears the words, forced alignment times every word and
-  sound, and the mouths follow them.
+- **Whole drawings, never chopped.** A character is filmed as the drawings in their kit (each view's assembled
+  figure, or a pose from a model sheet), cut out complete and upscaled 4x (Real-ESRGAN). No limbs are cut, so no
+  joins can show.
+- **The face acts.** The mouth, eyes, brows, smile and head are animated by warping the drawn face itself: the jaw
+  drops for each mouth shape over a painted mouth, the pupils move, the lids blink in skin colour, and the head nods
+  and turns. The lip sync comes from the recordings: every word and sound force-aligned, the mouth a frame ahead.
+- **The camera and the edit carry the scene,** like a documentary: close singles with the set out of focus and a
+  table edge in front, two-shots behind the table, inserts on the props that matter, a move along the set, hard
+  cuts on the line, captions and a title card.
+- **Real sound.** A tight dialogue edit (pauses trimmed), recorded room tone and foley on every action (CC0
+  library in `library/audio/sfx`), loudness to -16 LUFS. Whisper checks every line in the final mix.
+- **One library, reused everywhere.** Characters, sets, props and sounds live in `library/` and episodes refer to
+  them.
+
+The rules are written down as a checklist (`.claude/skills/produce/checklist.md`) and every episode is checked
+against it.
 
 ## Layout
 
@@ -30,9 +38,9 @@ place of the stand-in voices, final props.
 | `library/props/<set>/`, `library/extras/` | cut-out props; background cast (crowds, crew) |
 | `library/audio/` | `voiceovers/<character id>/` (the voice bank), `sfx/`, `music/` |
 | `library/reference/`, `library/fonts/` | finished artwork kept for the look; fonts |
-| `episodes/<slug>/` | one folder per episode: `script.md` and `pack/` (the production pack as delivered), `cast.yaml`, `beats.yaml`, `cues.yaml`, `staging.yaml`, `shots.yaml` (see "Making an episode"), the voiceovers (`voiceovers/`, named `01-<character id>.wav`), the finished video. `build/` and `*_preview*.mp4` are regenerated and git-ignored |
-| `studio/` | the engine |
-| `tools/` | importing kits, fetching models, `index_library.py` (rebuilds the index and checks the library is tidy) |
+| `episodes/<slug>/` | one folder per episode: `script.md` and `pack/` (the production pack as delivered), the voiceovers (`voiceovers/`, named `01-<character id>.mp3`), the production (`film/`, see "Making an episode"), the finished video. `build/` and `*_preview*.mp4` are regenerated and git-ignored |
+| `studio/` | the engine: `film/` (the house method), `ingest/` (kit sheets), `qc/` (grids and checks), `episode/` (speech tools, and the retired cut-out pipeline with its `rig/`, `anim/` and `face/`) |
+| `tools/` | importing kits, fetching models and sound effects (`get_sfx.py`), `index_library.py` (rebuilds the index and checks the library is tidy) |
 
 ## Characters
 
@@ -72,37 +80,38 @@ python3 -m studio.ingest.chart CHARACTER               # build/ingest/<id>_chart
 
 and checks the chart by eye before the character is used.
 
+## Filming a character
+
+Every character an episode uses needs `library/characters/<id>/film.yaml`, which lists the drawings they are filmed
+in, then `python3 -m studio.film.art <id>` and a look at `build/film/<id>_check.jpg` (the face landmarks). The
+`cast` skill (`.claude/skills/cast/SKILL.md`) has the details.
+
 ## Making an episode
 
-An episode is a folder `episodes/<slug>/` with the director's `script.md` (scenes, stage directions and lines
-`[L001] GARY: ...`) and these files, all read by `studio/episode/`:
+An episode is a folder `episodes/<slug>/`:
 
-| File | What it says |
+| What | |
 |---|---|
-| `cast.yaml` | who speaks, which library character plays them, and (for test runs) their text-to-speech voice |
-| `beats.yaml` | timing: how each scene's allowance is shared between its stage directions, gaps, reaction pauses |
-| `cues.yaml` | sound cues placed against beats (card tap, door squeak, chime...) and the room tone |
-| `staging.yaml` | who stands where, entrances and exits, props and who holds them, anchored to beats |
-| `shots.yaml` | the camera (wide, singles, two-shots, pans, pushes) and the full-frame insert cards |
+| `script.md`, `pack/` | the director's script (scenes, stage directions, lines `[L001] GARY: ...`) and the production pack as delivered |
+| `voiceovers/` | the actors' recordings, in speaking order: `01-gary-neville-1.mp3`... (one file can hold many lines) |
+| `film/` | the production, as Python: `lines.py` (which recording, which lines), `timeline.py` (the dialogue edit and its marks), `perf.py` (the acting), `direction.py` (sets, seating, the shot list, captions), `props.py` (set dressing and inserts), `sound.py` (the mix) |
+| `<slug>.mp4` | the finished film (committed, under 100 MB); `build/` is regenerated and git-ignored |
 
-Everything is anchored to script beats (a line id like `L031`, or a direction like `D3.2`), so when the voices change
-the picture retimes with them. The steps, from the repo root:
+Every cut, look, reaction and sound hangs off the dialogue edit's marks, so when a recording changes the whole film
+retimes with it. The steps, from the repo root (the `produce` skill has the whole procedure):
 
 ```bash
-tools/fetch_models.sh tts rhubarb whisper               # once: voices (test runs), lip sync, speech recognition
-python3 -m studio.episode.script SLUG                   # parse the script; checks it against pack/Dialogue.json
-python3 -m studio.episode.tts SLUG                      # a take of every line (test run: text-to-speech)
-python3 -m studio.episode.timeline SLUG                 # when everything happens
-python3 -m studio.episode.lipsync SLUG                  # mouth shapes for every take
-python3 -m studio.episode.soundtrack SLUG               # the mix: voices, cues, room tone; captions.srt
-python3 -m studio.episode.render SLUG --stills 5 52     # PNGs of those moments, to review
-python3 -m studio.episode.render SLUG --video           # the film, 1920x1080 at 24 fps, with sound
-python3 -m studio.episode.check SLUG --video            # words in the final mix, cues, timeline, the file
+tools/fetch_models.sh whisper                                    # once: speech recognition
+python3 -m studio.film SLUG lines                                # find and cut every line in the recordings
+python3 -m studio.film SLUG timeline                             # the edit: marks and line times
+EP_RES=960x540 python3 -m studio.film SLUG still 4.5 12 33       # quick frames to look at: build/stills/
+python3 -m studio.film SLUG sound                                # the mix: build/episode_audio.wav (-16 LUFS)
+python3 -m studio.film SLUG check                                # Whisper hears every line in the mix
+python3 -m studio.film SLUG render                               # episodes/SLUG/SLUG.mp4, 1920 x 1080, 30 fps
+python3 -m studio.film SLUG sheet                                # build/contact.jpg: three frames of every shot
+python3 -m studio.film SLUG lips                                 # build/lips.jpg: the mouths at the stressed words
 ```
 
-How a frame is made: the kit sheet's own assembled figure is the body (clean, correct), cut at the neck; the head,
-eyes and mouth are drawn over it so they can nod, look, blink and talk (`studio/episode/puppet.py`, the mouth shapes
-in `mouths.py`). Replacement animation only: no arm or leg moves, entrances and exits are bobbing slides, held props
-float at the hand, and the props and cards are plain stand-ins (`graphics.py`). **Real recordings** are not wired in
-yet: `timeline`, `lipsync`, `soundtrack` and `render` read `build/tts/<line id>.wav` and `tts.json`, so an import step
-that cuts a recording into those files is all it takes.
+The earlier cut-out pipeline (`studio/episode/`, read from `cast.yaml`, `beats.yaml`, `cues.yaml`, `staging.yaml`
+and `shots.yaml`) is retired for episodes: its loose-limbed rigs showed their joints. Its speech tools
+(`studio/episode/asr.py`, `tts.py` for text-to-speech stand-ins, and `upscale.py`) are used by the film engine.

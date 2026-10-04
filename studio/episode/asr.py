@@ -56,10 +56,12 @@ def spell(n):
 
 def digits_to_words(text):
     """numerals as words, so '115' and 'a hundred and fifteen' compare equal; four-digit numbers from 1100 to 2099 are
-    read as years (1999: nineteen ninety nine)"""
+    read as years (1999: nineteen ninety nine), except money (£2000: two thousand) and 2000 to 2009 (two thousand
+    and five)"""
     def one(m):
         n = int(m.group(0).replace(",", ""))
-        if 1100 <= n <= 2099:
+        money = m.start() > 0 and text[m.start() - 1] in "£$€"
+        if 1100 <= n <= 2099 and not money and not 2000 <= n <= 2009:
             return " ".join(spell(n // 100) + (spell(n % 100) if n % 100 else ["hundred"]))
         return " ".join(spell(n)) if n < 10000 else m.group(0)
     return re.sub(r"\d[\d,]*", one, text)

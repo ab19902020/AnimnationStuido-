@@ -28,9 +28,12 @@ timing.
   16:9 to be used full-frame; the index marks portrait ones.
 - Paired parts are anatomical: `_R` is the character's own right. In right-facing views the near side is the
   character's right.
-- Episodes: `studio/episode/` makes them from `episodes/<slug>/` (steps in the README, "Making an episode"). Commit the
-  episode's sources (`script.md`, `pack/`, `cast.yaml`, `beats.yaml`, `cues.yaml`, `staging.yaml`, `shots.yaml`); never
-  `build/` or the preview mp4 (both git-ignored). For a talking shot use the kit's assembled guide figure as the body
-  with the head, eyes and mouth drawn over it (`Puppet`): the rig's loose limbs show their joints and look wrong.
-  Review by rendering stills (`render --stills T ...`) and looking, then `check --video`.
+- Episodes are made the All or Something way by `studio/film/` from `episodes/<slug>/`: `script.md`, `pack/`,
+  `voiceovers/` and the production in `film/` (lines, timeline, perf, direction, props, sound). Follow the
+  `produce` skill; its `checklist.md` holds the rules. Whole drawings only: the face acts, and the camera and the
+  edit carry the scene. Never film the rig's loose limbs, because their joints show. Every character filmed needs a
+  `film.yaml` and a checked `build/film/<id>_check.jpg` (the `cast` skill). Review by rendering stills
+  (`EP_RES=960x540 python3 -m studio.film SLUG still T ...`) and looking, then `render`, `sheet` and `check`.
+  Commit the sources and the finished `<slug>.mp4`; never `build/`. `studio/episode/` (the cut-out pipeline) is
+  retired for episodes, but its speech tools are still used.
 - Keep the repo root clean: no loose uploads or scratch files (use the session scratchpad).

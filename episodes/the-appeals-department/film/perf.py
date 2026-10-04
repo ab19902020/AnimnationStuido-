@@ -5,6 +5,7 @@ import json
 from studio.film import ep
 from studio.film.perf import Performance
 from studio.film.shots import Marks
+from film.direction import SHOTS
 from film.timeline import TL
 
 L = json.loads(ep.path("lines.json").read_text())
@@ -62,11 +63,12 @@ EXPR = {
 NODS = {"micah": [(m("cut_look") + 0.3, 2, 2.2)],                  # a small silent laugh
         "gary": [(m("cut_look") + 0.35, 1, 2.0)]}
 TURN = {"roy": [(le("L014") + 0.15, m("cut_title"), 0.0, -1.5)]}
-FORCED = {"roy": [le("L014") + 0.05], "gary": [m("cut_look") + 0.05], "pep": [m("cut_pep2") + 0.1],
-          "micah": [m("squeak") + 0.05]}
+# blinks on cue: as the line lands, as the look starts (after the cut has settled), a startle at the squeak
+FORCED = {"roy": [le("L014") + 0.05], "gary": [m("cut_look") + 0.4], "pep": [le("L011") + 0.12],
+          "micah": [m("squeak") + 0.12]}
 NOBLINK = {"roy": [(le("L014") + 0.3, m("cut_title"))]}
 REST = dict(gary="roy", roy="gary", micah="gary", pep="gary")
 
 PERF = Performance(TL, L, WHO, SPK, META, lambda lid: ep.path("lines", f"{lid}.wav"), base=BASE, gaze=GAZE,
                    expr=EXPR, nods=NODS, turn=TURN, forced=FORCED, noblink=NOBLINK, smile_bias=SMILE_BIAS,
-                   rest_target=REST)
+                   rest_target=REST, cuts=[s["t"] for s in SHOTS])

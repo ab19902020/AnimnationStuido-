@@ -330,6 +330,8 @@ def still(ts, out_dir):
 
 
 def chunk(a, b, out):
+    if os.environ.get("FILM_THREADS"):
+        cv2.setNumThreads(int(os.environ["FILM_THREADS"]))
     p = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s",
                           f"{OW}x{OH}", "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "medium", "-crf", "14",
                           "-pix_fmt", "yuv420p", str(out)], stdin=subprocess.PIPE)
