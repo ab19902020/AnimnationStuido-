@@ -1,0 +1,43 @@
+# Which drawing on front.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/bruno-fernandes/home/front_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1340, 440]
+parts:
+  eyes:
+  - [389, 201]
+  - [482, 201]
+  foot_L:
+  - [1030, 877]
+  foot_R:
+  - [863, 877]
+  forearm_L:
+  - [623, 542]
+  forearm_R:
+  - [453, 544]
+  hand_L:
+  - [960, 567]
+  hand_R:
+  - [811, 567]
+  head:
+  - [166, 138]
+  mouth:
+  - [578, 290]
+  neck:
+  - [295, 373]
+  pelvis:
+  - [1086, 323]
+  shin_L:
+  - [663, 788]
+  shin_R:
+  - [466, 785]
+  thigh_L:
+  - [285, 789]
+  thigh_R:
+  - [107, 790]
+  torso:
+  - [798, 260]
+  upper_arm_L:
+  - [284, 512]
+  upper_arm_R:
+  - [119, 514]

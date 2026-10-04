@@ -1,0 +1,44 @@
+# Which drawing on three_quarter.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/michael-carrick/casual/three_quarter_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1307, 169]
+parts:
+  eyes:
+  - [591, 173]
+  - [709, 172]
+  - [683, 118]
+  foot_L:
+  - [979, 917]
+  foot_R:
+  - [812, 922]
+  forearm_L:
+  - [341, 608]
+  forearm_R:
+  - [113, 659]
+  hand_L:
+  - [904, 636]
+  hand_R:
+  - [747, 642]
+  head:
+  - [182, 158]
+  mouth:
+  - [938, 221]
+  neck:
+  - [444, 252]
+  pelvis:
+  - [863, 422]
+  shin_L:
+  - [636, 826]
+  shin_R:
+  - [486, 819]
+  thigh_L:
+  - [281, 789]
+  thigh_R:
+  - [119, 788]
+  torso:
+  - [614, 400]
+  upper_arm_L:
+  - [331, 425]
+  upper_arm_R:
+  - [156, 424]

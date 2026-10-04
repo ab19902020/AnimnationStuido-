@@ -1,0 +1,15 @@
+name: Pep Guardiola
+short: Pep
+role: manager
+style: house
+height_cm: 180
+likeness: Bald scalp, light olive-peach skin, fine salt-and-pepper stubble beard and moustache, pronounced expressive
+  dark eyebrows, narrow angular face and attentive expression. Lean compact adult coach caricature.
+outfits:
+  casual:
+    description: Plain black long-sleeve crew-neck sweater, charcoal trousers, white low-top trainers; no badges.
+    sheets:
+    - front
+    - three_quarter
+    - side
+    - hands

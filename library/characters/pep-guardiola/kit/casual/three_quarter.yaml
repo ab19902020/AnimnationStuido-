@@ -1,0 +1,43 @@
+# Which drawing on three_quarter.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/pep-guardiola/casual/three_quarter_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1357, 250]
+parts:
+  eyes:
+  - [484, 171]
+  - [571, 171]
+  foot_L:
+  - [935, 910]
+  foot_R:
+  - [699, 910]
+  forearm_L:
+  - [898, 406]
+  forearm_R:
+  - [713, 409]
+  hand_L:
+  - [895, 564]
+  hand_R:
+  - [692, 593]
+  head:
+  - [176, 160]
+  mouth:
+  - [528, 292]
+  neck:
+  - [367, 303]
+  pelvis:
+  - [1042, 254]
+  shin_L:
+  - [911, 730]
+  shin_R:
+  - [734, 728]
+  thigh_L:
+  - [507, 721]
+  thigh_R:
+  - [304, 723]
+  torso:
+  - [809, 209]
+  upper_arm_L:
+  - [470, 435]
+  upper_arm_R:
+  - [256, 418]

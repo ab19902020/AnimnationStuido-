@@ -1,0 +1,46 @@
+# Which drawing on hands.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/micah-richards/suit/hands_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1790, 358]
+parts:
+  back_L:
+  - [1403, 568]
+  back_R:
+  - [1536, 567]
+  fist_L:
+  - [937, 262]
+  fist_R:
+  - [787, 259]
+  grip_L:
+  - [933, 590]
+  grip_R:
+  - [745, 590]
+  ok_L:
+  - [91, 545]
+  ok_R:
+  - [281, 545]
+  open_palm_L:
+  - [124, 277]
+  open_palm_R:
+  - [274, 277]
+  point_L:
+  - [1257, 277]
+  point_R:
+  - [1095, 279]
+  relaxed_L:
+  - [639, 283]
+  relaxed_R:
+  - [462, 240]
+  stop_L:
+  - [1247, 561]
+  stop_R:
+  - [1068, 601]
+  thumbs_up_L:
+  - [1554, 280]
+  thumbs_up_R:
+  - [1412, 280]
+  wave_L:
+  - [436, 586]
+  wave_R:
+  - [598, 586]

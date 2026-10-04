@@ -1,0 +1,17 @@
+name: Gary Lineker
+short: Lineker
+role: presenter
+style: house
+height_cm: 177
+likeness: Preserve Lineker's swept silver-grey hair, large ears, black square glasses, friendly smile-ready face
+  and light warm-peach skin. Keep the glasses as part of the separate eyes/brows overlay, while head base carries
+  hair/nose/ears only.
+outfits:
+  suit:
+    description: Dark navy blazer and matching trousers over an open-neck white shirt, black shoes with cream soles;
+      no tie, matching the attached cartoon reference.
+    sheets:
+    - front
+    - three_quarter
+    - side
+    - hands

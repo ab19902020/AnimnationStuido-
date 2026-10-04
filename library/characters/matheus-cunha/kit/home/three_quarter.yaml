@@ -1,0 +1,45 @@
+# Which drawing on three_quarter.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/matheus-cunha/home/three_quarter_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1299, 172]
+parts:
+  eyes:
+  - [426, 223]
+  - [518, 219]
+  - [439, 174]
+  - [518, 169]
+  foot_L:
+  - [961, 880]
+  foot_R:
+  - [761, 882]
+  forearm_L:
+  - [641, 452]
+  forearm_R:
+  - [519, 452]
+  hand_L:
+  - [366, 711]
+  hand_R:
+  - [169, 712]
+  head:
+  - [171, 158]
+  mouth:
+  - [492, 304]
+  neck:
+  - [351, 317]
+  pelvis:
+  - [966, 270]
+  shin_L:
+  - [973, 684]
+  shin_R:
+  - [788, 681]
+  thigh_L:
+  - [979, 498]
+  thigh_R:
+  - [823, 491]
+  torso:
+  - [735, 213]
+  upper_arm_L:
+  - [326, 469]
+  upper_arm_R:
+  - [147, 487]

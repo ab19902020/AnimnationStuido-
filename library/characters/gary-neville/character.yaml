@@ -1,0 +1,17 @@
+name: Gary Neville
+short: Neville
+role: pundit
+style: provisional
+height_cm: 180
+note: Off-style stand-in (thin outline, Studio Mayhem look). Replace with a dark-outline house-style kit like Haaland's;
+  the new kit drops into the same folder.
+likeness: 'Gary Neville, the man in the CENTRE of the reference: dark side-swept brown hair, long face, thin moustache
+  and small chin goatee, large white eyes.'
+outfits:
+  casual:
+    description: Plain black hoodie, dark blue jeans, white trainers.
+    sheets:
+    - front
+    - three_quarter
+    - side
+    - hands

@@ -1,0 +1,43 @@
+# Which drawing on front.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/jim-ratcliffe/casual/front_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1342, 450]
+parts:
+  eyes:
+  - [455, 190]
+  - [378, 190]
+  foot_L:
+  - [887, 905]
+  foot_R:
+  - [628, 905]
+  forearm_L:
+  - [413, 649]
+  forearm_R:
+  - [155, 648]
+  hand_L:
+  - [429, 797]
+  hand_R:
+  - [138, 794]
+  head:
+  - [174, 175]
+  mouth:
+  - [495, 302]
+  neck:
+  - [340, 351]
+  pelvis:
+  - [1068, 287]
+  shin_L:
+  - [874, 684]
+  shin_R:
+  - [629, 686]
+  thigh_L:
+  - [854, 497]
+  thigh_R:
+  - [649, 500]
+  torso:
+  - [756, 259]
+  upper_arm_L:
+  - [383, 480]
+  upper_arm_R:
+  - [192, 473]

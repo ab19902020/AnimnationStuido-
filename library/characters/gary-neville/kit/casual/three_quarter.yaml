@@ -1,0 +1,42 @@
+# Which drawing on three_quarter.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/gary-neville/casual/three_quarter_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1492, 205]
+parts:
+  eyes:
+  - [488, 256]
+  foot_L:
+  - [1164, 837]
+  foot_R:
+  - [933, 837]
+  forearm_L:
+  - [687, 470]
+  forearm_R:
+  - [546, 484]
+  hand_L:
+  - [1077, 563]
+  hand_R:
+  - [884, 551]
+  head:
+  - [171, 201]
+  mouth:
+  - [686, 290]
+  neck:
+  - [362, 334]
+  pelvis:
+  - [1140, 319]
+  shin_L:
+  - [720, 722]
+  shin_R:
+  - [533, 718]
+  thigh_L:
+  - [314, 706]
+  thigh_R:
+  - [154, 712]
+  torso:
+  - [927, 229]
+  upper_arm_L:
+  - [358, 481]
+  upper_arm_R:
+  - [136, 480]

@@ -1,0 +1,43 @@
+# Which drawing on front.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/micah-richards/suit/front_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1328, 342]
+parts:
+  eyes:
+  - [435, 243]
+  - [514, 243]
+  foot_L:
+  - [730, 907]
+  foot_R:
+  - [558, 907]
+  forearm_L:
+  - [659, 513]
+  forearm_R:
+  - [502, 512]
+  hand_L:
+  - [1005, 568]
+  hand_R:
+  - [848, 569]
+  head:
+  - [176, 244]
+  mouth:
+  - [625, 320]
+  neck:
+  - [342, 361]
+  pelvis:
+  - [1074, 236]
+  shin_L:
+  - [302, 511]
+  shin_R:
+  - [133, 510]
+  thigh_L:
+  - [325, 741]
+  thigh_R:
+  - [167, 750]
+  torso:
+  - [825, 259]
+  upper_arm_L:
+  - [731, 737]
+  upper_arm_R:
+  - [558, 738]

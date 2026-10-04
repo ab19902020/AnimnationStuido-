@@ -1,0 +1,46 @@
+# Which drawing on hands.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/patrice-evra/home/hands_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1955, 136]
+parts:
+  back_L:
+  - [1523, 497]
+  back_R:
+  - [1676, 499]
+  fist_L:
+  - [965, 180]
+  fist_R:
+  - [804, 181]
+  grip_L:
+  - [995, 511]
+  grip_R:
+  - [784, 508]
+  ok_L:
+  - [301, 466]
+  ok_R:
+  - [100, 466]
+  open_palm_L:
+  - [289, 188]
+  open_palm_R:
+  - [117, 187]
+  point_L:
+  - [1351, 192]
+  point_R:
+  - [1135, 192]
+  relaxed_L:
+  - [631, 167]
+  relaxed_R:
+  - [470, 167]
+  stop_L:
+  - [1338, 503]
+  stop_R:
+  - [1156, 503]
+  thumbs_up_L:
+  - [1670, 195]
+  thumbs_up_R:
+  - [1520, 195]
+  wave_L:
+  - [453, 497]
+  wave_R:
+  - [634, 496]

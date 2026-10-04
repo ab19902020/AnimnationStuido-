@@ -1,0 +1,16 @@
+name: Patrice Evra
+short: Evra
+role: player
+style: house
+height_cm: 175
+likeness: Preserve the Evra reference's warm medium-brown skin, short tight dark curls with low fade, dark brows,
+  very light moustache/stubble and cheeky large-eyed expression.
+outfits:
+  home:
+    description: Red short-sleeve shirt with black shoulder panels, white piping and white number 3; black shorts;
+      white knee socks; black football boots, matching his United 2008 reference. Simplify small logos.
+    sheets:
+    - front
+    - three_quarter
+    - side
+    - hands

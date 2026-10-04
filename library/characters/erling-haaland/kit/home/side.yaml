@@ -1,0 +1,42 @@
+# Which drawing on side.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/erling-haaland/home/side_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1335, 169]
+parts:
+  eyes:
+  - [475, 176]
+  foot_L:
+  - [1022, 908]
+  foot_R:
+  - [818, 912]
+  forearm_L:
+  - [637, 537]
+  forearm_R:
+  - [473, 537]
+  hand_L:
+  - [1034, 598]
+  hand_R:
+  - [820, 599]
+  head:
+  - [193, 168]
+  mouth:
+  - [486, 292]
+  neck:
+  - [378, 399]
+  pelvis:
+  - [992, 335]
+  shin_L:
+  - [634, 786]
+  shin_R:
+  - [473, 786]
+  thigh_L:
+  - [301, 774]
+  thigh_R:
+  - [121, 777]
+  torso:
+  - [713, 269]
+  upper_arm_L:
+  - [314, 557]
+  upper_arm_R:
+  - [99, 544]

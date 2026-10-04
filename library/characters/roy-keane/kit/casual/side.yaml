@@ -1,0 +1,42 @@
+# Which drawing on side.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/roy-keane/casual/side_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1478, 172]
+parts:
+  eyes:
+  - [503, 158]
+  foot_L:
+  - [1147, 849]
+  foot_R:
+  - [929, 849]
+  forearm_L:
+  - [752, 482]
+  forearm_R:
+  - [583, 489]
+  hand_L:
+  - [1152, 526]
+  hand_R:
+  - [966, 529]
+  head:
+  - [207, 174]
+  mouth:
+  - [502, 304]
+  neck:
+  - [405, 379]
+  pelvis:
+  - [1047, 295]
+  shin_L:
+  - [753, 716]
+  shin_R:
+  - [595, 714]
+  thigh_L:
+  - [387, 713]
+  thigh_R:
+  - [163, 720]
+  torso:
+  - [779, 220]
+  upper_arm_L:
+  - [384, 479]
+  upper_arm_R:
+  - [165, 478]

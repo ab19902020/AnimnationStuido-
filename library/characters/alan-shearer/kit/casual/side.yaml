@@ -1,0 +1,42 @@
+# Which drawing on side.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/alan-shearer/casual/side_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1316, 597]
+parts:
+  eyes:
+  - [473, 129]
+  foot_L:
+  - [1042, 916]
+  foot_R:
+  - [836, 913]
+  forearm_L:
+  - [672, 520]
+  forearm_R:
+  - [519, 519]
+  hand_L:
+  - [1021, 564]
+  hand_R:
+  - [855, 566]
+  head:
+  - [197, 163]
+  mouth:
+  - [478, 295]
+  neck:
+  - [350, 374]
+  pelvis:
+  - [960, 309]
+  shin_L:
+  - [651, 828]
+  shin_R:
+  - [490, 832]
+  thigh_L:
+  - [296, 776]
+  thigh_R:
+  - [127, 777]
+  torso:
+  - [704, 223]
+  upper_arm_L:
+  - [334, 556]
+  upper_arm_R:
+  - [125, 566]

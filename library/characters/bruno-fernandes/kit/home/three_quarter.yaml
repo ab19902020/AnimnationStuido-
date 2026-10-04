@@ -1,0 +1,45 @@
+# Which drawing on three_quarter.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/bruno-fernandes/home/three_quarter_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1366, 463]
+parts:
+  eyes:
+  - [417, 226]
+  - [509, 226]
+  - [435, 177]
+  - [496, 178]
+  foot_L:
+  - [1050, 885]
+  foot_R:
+  - [845, 878]
+  forearm_L:
+  - [658, 548]
+  forearm_R:
+  - [478, 548]
+  hand_L:
+  - [1044, 616]
+  hand_R:
+  - [822, 616]
+  head:
+  - [169, 153]
+  mouth:
+  - [464, 330]
+  neck:
+  - [300, 397]
+  pelvis:
+  - [1005, 352]
+  shin_L:
+  - [655, 792]
+  shin_R:
+  - [477, 791]
+  thigh_L:
+  - [303, 783]
+  thigh_R:
+  - [111, 788]
+  torso:
+  - [749, 254]
+  upper_arm_L:
+  - [307, 559]
+  upper_arm_R:
+  - [128, 551]

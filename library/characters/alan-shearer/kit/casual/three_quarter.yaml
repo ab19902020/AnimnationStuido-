@@ -1,0 +1,43 @@
+# Which drawing on three_quarter.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/alan-shearer/casual/three_quarter_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1344, 208]
+parts:
+  eyes:
+  - [411, 163]
+  - [515, 178]
+  foot_L:
+  - [1012, 891]
+  foot_R:
+  - [831, 903]
+  forearm_L:
+  - [648, 528]
+  forearm_R:
+  - [486, 527]
+  hand_L:
+  - [1021, 575]
+  hand_R:
+  - [829, 576]
+  head:
+  - [192, 184]
+  mouth:
+  - [319, 385]
+  neck:
+  - [466, 303]
+  pelvis:
+  - [951, 327]
+  shin_L:
+  - [647, 775]
+  shin_R:
+  - [483, 776]
+  thigh_L:
+  - [289, 767]
+  thigh_R:
+  - [125, 769]
+  torso:
+  - [721, 251]
+  upper_arm_L:
+  - [306, 548]
+  upper_arm_R:
+  - [116, 539]

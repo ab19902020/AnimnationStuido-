@@ -1,0 +1,43 @@
+# Which drawing on three_quarter.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/micah-richards/suit/three_quarter_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1335, 238]
+parts:
+  eyes:
+  - [468, 214]
+  - [556, 209]
+  foot_L:
+  - [807, 908]
+  foot_R:
+  - [582, 911]
+  forearm_L:
+  - [656, 521]
+  forearm_R:
+  - [476, 529]
+  hand_L:
+  - [1000, 505]
+  hand_R:
+  - [856, 573]
+  head:
+  - [193, 200]
+  mouth:
+  - [524, 342]
+  neck:
+  - [368, 369]
+  pelvis:
+  - [1022, 256]
+  shin_L:
+  - [291, 492]
+  shin_R:
+  - [123, 498]
+  thigh_L:
+  - [355, 736]
+  thigh_R:
+  - [157, 730]
+  torso:
+  - [787, 245]
+  upper_arm_L:
+  - [785, 735]
+  upper_arm_R:
+  - [585, 732]

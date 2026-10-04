@@ -1,0 +1,17 @@
+name: Roy Keane
+short: Keane
+role: pundit
+style: provisional
+height_cm: 178
+note: Off-style stand-in (thin outline, Studio Mayhem look). Replace with a dark-outline house-style kit like Haaland's;
+  the new kit drops into the same folder.
+likeness: 'Roy Keane, the man on the RIGHT of the reference scene: short salt-and-pepper hair, full grey-white beard,
+  square stern face, thick eyebrows and large white cartoon eyes.'
+outfits:
+  casual:
+    description: Plain black short-sleeve polo shirt, charcoal trousers, black trainers.
+    sheets:
+    - front
+    - three_quarter
+    - side
+    - hands

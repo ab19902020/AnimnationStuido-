@@ -1,0 +1,17 @@
+name: Erling Haaland
+short: Haaland
+role: player
+style: house
+height_cm: 195
+likeness: Tall powerful blond footballer, pale peach skin, slicked-back light blond hair tied into a short bun or
+  ponytail, broad jaw, distinctive broad angular face and understated blond eyebrows; clean-shaven. Give him longer
+  athletic legs than the compact pundits but retain the big-head cartoon proportions.
+outfits:
+  home:
+    description: Sky-blue short-sleeve football shirt with white collar, plain white shorts, sky-blue socks, black
+      football boots. Small white 9 centred on shirt, no sponsor or tiny badges.
+    sheets:
+    - front
+    - three_quarter
+    - side
+    - hands

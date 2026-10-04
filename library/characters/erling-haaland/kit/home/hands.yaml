@@ -1,0 +1,46 @@
+# Which drawing on hands.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/erling-haaland/home/hands_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1995, 135]
+parts:
+  back_L:
+  - [1570, 505]
+  back_R:
+  - [1750, 505]
+  fist_L:
+  - [975, 232]
+  fist_R:
+  - [828, 230]
+  grip_L:
+  - [1021, 520]
+  grip_R:
+  - [808, 520]
+  ok_L:
+  - [307, 471]
+  ok_R:
+  - [101, 470]
+  open_palm_L:
+  - [115, 240]
+  open_palm_R:
+  - [292, 240]
+  point_L:
+  - [1375, 238]
+  point_R:
+  - [1180, 238]
+  relaxed_L:
+  - [644, 207]
+  relaxed_R:
+  - [494, 207]
+  stop_L:
+  - [1371, 510]
+  stop_R:
+  - [1182, 511]
+  thumbs_up_L:
+  - [1739, 237]
+  thumbs_up_R:
+  - [1580, 238]
+  wave_L:
+  - [486, 502]
+  wave_R:
+  - [657, 504]

@@ -1,0 +1,12 @@
+# The studio engine (ffmpeg must also be on PATH; skia needs the system libEGL: apt-get install libegl1).
+numpy
+scipy
+pillow
+opencv-python-headless
+pyyaml
+skia-python
+librosa
+soundfile
+sherpa-onnx
+pocketsphinx
+onnxruntime

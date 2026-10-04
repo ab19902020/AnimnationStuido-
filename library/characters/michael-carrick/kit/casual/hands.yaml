@@ -1,0 +1,46 @@
+# Which drawing on hands.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/michael-carrick/casual/hands_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1978, 130]
+parts:
+  back_L:
+  - [1549, 542]
+  back_R:
+  - [1716, 543]
+  fist_L:
+  - [1005, 231]
+  fist_R:
+  - [827, 231]
+  grip_L:
+  - [1038, 561]
+  grip_R:
+  - [816, 561]
+  ok_L:
+  - [287, 520]
+  ok_R:
+  - [78, 520]
+  open_palm_L:
+  - [100, 242]
+  open_palm_R:
+  - [273, 242]
+  point_L:
+  - [1361, 243]
+  point_R:
+  - [1189, 243]
+  relaxed_L:
+  - [634, 209]
+  relaxed_R:
+  - [474, 211]
+  stop_L:
+  - [1375, 554]
+  stop_R:
+  - [1189, 555]
+  thumbs_up_L:
+  - [1718, 252]
+  thumbs_up_R:
+  - [1551, 252]
+  wave_L:
+  - [449, 526]
+  wave_R:
+  - [660, 527]

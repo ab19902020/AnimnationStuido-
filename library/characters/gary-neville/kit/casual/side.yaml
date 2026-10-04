@@ -1,0 +1,43 @@
+# Which drawing on side.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/gary-neville/casual/side_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1484, 163]
+parts:
+  eyes:
+  - [508, 174]
+  - [535, 128]
+  foot_L:
+  - [1174, 867]
+  foot_R:
+  - [932, 866]
+  forearm_L:
+  - [746, 498]
+  forearm_R:
+  - [545, 494]
+  hand_L:
+  - [1145, 570]
+  hand_R:
+  - [956, 570]
+  head:
+  - [201, 168]
+  mouth:
+  - [504, 347]
+  neck:
+  - [192, 383]
+  pelvis:
+  - [1077, 337]
+  shin_L:
+  - [743, 731]
+  shin_R:
+  - [576, 729]
+  thigh_L:
+  - [350, 730]
+  thigh_R:
+  - [146, 731]
+  torso:
+  - [809, 239]
+  upper_arm_L:
+  - [336, 490]
+  upper_arm_R:
+  - [134, 482]

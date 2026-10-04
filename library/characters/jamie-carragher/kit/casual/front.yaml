@@ -1,0 +1,43 @@
+# Which drawing on front.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/jamie-carragher/casual/front_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1437, 450]
+parts:
+  eyes:
+  - [501, 242]
+  - [431, 242]
+  foot_L:
+  - [1096, 856]
+  foot_R:
+  - [898, 855]
+  forearm_L:
+  - [643, 505]
+  forearm_R:
+  - [472, 505]
+  hand_L:
+  - [1045, 561]
+  hand_R:
+  - [807, 563]
+  head:
+  - [178, 177]
+  mouth:
+  - [353, 342]
+  neck:
+  - [637, 290]
+  pelvis:
+  - [1180, 328]
+  shin_L:
+  - [709, 738]
+  shin_R:
+  - [521, 734]
+  thigh_L:
+  - [327, 730]
+  thigh_R:
+  - [148, 719]
+  torso:
+  - [875, 273]
+  upper_arm_L:
+  - [289, 452]
+  upper_arm_R:
+  - [140, 454]

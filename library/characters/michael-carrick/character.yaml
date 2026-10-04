@@ -1,0 +1,17 @@
+name: Michael Carrick
+short: Carrick
+role: manager
+style: house
+height_cm: 188
+likeness: Preserve the attached Carrick reference's brown textured swept-up hair, dark brows, neatly cropped brown
+  beard and moustache, nose, ears and calm thoughtful expression. Convert his shading and body proportions into
+  the first reference's compact big-eye cartoon system.
+outfits:
+  casual:
+    description: Charcoal long-sleeve crew-neck sweater, dark blue jeans, white low-top trainers, as the left casual
+      outfit of the Carrick reference.
+    sheets:
+    - front
+    - three_quarter
+    - side
+    - hands

@@ -1,0 +1,43 @@
+# Which drawing on side.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/matheus-cunha/home/side_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1319, 190]
+parts:
+  eyes:
+  - [515, 221]
+  - [532, 161]
+  foot_L:
+  - [952, 896]
+  foot_R:
+  - [786, 897]
+  forearm_L:
+  - [656, 490]
+  forearm_R:
+  - [502, 485]
+  hand_L:
+  - [395, 755]
+  hand_R:
+  - [165, 756]
+  head:
+  - [168, 158]
+  mouth:
+  - [557, 299]
+  neck:
+  - [396, 327]
+  pelvis:
+  - [958, 250]
+  shin_L:
+  - [958, 688]
+  shin_R:
+  - [786, 689]
+  thigh_L:
+  - [988, 472]
+  thigh_R:
+  - [826, 474]
+  torso:
+  - [727, 200]
+  upper_arm_L:
+  - [318, 484]
+  upper_arm_R:
+  - [145, 487]

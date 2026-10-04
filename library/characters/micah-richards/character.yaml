@@ -1,0 +1,16 @@
+name: Micah Richards
+short: Micah
+role: pundit
+style: house
+height_cm: 180
+likeness: Preserve Micah's dark warm-brown skin, short curly black top with fade, broad grin-ready face, thick brows
+  and neat full black beard; broad stocky torso with the attached cartoon proportions.
+outfits:
+  suit:
+    description: Navy suit jacket and trousers, white shirt, black tie, black formal shoes; matching the attached
+      reference. Jacket upper arm and forearm have navy sleeve, white wrist cuff on forearm.
+    sheets:
+    - front
+    - three_quarter
+    - side
+    - hands

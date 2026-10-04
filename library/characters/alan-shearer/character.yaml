@@ -1,0 +1,16 @@
+name: Alan Shearer
+short: Shearer
+role: pundit
+style: house
+height_cm: 183
+likeness: Preserve Shearer's bald/receded short hair scalp, light warm-peach skin, strong jaw, prominent dark eyebrows
+  and light grey stubble. Make him a compact big-eye adult caricature in the first reference's style.
+outfits:
+  casual:
+    description: Black collared polo shirt with sleeves ending above elbow, charcoal trousers, white low-top trainers;
+      matches the attached reference's black casual outfit.
+    sheets:
+    - front
+    - three_quarter
+    - side
+    - hands

@@ -1,0 +1,11 @@
+# build products: everything under build/ is regenerated from library/ and episodes/ sources
+build/
+models/*
+!models/README.md
+!models/*.onnx
+__pycache__/
+*.pyc
+.DS_Store
+# episode working files (the finished video and its sources are committed)
+episodes/*/build/
+episodes/*/*_preview*.mp4

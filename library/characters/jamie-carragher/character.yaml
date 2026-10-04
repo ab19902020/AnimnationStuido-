@@ -1,0 +1,17 @@
+name: Jamie Carragher
+short: Carra
+role: pundit
+style: provisional
+height_cm: 185
+note: Off-style stand-in (thin outline, Studio Mayhem look). Replace with a dark-outline house-style kit like Haaland's;
+  the new kit drops into the same folder.
+likeness: 'Jamie Carragher, the man on the LEFT of the reference: side-combed silver-grey hair, grey stubble, broad
+  cheekbones, mischievous brows, large white cartoon eyes.'
+outfits:
+  casual:
+    description: Plain black short-sleeve T-shirt, dark blue jeans, white trainers.
+    sheets:
+    - front
+    - three_quarter
+    - side
+    - hands

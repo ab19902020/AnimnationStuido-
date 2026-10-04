@@ -1,0 +1,44 @@
+# Which drawing on front.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/gary-lineker/suit/front_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1333, 202]
+parts:
+  eyes:
+  - [410, 212]
+  - [481, 151]
+  - [421, 151]
+  foot_L:
+  - [893, 918]
+  foot_R:
+  - [671, 918]
+  forearm_L:
+  - [275, 680]
+  forearm_R:
+  - [506, 677]
+  hand_L:
+  - [479, 872]
+  hand_R:
+  - [303, 870]
+  head:
+  - [179, 169]
+  mouth:
+  - [443, 313]
+  neck:
+  - [297, 392]
+  pelvis:
+  - [1058, 368]
+  shin_L:
+  - [886, 722]
+  shin_R:
+  - [677, 725]
+  thigh_L:
+  - [874, 533]
+  thigh_R:
+  - [688, 528]
+  torso:
+  - [734, 315]
+  upper_arm_L:
+  - [494, 514]
+  upper_arm_R:
+  - [298, 512]

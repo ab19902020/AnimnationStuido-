@@ -1,0 +1,48 @@
+# Which drawing on hands.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/matheus-cunha/home/hands_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1556, 133]
+parts:
+  back_L:
+  - [1168, 671]
+  back_R:
+  - [1301, 671]
+  fist_L:
+  - [783, 354]
+  fist_R:
+  - [654, 354]
+  grip_L:
+  - [798, 677]
+  grip_R:
+  - [636, 679]
+  ok_L:
+  - [230, 637]
+  ok_R:
+  - [75, 640]
+  open_palm_L:
+  - [217, 369]
+  open_palm_R:
+  - [90, 368]
+  point_L:
+  - [1074, 363]
+  point_R:
+  - [924, 365]
+  relaxed_L:
+  - [505, 333]
+  relaxed_R:
+  - [376, 334]
+  stop_L:
+  - [1037, 670]
+  stop_R:
+  - [918, 670]
+  thumbs_up_L:
+  - [1348, 364]
+  thumbs_up_R:
+  - [1212, 365]
+  wave_L:
+  - [372, 665]
+  wave_R:
+  - [509, 665]
+split:
+- [154, 275, 154, 438]

@@ -1,0 +1,42 @@
+# Which drawing on side.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/patrice-evra/home/side_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: false
+guide: [1315, 220]
+parts:
+  eyes:
+  - [719, 169]
+  foot_L:
+  - [832, 936]
+  foot_R:
+  - [576, 938]
+  forearm_L:
+  - [368, 572]
+  forearm_R:
+  - [138, 563]
+  hand_L:
+  - [363, 777]
+  hand_R:
+  - [139, 777]
+  head:
+  - [215, 154]
+  mouth:
+  - [906, 239]
+  neck:
+  - [528, 249]
+  pelvis:
+  - [928, 481]
+  shin_L:
+  - [781, 786]
+  shin_R:
+  - [563, 791]
+  thigh_L:
+  - [747, 648]
+  thigh_R:
+  - [583, 644]
+  torso:
+  - [629, 421]
+  upper_arm_L:
+  - [334, 410]
+  upper_arm_R:
+  - [162, 405]

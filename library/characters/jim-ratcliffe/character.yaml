@@ -1,0 +1,16 @@
+name: Jim Ratcliffe
+short: Jim
+role: owner
+style: house
+height_cm: 178
+likeness: Preserve Jim's long lined face, swept wavy grey hair, grey/white short beard, pointed nose and bushy downward-slanting
+  brows. Light peach skin; older lean compact caricature using the first reference's large eyes.
+outfits:
+  casual:
+    description: Olive-green padded jacket over burgundy crew-neck jumper, charcoal trousers, brown lace-up shoes;
+      use the middle outfit in the Jim reference.
+    sheets:
+    - front
+    - three_quarter
+    - side
+    - hands
