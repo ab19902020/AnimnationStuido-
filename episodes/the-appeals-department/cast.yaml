@@ -1,0 +1,10 @@
+# Who speaks in this episode and who plays them. character = the library id (library/characters/<id>/).
+# voice / speed: the text-to-speech voice used for test runs (Kokoro, see tools/fetch_models.sh tts); real recorded
+# voices replace these when they exist. Chosen for a spread of pitch and accent so the five are easy to tell apart:
+# Roy deep (105 Hz), Pep Spanish voice (130), Ronaldo Portuguese voice (138), Gary (146), Micah brighter (161).
+# Pep is a fictional invited guest, not City's manager.
+GARY:    {character: gary-neville,      outfit: casual, voice: bm_george, speed: 1.05}
+ROY:     {character: roy-keane,         outfit: casual, voice: bm_fable,  speed: 0.95}
+MICAH:   {character: micah-richards,    outfit: suit,   voice: am_eric,   speed: 1.05}
+RONALDO: {character: cristiano-ronaldo, outfit: home,   voice: pm_alex,   speed: 1.02}
+PEP:     {character: pep-guardiola,     outfit: casual, voice: em_alex,   speed: 0.97}

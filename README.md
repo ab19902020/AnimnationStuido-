@@ -4,8 +4,10 @@ A South Park-style cut-out animation studio. You upload character kits, backgrou
 directive; Claude cuts the puppets, lip-syncs the voices, acts, stages and shoots the scenes, and renders the
 episode (landscape 16:9).
 
-**Status: being built.** Done so far: the character library and kit ingest (every part of every sheet found,
-named and checked). Next: the puppet rigs, the shared mouth/eye library, the voice pipeline, the renderer.
+**Status: being built.** Done: the character library and kit ingest, the puppet rigs, and a first end-to-end
+episode pipeline, run as a test on *The Appeals Department* with text-to-speech voices (see "Making an episode"). Not
+done: limb animation that looks right (the rigs' joints show; walks need art drawn for it), real recordings in
+place of the stand-in voices, final props.
 
 ## How it works (the South Park way)
 
@@ -28,7 +30,7 @@ named and checked). Next: the puppet rigs, the shared mouth/eye library, the voi
 | `library/props/<set>/`, `library/extras/` | cut-out props; background cast (crowds, crew) |
 | `library/audio/` | `voiceovers/<character id>/` (the voice bank), `sfx/`, `music/` |
 | `library/reference/`, `library/fonts/` | finished artwork kept for the look; fonts |
-| `episodes/<slug>/` | one folder per episode: your directive, the voiceovers (`voiceovers/`, named `01-<character id>.wav`), the production script, the finished video |
+| `episodes/<slug>/` | one folder per episode: `script.md` and `pack/` (the production pack as delivered), `cast.yaml`, `beats.yaml`, `cues.yaml`, `staging.yaml`, `shots.yaml` (see "Making an episode"), the voiceovers (`voiceovers/`, named `01-<character id>.wav`), the finished video. `build/` and `*_preview*.mp4` are regenerated and git-ignored |
 | `studio/` | the engine |
 | `tools/` | importing kits, fetching models, `index_library.py` (rebuilds the index and checks the library is tidy) |
 
@@ -69,3 +71,38 @@ python3 -m studio.ingest.chart CHARACTER               # build/ingest/<id>_chart
 ```
 
 and checks the chart by eye before the character is used.
+
+## Making an episode
+
+An episode is a folder `episodes/<slug>/` with the director's `script.md` (scenes, stage directions and lines
+`[L001] GARY: ...`) and these files, all read by `studio/episode/`:
+
+| File | What it says |
+|---|---|
+| `cast.yaml` | who speaks, which library character plays them, and (for test runs) their text-to-speech voice |
+| `beats.yaml` | timing: how each scene's allowance is shared between its stage directions, gaps, reaction pauses |
+| `cues.yaml` | sound cues placed against beats (card tap, door squeak, chime...) and the room tone |
+| `staging.yaml` | who stands where, entrances and exits, props and who holds them, anchored to beats |
+| `shots.yaml` | the camera (wide, singles, two-shots, pans, pushes) and the full-frame insert cards |
+
+Everything is anchored to script beats (a line id like `L031`, or a direction like `D3.2`), so when the voices change
+the picture retimes with them. The steps, from the repo root:
+
+```bash
+tools/fetch_models.sh tts rhubarb whisper               # once: voices (test runs), lip sync, speech recognition
+python3 -m studio.episode.script SLUG                   # parse the script; checks it against pack/Dialogue.json
+python3 -m studio.episode.tts SLUG                      # a take of every line (test run: text-to-speech)
+python3 -m studio.episode.timeline SLUG                 # when everything happens
+python3 -m studio.episode.lipsync SLUG                  # mouth shapes for every take
+python3 -m studio.episode.soundtrack SLUG               # the mix: voices, cues, room tone; captions.srt
+python3 -m studio.episode.render SLUG --stills 5 52     # PNGs of those moments, to review
+python3 -m studio.episode.render SLUG --video           # the film, 1920x1080 at 24 fps, with sound
+python3 -m studio.episode.check SLUG --video            # words in the final mix, cues, timeline, the file
+```
+
+How a frame is made: the kit sheet's own assembled figure is the body (clean, correct), cut at the neck; the head,
+eyes and mouth are drawn over it so they can nod, look, blink and talk (`studio/episode/puppet.py`, the mouth shapes
+in `mouths.py`). Replacement animation only: no arm or leg moves, entrances and exits are bobbing slides, held props
+float at the hand, and the props and cards are plain stand-ins (`graphics.py`). **Real recordings** are not wired in
+yet: `timeline`, `lipsync`, `soundtrack` and `render` read `build/tts/<line id>.wav` and `tts.json`, so an import step
+that cuts a recording into those files is all it takes.

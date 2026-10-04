@@ -1,0 +1,71 @@
+# Where everyone stands and what moves, anchored to script beats (a line id L0xx or a stage direction D<scene>.<n>).
+# Positions are in the studio plate's own pixels (1672 x 941, feet on y = 890). A time is `at` (the beat), `from`
+# (start | end of that beat) and `off` (seconds from there, negative = before). Camera: shots.yaml.
+height_px_per_cm: 2.15            # a 180 cm character stands about 387 plate pixels tall
+floor_y: 890
+
+characters:                       # where each one starts; x = 1900 is off to the right (not in the room yet)
+  GARY:    {x: 380}
+  MICAH:   {x: 790}
+  ROY:     {x: 1130}
+  PEP:     {x: 1900}
+  RONALDO: {x: 1900}
+
+moves:                            # style: walk (a bobbing step) | slide
+  - {who: PEP,     at: D1.2, from: end,   off: -1.6, to: 1480, dur: 1.5, style: walk}          # the door squeaks; Pep comes in
+  - {who: PEP,     at: D1.3, from: start, off: 0.1,  to: 600,  dur: 1.6, style: walk}          # over to Gary's reader
+  - {who: RONALDO, at: D2.3, from: start, off: 0.6,  to: 1400, dur: 1.9, style: walk}          # the suitcase wheel pins the paper
+  - {who: RONALDO, at: D3.1, from: start, off: 0.2,  to: 1335, dur: 0.5, style: walk}          # to the bench
+  - {who: RONALDO, at: D3.1, from: start, off: 1.5,  to: 1400, dur: 0.3, style: slide}         # and back, recoiled
+  - {who: GARY,    at: D3.4, from: start, off: 0.6,  to: 380,  dur: 0.1, style: slide}
+  - {who: PEP,     at: D4.1, from: start, off: 0.2,  to: 600,  dur: 0.1, style: slide}
+  - {who: RONALDO, at: D4.1, from: start, off: 0.4,  to: 1010, dur: 1.4, style: walk}          # the junior line-up
+  - {who: ROY,     at: D4.1, from: start, off: 0.4,  to: 1200, dur: 1.2, style: walk}
+  - {who: PEP,     at: D5.1, from: start, off: 0.3,  to: 830,  dur: 1.2, style: walk}          # rearranging the furniture
+  - {who: PEP,     at: D5.2, from: start, off: 0.0,  to: 640,  dur: 1.0, style: walk}
+  - {who: ROY,     at: D6.4, from: start, off: 0.9,  to: 1010, dur: 1.2, style: walk}          # Roy carries the bench to the centre
+  - {who: GARY,    at: L082, from: start, off: 0.2,  to: 880,  dur: 1.4, style: walk}          # to be benched
+  - {who: RONALDO, at: L083, from: start, off: 0.0,  to: 1230, dur: 1.0, style: walk}
+  - {who: PEP,     at: D7.4, from: start, off: 0.5,  to: 1950, dur: 2.6, style: walk}          # everyone else leaves
+  - {who: MICAH,   at: D7.4, from: start, off: 0.9,  to: 1950, dur: 2.6, style: walk}
+  - {who: RONALDO, at: D7.4, from: start, off: 1.2,  to: 1950, dur: 2.4, style: walk}
+  - {who: ROY,     at: D7.4, from: start, off: 1.5,  to: 1690, dur: 2.2, style: walk}          # Roy stops at the edge of the frame
+
+actions:                          # do: recoil | sit | stand | rock
+  - {who: RONALDO, at: D3.1, from: start, off: 0.75, do: recoil}
+  - {who: RONALDO, at: D5.1, from: start, off: 0.2,  do: sit, dur: 0.5}
+  - {who: RONALDO, at: L064, from: start, off: -0.2, do: stand, dur: 0.3}
+  - {who: GARY,    at: D7.1, from: start, off: 0.5,  do: sit, dur: 0.6}
+  - {who: GARY,    at: D6.2, from: start, off: 1.2,  do: freeze, until: {at: D6.2, from: end}}     # the refund chime; his face freezes
+
+props:                            # kind, pos (anchor, plate px), z: far | back (behind everyone, far first) | y (sorted with the cast by floor y) | front
+  fee_sign:   {kind: fee_sign, pos: [870, 370], z: back, scale: 0.85}
+  printer:    {kind: printer, pos: [905, 640], z: back}
+  notice:     {kind: notice, args: ["ON AIR"], pos: [215, 420], z: back}
+  bench:      {kind: bench, pos: [1330, 905], z: y}
+  paper_strip: {kind: paper_strip, args: [900], pos: [880, 920], z: front, grow: {at: D2.2, from: start, off: 0.9, dur: 1.4, to: 900}}
+  suitcase:   {kind: suitcase, pos: [1900, 892], z: y, follows: {who: RONALDO, dx: 100, dy: 2, from: {at: D2.3, from: start, off: 0.6}, until: {at: D6.3, from: start, off: 1.4}}}
+  curtain:    {kind: curtain, pos: [1400, 0], z: far, appear: {at: D4.1, from: start, off: 0.2}, reveal: {dur: 1.8}}
+  chair_a:    {kind: chair, pos: [1010, 895], z: y, appear: {at: D4.1, from: start, off: 0.2}}
+  chair_b:    {kind: chair, pos: [700, 893], z: y, appear: {at: D4.1, from: start, off: 0.2}}
+  chair_c:    {kind: chair, pos: [520, 893], z: y, appear: {at: D4.1, from: start, off: 0.2}}
+  reader:     {kind: card_reader, pos: [0, 0], z: held, hold: [{who: MICAH, dx: 0.12, dy: -0.40, at: L001, from: start, off: -1.0},
+                                                           {who: PEP, dx: -0.10, dy: -0.42, at: D2.1, from: start, off: 0.0},
+                                                           {who: MICAH, dx: 0.12, dy: -0.40, at: L012, from: start, off: 0.0}]}
+  clipboard:  {kind: clipboard, pos: [0, 0], z: held, hold: [{who: ROY, dx: -0.12, dy: -0.36, at: D4.3, from: end, off: -0.5}]}
+  mug:        {kind: mug, pos: [0, 0], z: held, hold: [{who: ROY, dx: 0.13, dy: -0.34, at: L001, from: start, off: -1.0}]}
+  pass_pep:   {kind: pass_card, args: ["PEP", "AGE 13"], pos: [0, 0], z: held, hold: [{who: PEP, dx: -0.02, dy: -0.58, at: L040, from: end, off: 0.0}]}
+  pass_cris:  {kind: pass_card, args: ["LITTLE CRIS", "AGE 7"], pos: [0, 0], z: held, hold: [{who: RONALDO, dx: 0.0, dy: -0.58, at: D4.2, from: start, off: 0.9}]}
+  pass_gary:  {kind: pass_card, args: ["GARY", "AGE 11"], pos: [0, 0], z: held, hold: [{who: GARY, dx: 0.0, dy: -0.58, at: L047, from: end, off: -0.3}]}
+  pass_micah: {kind: pass_card, args: ["MICAH", "AGE 13"], pos: [0, 0], z: held, hold: [{who: MICAH, dx: 0.0, dy: -0.58, at: L047, from: end, off: -0.2}]}
+  forms:      {kind: forms_pile, pos: [0, 0], z: held, fall: {who: GARY, dy: -0.26, at: D6.3, from: start, off: 1.0, dur: 0.45}}
+
+bench_moves:                      # the bench is carried to the middle of the room
+  - {prop: bench, at: D6.4, from: start, off: 0.9, to: [880, 905], dur: 1.2}
+chair_moves:                      # Pep sets two chairs in a triangle
+  - {prop: chair_b, at: D5.1, from: start, off: 0.5, to: [760, 893], dur: 0.8}
+  - {prop: chair_c, at: D5.1, from: start, off: 0.9, to: [620, 893], dur: 0.8}
+swaps:                            # a prop's picture changes: (prop, args or flag, when)
+  - {prop: notice, args: ["PRIVATE\nHEARING"], at: D3.4, from: start, off: 0.5}
+  - {prop: fee_sign, kwargs: {extra: "JUNIOR HEARING"}, at: D4.1, from: start, off: 0.9}
+  - {prop: paper_strip, hide: true, at: D6.3, from: start, off: 0.0}

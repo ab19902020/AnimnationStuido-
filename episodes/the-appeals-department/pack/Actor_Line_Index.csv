@@ -1,0 +1,94 @@
+id,scene,character,text,words
+L001,1,GARY,"City's charges saga has delivered a ruling, they're appealing, and I've spotted a gap in the market.",17
+L002,1,ROY,A football match?,3
+L003,1,GARY,"An appeals service. Managers, players, anyone. Nineteen ninety-nine and we'll hear your complaint.",13
+L004,1,MICAH,Guaranteed result?,2
+L005,1,GARY,Guaranteed to hear it. It's on the sign.,8
+L006,1,ROY,So you've invented a Post Office where the bloke behind the glass is also the problem.,16
+L007,1,GARY,Under-fourteens go free. Shows we're a community business.,8
+L008,1,ROY,You couldn't get a card reader to work on a toddler.,11
+L009,1,PEP,You sent me a hundred and fifteen questions for a five-minute interview.,12
+L010,1,GARY,And you object to all of them?,7
+L011,1,PEP,All of them.,3
+L012,2,PEP,Why have you charged me two thousand pounds?,8
+L013,2,GARY,"Two thousand two hundred and ninety-eight, eighty-five. It's important we get the finances right.",14
+L014,2,ROY,You've made a mugging look like a seminar.,8
+L015,2,PEP,I want to appeal that.,5
+L016,2,MICAH,Shall I put it through again?,6
+L017,2,PEP,Do not put it through again.,6
+L018,2,GARY,"First, tell us your grounds.",5
+L019,2,PEP,This entire fucking room.,4
+L020,2,ROY,Are we getting tea at any point?,7
+L021,2,GARY,Tea's a separate department.,4
+L022,2,ROY,Of course it is.,4
+L023,3,RONALDO,I want to report a bench.,6
+L024,3,MICAH,The one in Portugal?,4
+L025,3,RONALDO,There has been disrespect.,4
+L026,3,ROY,Did it have another man's arse on it?,8
+L027,3,GARY,"Cristiano, you've left the camp. Tell us what happened. Take a seat.",12
+L028,3,RONALDO,That is how it starts.,5
+L029,3,GARY,Fine. Standing complaint. Same price.,5
+L030,3,RONALDO,I want a private hearing. Nobody needs to see me bothered. Put the camera a little higher.,17
+L031,3,MICAH,England put seven past Croatia. You seen it?,8
+L032,3,RONALDO,Seven goals. My number. Not even a thank-you.,8
+L033,3,ROY,They were busy playing football.,5
+L034,3,MICAH,"It was meant to be behind closed doors, but they let thousands of schoolkids in.",15
+L035,3,GARY,"Hang on. Closed doors, but children can still come in?",10
+L036,3,ROY,At a football match.,4
+L037,3,GARY,"Same principle. A private junior hearing. Fresh, uncorrupted opinions.",9
+L038,3,ROY,In here?,2
+L039,4,GARY,"Under-fourteens only. Micah, make the passes.",6
+L040,4,MICAH,Pep. Age thirteen.,3
+L041,4,PEP,Why thirteen?,2
+L042,4,GARY,Because fourteen's full price.,4
+L043,4,MICAH,Cristiano. Age twelve.,3
+L044,4,RONALDO,Twelve? Make it seven.,4
+L045,4,ROY,That's not an age. It's your shirt number.,8
+L046,4,RONALDO,"You understand branding, Roy.",4
+L047,4,GARY,"Gary. Age eleven. Micah, thirteen. Roy, you supervise. Children need an adult.",12
+L048,4,ROY,They're going to need a fucking inquiry.,7
+L049,4,GARY,Just be impartial.,3
+L050,4,ROY,Fine. Bags down. Phones away.,5
+L051,5,ROY,Little Cris. What is the problem?,6
+L052,5,RONALDO,My manager did not pick me.,6
+L053,5,ROY,And did everybody else get a turn?,7
+L054,5,RONALDO,That is the problem.,4
+L055,5,ROY,"Well, at your age, everybody gets a go.",8
+L056,5,RONALDO,This is not elite performance.,5
+L057,5,ROY,No. It's a school. Gary's made you seven.,8
+L058,5,PEP,The room is too narrow. We need width.,8
+L059,5,ROY,Pep. Leave the fucking furniture alone.,6
+L060,5,MICAH,Can I do the whistle?,5
+L061,5,ROY,No.,1
+L062,5,GARY,"Roy, we're trying to settle their complaints.",7
+L063,5,ROY,I have. He has to share. He has to stop touching things. You need to stop selling justice out of a stationery cupboard.,23
+L064,5,RONALDO,I demand an adult hearing.,5
+L065,5,GARY,You can't. We banned adults.,5
+L066,5,PEP,Except the one who is enjoying himself.,7
+L067,6,PEP,Gary. We are all under fourteen?,6
+L068,6,GARY,For the purposes of the hearing.,6
+L069,6,PEP,Then why have we paid?,5
+L070,6,GARY,That's a different definition of child.,6
+L071,6,ROY,Ah. The expensive kind.,4
+L072,6,MICAH,It's given all the money back.,6
+L073,6,GARY,Why did you tick the box?,6
+L074,6,MICAH,You told me they were children.,6
+L075,6,GARY,Emotionally! For atmosphere!,3
+L076,6,RONALDO,I would also like compensation for being called Little Cris.,10
+L077,6,ROY,You asked for the badge.,5
+L078,6,RONALDO,I paid to be a brand. You've made me a fucking lunchbox.,12
+L079,6,PEP,You changed the rules to win. You forgot the rules also apply to you.,14
+L080,6,GARY,"Nobody asked for a TED Talk, Pep.",7
+L081,6,PEP,You sent a hundred and fifteen questions.,7
+L082,7,ROY,Gary. On the bench. Five minutes for being a little prick.,11
+L083,7,GARY,I'm the host.,3
+L084,7,ROY,You're eleven. Sit down.,4
+L085,7,RONALDO,Sometimes you must respect the manager's decision.,7
+L086,7,MICAH,So who pays for all this printing?,7
+L087,7,GARY,The sponsor.,2
+L088,7,MICAH,There isn't a sponsor.,4
+L089,7,GARY,I put one on the form.,6
+L090,7,ROY,Lovely. An independent decision.,4
+L091,7,GARY,I appeal.,2
+L092,7,PEP,On what grounds?,3
+L093,7,GARY,This entire fucking room.,4

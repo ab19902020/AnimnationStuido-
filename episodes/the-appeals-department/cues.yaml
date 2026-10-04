@@ -1,0 +1,22 @@
+# Sound cues, each placed against a beat: at = beat id (a line or a stage direction), from = start | end of that
+# beat, offset = seconds from there (negative = before). The whistle is deliberately never played (D5.2).
+# room_tone: quiet studio ambience under everything; it is cut dead at the final switch-click.
+room_tone: {gain_db: -43, cut_at: D7.4, cut_from: end, cut_offset: -0.62}
+cues:
+  - {at: D1.2, from: end,   offset: -1.0,  sfx: door_squeak,        gain_db: -14}
+  - {at: D2.1, from: start, offset: 0.7,   sfx: card_tap,           gain_db: -10}
+  - {at: D2.2, from: start, offset: 0.9,   sfx: printer_feed,       gain_db: -16}
+  - {at: D2.3, from: start, offset: 0.2,   sfx: door_squeak,        gain_db: -16}
+  - {at: D2.3, from: start, offset: 0.9,   sfx: wheel_roll,         gain_db: -14}
+  - {at: D3.1, from: start, offset: 1.0,   sfx: shoe_squeak,        gain_db: -14}
+  - {at: D3.2, from: start, offset: 0.4,   sfx: card_tap,           gain_db: -10}
+  - {at: D4.1, from: start, offset: 0.3,   sfx: curtain_rings,      gain_db: -13}
+  - {at: D4.2, from: start, offset: 0.7,   sfx: switch_click,       gain_db: -13}
+  - {at: D4.3, from: end,   offset: -0.3,  sfx: clipboard_thump,    gain_db: -9}
+  - {at: D5.1, from: start, offset: 0.4,   sfx: chair_scrape,       gain_db: -15}
+  - {at: D6.2, from: start, offset: 0.7,   sfx: chime,              gain_db: -9}
+  - {at: D6.3, from: start, offset: 1.1,   sfx: paper_spill,        gain_db: -11}
+  - {at: D6.4, from: start, offset: 0.5,   sfx: thump,              gain_db: -8}
+  - {at: D7.1, from: start, offset: 0.9,   sfx: soft_thump,         gain_db: -10}
+  - {at: D7.4, from: start, offset: 0.4,   sfx: printer_feed_short, gain_db: -16}
+  - {at: D7.4, from: end,   offset: -0.6,  sfx: switch_click,       gain_db: -7}

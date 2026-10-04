@@ -1,0 +1,54 @@
+# The camera, after the director's shot plan (pack/Claude_Director_Note.md, S01-S31). Cameras live in the
+# plate's pixels: a view is (centre x, centre y, width); the height follows at 16:9.
+#   wide              the whole room
+#   single:WHO        a medium single of one actor (follows them); two:A+B a two-shot (two:A+B)
+#   pan               a move from one view to another over the shot
+# A shot starts at beat `from` and runs to the next shot's `from`. Beats with no shot get a single of whoever speaks
+# (a wide for stage directions). `push` slowly closes in on the shot by that fraction.
+shots:
+  - {from: D1.1, cam: pan, views: [[400, 650, 760], [880, 575, 1100]]}                    # S01 starts on Gary mid-pitch, tracks across the set to the sign
+  - {from: L002, cam: single:ROY}                                                          # S02
+  - {from: L003, cam: two:GARY+MICAH}                                                      # S03
+  - {from: L006, cam: single:ROY}                                                          # S04
+  - {from: D1.2, cam: wide}                                                                # the reader; the door squeaks (S05)
+  - {from: L009, cam: single:PEP}
+  - {from: D1.3, cam: two:GARY+MICAH}                                                      # the look of commercial understanding
+  - {from: D2.1, cam: two:GARY+PEP}                                                        # S06
+  - {from: L016, cam: single:MICAH}                                                        # S08
+  - {from: D2.2, cam: wide}                                                                # S10: the strip across the floor; Roy steps over
+  - {from: D2.3, cam: pan, views: [[900, 700, 1000], [1380, 690, 900]]}                    # S11: along the floor to the door; Ronaldo
+  - {from: L027, cam: wide}                                                                # S12
+  - {from: D3.1, cam: two:RONALDO+ROY}                                                     # S13: the almost-sit and the recoil
+  - {from: D3.2, cam: two:GARY+PEP}                                                        # S14: the second tap
+  - {from: D3.3, cam: two:RONALDO+MICAH}
+  - {from: L035, cam: single:GARY, push: 0.07}                                             # S16: the loophole
+  - {from: D3.4, cam: single:GARY}                                                         # the sign flips
+  - {from: D4.1, cam: pan, views: [[760, 560, 1300], [1250, 620, 1000]]}                    # S17: the curtain track
+  - {from: D4.2, cam: two:MICAH+RONALDO}                                                   # S18
+  - {from: D4.3, cam: wide}                                                                # S19
+  - {from: L051, cam: two:ROY+RONALDO}                                                     # S20
+  - {from: L057, cam: single:ROY}
+  - {from: D5.1, cam: wide}                                                                # S21: Pep moving chairs behind them
+  - {from: L060, cam: single:MICAH}                                                        # S22
+  - {from: D5.2, cam: single:MICAH}
+  - {from: D5.3, cam: single:ROY}                                                          # S24
+  - {from: D6.1, cam: pan, views: [[600, 640, 720], [860, 390, 640]]}                      # S25: Pep's eye-line to the fee sign
+  - {from: L067, cam: single:PEP, push: 0.05}
+  - {from: D6.2, cam: single:GARY, push: 0.08}                                             # S26: the chime, Gary freezes
+  - {from: D6.3, cam: wide}                                                                # S27: the forms fall
+  - {from: L079, cam: single:PEP}
+  - {from: D6.4, cam: wide}                                                                # S28: the bench in the middle
+  - {from: D7.1, cam: two:GARY+RONALDO}                                                    # S29
+  - {from: D7.2, cam: single:ROY}                                                          # Roy's look
+  - {from: D7.3, cam: two:GARY+MICAH}                                                      # S30
+  - {from: D7.4, cam: pan, views: [[900, 650, 1000], [836, 470, 1672]]}                    # S31: out to the opening composition
+
+inserts:                          # full-frame cards over the shot, held long enough to read
+  - {card: reader_register, at: D2.1, from: start, off: 0.2, dur: 1.0}
+  - {card: reader_total,    at: D2.1, from: start, off: 1.2, dur: 1.7}
+  - {card: reader_plus,     at: D3.2, from: start, off: 0.5, dur: 1.5}
+  - {card: scoreboard,      at: L031, from: start, off: 0.0, dur: 2.4}
+  - {card: notice_private,  at: D3.4, from: start, off: 0.6, dur: 1.4}
+  - {card: badge_cris,      at: D4.2, from: start, off: 0.3, dur: 1.6}
+  - {card: refund,          at: D6.2, from: start, off: 0.9, dur: 1.9}
+  - {card: sponsor,         at: D7.3, from: start, off: 0.2, dur: 1.7}

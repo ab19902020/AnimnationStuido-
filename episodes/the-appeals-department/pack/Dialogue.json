@@ -1,0 +1,716 @@
+{
+  "episode": "The Appeals Department",
+  "word_count": 625,
+  "guide_runtime_seconds": 333.94,
+  "scenes": [
+    {
+      "scene": 1,
+      "title": "A GAP IN THE MARKET",
+      "start_seconds": 0.0,
+      "end_seconds": 49.71,
+      "words": 100,
+      "visual_and_reaction_allowance_seconds": 11
+    },
+    {
+      "scene": 2,
+      "title": "THE CUSTOMER IS ALWAYS PAYING",
+      "start_seconds": 49.71,
+      "end_seconds": 90.19,
+      "words": 71,
+      "visual_and_reaction_allowance_seconds": 13
+    },
+    {
+      "scene": 3,
+      "title": "A BENCH WITH A CASE TO ANSWER",
+      "start_seconds": 90.19,
+      "end_seconds": 152.42,
+      "words": 122,
+      "visual_and_reaction_allowance_seconds": 15
+    },
+    {
+      "scene": 4,
+      "title": "GROWN MEN, JUNIOR TERMS",
+      "start_seconds": 152.42,
+      "end_seconds": 188.03,
+      "words": 61,
+      "visual_and_reaction_allowance_seconds": 12
+    },
+    {
+      "scene": 5,
+      "title": "ROY TAKES THE REGISTER",
+      "start_seconds": 188.03,
+      "end_seconds": 242.0,
+      "words": 111,
+      "visual_and_reaction_allowance_seconds": 11
+    },
+    {
+      "scene": 6,
+      "title": "THE SMALL PRINT COMES HOME",
+      "start_seconds": 242.0,
+      "end_seconds": 295.87,
+      "words": 103,
+      "visual_and_reaction_allowance_seconds": 14
+    },
+    {
+      "scene": 7,
+      "title": "A RARE SENSIBLE BENCHING",
+      "start_seconds": 295.87,
+      "end_seconds": 333.94,
+      "words": 57,
+      "visual_and_reaction_allowance_seconds": 16
+    }
+  ],
+  "lines": [
+    {
+      "id": "L001",
+      "scene": 1,
+      "character": "GARY",
+      "text": "City's charges saga has delivered a ruling, they're appealing, and I've spotted a gap in the market.",
+      "words": 17
+    },
+    {
+      "id": "L002",
+      "scene": 1,
+      "character": "ROY",
+      "text": "A football match?",
+      "words": 3
+    },
+    {
+      "id": "L003",
+      "scene": 1,
+      "character": "GARY",
+      "text": "An appeals service. Managers, players, anyone. Nineteen ninety-nine and we'll hear your complaint.",
+      "words": 13
+    },
+    {
+      "id": "L004",
+      "scene": 1,
+      "character": "MICAH",
+      "text": "Guaranteed result?",
+      "words": 2
+    },
+    {
+      "id": "L005",
+      "scene": 1,
+      "character": "GARY",
+      "text": "Guaranteed to hear it. It's on the sign.",
+      "words": 8
+    },
+    {
+      "id": "L006",
+      "scene": 1,
+      "character": "ROY",
+      "text": "So you've invented a Post Office where the bloke behind the glass is also the problem.",
+      "words": 16
+    },
+    {
+      "id": "L007",
+      "scene": 1,
+      "character": "GARY",
+      "text": "Under-fourteens go free. Shows we're a community business.",
+      "words": 8
+    },
+    {
+      "id": "L008",
+      "scene": 1,
+      "character": "ROY",
+      "text": "You couldn't get a card reader to work on a toddler.",
+      "words": 11
+    },
+    {
+      "id": "L009",
+      "scene": 1,
+      "character": "PEP",
+      "text": "You sent me a hundred and fifteen questions for a five-minute interview.",
+      "words": 12
+    },
+    {
+      "id": "L010",
+      "scene": 1,
+      "character": "GARY",
+      "text": "And you object to all of them?",
+      "words": 7
+    },
+    {
+      "id": "L011",
+      "scene": 1,
+      "character": "PEP",
+      "text": "All of them.",
+      "words": 3
+    },
+    {
+      "id": "L012",
+      "scene": 2,
+      "character": "PEP",
+      "text": "Why have you charged me two thousand pounds?",
+      "words": 8
+    },
+    {
+      "id": "L013",
+      "scene": 2,
+      "character": "GARY",
+      "text": "Two thousand two hundred and ninety-eight, eighty-five. It's important we get the finances right.",
+      "words": 14
+    },
+    {
+      "id": "L014",
+      "scene": 2,
+      "character": "ROY",
+      "text": "You've made a mugging look like a seminar.",
+      "words": 8
+    },
+    {
+      "id": "L015",
+      "scene": 2,
+      "character": "PEP",
+      "text": "I want to appeal that.",
+      "words": 5
+    },
+    {
+      "id": "L016",
+      "scene": 2,
+      "character": "MICAH",
+      "text": "Shall I put it through again?",
+      "words": 6
+    },
+    {
+      "id": "L017",
+      "scene": 2,
+      "character": "PEP",
+      "text": "Do not put it through again.",
+      "words": 6
+    },
+    {
+      "id": "L018",
+      "scene": 2,
+      "character": "GARY",
+      "text": "First, tell us your grounds.",
+      "words": 5
+    },
+    {
+      "id": "L019",
+      "scene": 2,
+      "character": "PEP",
+      "text": "This entire fucking room.",
+      "words": 4
+    },
+    {
+      "id": "L020",
+      "scene": 2,
+      "character": "ROY",
+      "text": "Are we getting tea at any point?",
+      "words": 7
+    },
+    {
+      "id": "L021",
+      "scene": 2,
+      "character": "GARY",
+      "text": "Tea's a separate department.",
+      "words": 4
+    },
+    {
+      "id": "L022",
+      "scene": 2,
+      "character": "ROY",
+      "text": "Of course it is.",
+      "words": 4
+    },
+    {
+      "id": "L023",
+      "scene": 3,
+      "character": "RONALDO",
+      "text": "I want to report a bench.",
+      "words": 6
+    },
+    {
+      "id": "L024",
+      "scene": 3,
+      "character": "MICAH",
+      "text": "The one in Portugal?",
+      "words": 4
+    },
+    {
+      "id": "L025",
+      "scene": 3,
+      "character": "RONALDO",
+      "text": "There has been disrespect.",
+      "words": 4
+    },
+    {
+      "id": "L026",
+      "scene": 3,
+      "character": "ROY",
+      "text": "Did it have another man's arse on it?",
+      "words": 8
+    },
+    {
+      "id": "L027",
+      "scene": 3,
+      "character": "GARY",
+      "text": "Cristiano, you've left the camp. Tell us what happened. Take a seat.",
+      "words": 12
+    },
+    {
+      "id": "L028",
+      "scene": 3,
+      "character": "RONALDO",
+      "text": "That is how it starts.",
+      "words": 5
+    },
+    {
+      "id": "L029",
+      "scene": 3,
+      "character": "GARY",
+      "text": "Fine. Standing complaint. Same price.",
+      "words": 5
+    },
+    {
+      "id": "L030",
+      "scene": 3,
+      "character": "RONALDO",
+      "text": "I want a private hearing. Nobody needs to see me bothered. Put the camera a little higher.",
+      "words": 17
+    },
+    {
+      "id": "L031",
+      "scene": 3,
+      "character": "MICAH",
+      "text": "England put seven past Croatia. You seen it?",
+      "words": 8
+    },
+    {
+      "id": "L032",
+      "scene": 3,
+      "character": "RONALDO",
+      "text": "Seven goals. My number. Not even a thank-you.",
+      "words": 8
+    },
+    {
+      "id": "L033",
+      "scene": 3,
+      "character": "ROY",
+      "text": "They were busy playing football.",
+      "words": 5
+    },
+    {
+      "id": "L034",
+      "scene": 3,
+      "character": "MICAH",
+      "text": "It was meant to be behind closed doors, but they let thousands of schoolkids in.",
+      "words": 15
+    },
+    {
+      "id": "L035",
+      "scene": 3,
+      "character": "GARY",
+      "text": "Hang on. Closed doors, but children can still come in?",
+      "words": 10
+    },
+    {
+      "id": "L036",
+      "scene": 3,
+      "character": "ROY",
+      "text": "At a football match.",
+      "words": 4
+    },
+    {
+      "id": "L037",
+      "scene": 3,
+      "character": "GARY",
+      "text": "Same principle. A private junior hearing. Fresh, uncorrupted opinions.",
+      "words": 9
+    },
+    {
+      "id": "L038",
+      "scene": 3,
+      "character": "ROY",
+      "text": "In here?",
+      "words": 2
+    },
+    {
+      "id": "L039",
+      "scene": 4,
+      "character": "GARY",
+      "text": "Under-fourteens only. Micah, make the passes.",
+      "words": 6
+    },
+    {
+      "id": "L040",
+      "scene": 4,
+      "character": "MICAH",
+      "text": "Pep. Age thirteen.",
+      "words": 3
+    },
+    {
+      "id": "L041",
+      "scene": 4,
+      "character": "PEP",
+      "text": "Why thirteen?",
+      "words": 2
+    },
+    {
+      "id": "L042",
+      "scene": 4,
+      "character": "GARY",
+      "text": "Because fourteen's full price.",
+      "words": 4
+    },
+    {
+      "id": "L043",
+      "scene": 4,
+      "character": "MICAH",
+      "text": "Cristiano. Age twelve.",
+      "words": 3
+    },
+    {
+      "id": "L044",
+      "scene": 4,
+      "character": "RONALDO",
+      "text": "Twelve? Make it seven.",
+      "words": 4
+    },
+    {
+      "id": "L045",
+      "scene": 4,
+      "character": "ROY",
+      "text": "That's not an age. It's your shirt number.",
+      "words": 8
+    },
+    {
+      "id": "L046",
+      "scene": 4,
+      "character": "RONALDO",
+      "text": "You understand branding, Roy.",
+      "words": 4
+    },
+    {
+      "id": "L047",
+      "scene": 4,
+      "character": "GARY",
+      "text": "Gary. Age eleven. Micah, thirteen. Roy, you supervise. Children need an adult.",
+      "words": 12
+    },
+    {
+      "id": "L048",
+      "scene": 4,
+      "character": "ROY",
+      "text": "They're going to need a fucking inquiry.",
+      "words": 7
+    },
+    {
+      "id": "L049",
+      "scene": 4,
+      "character": "GARY",
+      "text": "Just be impartial.",
+      "words": 3
+    },
+    {
+      "id": "L050",
+      "scene": 4,
+      "character": "ROY",
+      "text": "Fine. Bags down. Phones away.",
+      "words": 5
+    },
+    {
+      "id": "L051",
+      "scene": 5,
+      "character": "ROY",
+      "text": "Little Cris. What is the problem?",
+      "words": 6
+    },
+    {
+      "id": "L052",
+      "scene": 5,
+      "character": "RONALDO",
+      "text": "My manager did not pick me.",
+      "words": 6
+    },
+    {
+      "id": "L053",
+      "scene": 5,
+      "character": "ROY",
+      "text": "And did everybody else get a turn?",
+      "words": 7
+    },
+    {
+      "id": "L054",
+      "scene": 5,
+      "character": "RONALDO",
+      "text": "That is the problem.",
+      "words": 4
+    },
+    {
+      "id": "L055",
+      "scene": 5,
+      "character": "ROY",
+      "text": "Well, at your age, everybody gets a go.",
+      "words": 8
+    },
+    {
+      "id": "L056",
+      "scene": 5,
+      "character": "RONALDO",
+      "text": "This is not elite performance.",
+      "words": 5
+    },
+    {
+      "id": "L057",
+      "scene": 5,
+      "character": "ROY",
+      "text": "No. It's a school. Gary's made you seven.",
+      "words": 8
+    },
+    {
+      "id": "L058",
+      "scene": 5,
+      "character": "PEP",
+      "text": "The room is too narrow. We need width.",
+      "words": 8
+    },
+    {
+      "id": "L059",
+      "scene": 5,
+      "character": "ROY",
+      "text": "Pep. Leave the fucking furniture alone.",
+      "words": 6
+    },
+    {
+      "id": "L060",
+      "scene": 5,
+      "character": "MICAH",
+      "text": "Can I do the whistle?",
+      "words": 5
+    },
+    {
+      "id": "L061",
+      "scene": 5,
+      "character": "ROY",
+      "text": "No.",
+      "words": 1
+    },
+    {
+      "id": "L062",
+      "scene": 5,
+      "character": "GARY",
+      "text": "Roy, we're trying to settle their complaints.",
+      "words": 7
+    },
+    {
+      "id": "L063",
+      "scene": 5,
+      "character": "ROY",
+      "text": "I have. He has to share. He has to stop touching things. You need to stop selling justice out of a stationery cupboard.",
+      "words": 23
+    },
+    {
+      "id": "L064",
+      "scene": 5,
+      "character": "RONALDO",
+      "text": "I demand an adult hearing.",
+      "words": 5
+    },
+    {
+      "id": "L065",
+      "scene": 5,
+      "character": "GARY",
+      "text": "You can't. We banned adults.",
+      "words": 5
+    },
+    {
+      "id": "L066",
+      "scene": 5,
+      "character": "PEP",
+      "text": "Except the one who is enjoying himself.",
+      "words": 7
+    },
+    {
+      "id": "L067",
+      "scene": 6,
+      "character": "PEP",
+      "text": "Gary. We are all under fourteen?",
+      "words": 6
+    },
+    {
+      "id": "L068",
+      "scene": 6,
+      "character": "GARY",
+      "text": "For the purposes of the hearing.",
+      "words": 6
+    },
+    {
+      "id": "L069",
+      "scene": 6,
+      "character": "PEP",
+      "text": "Then why have we paid?",
+      "words": 5
+    },
+    {
+      "id": "L070",
+      "scene": 6,
+      "character": "GARY",
+      "text": "That's a different definition of child.",
+      "words": 6
+    },
+    {
+      "id": "L071",
+      "scene": 6,
+      "character": "ROY",
+      "text": "Ah. The expensive kind.",
+      "words": 4
+    },
+    {
+      "id": "L072",
+      "scene": 6,
+      "character": "MICAH",
+      "text": "It's given all the money back.",
+      "words": 6
+    },
+    {
+      "id": "L073",
+      "scene": 6,
+      "character": "GARY",
+      "text": "Why did you tick the box?",
+      "words": 6
+    },
+    {
+      "id": "L074",
+      "scene": 6,
+      "character": "MICAH",
+      "text": "You told me they were children.",
+      "words": 6
+    },
+    {
+      "id": "L075",
+      "scene": 6,
+      "character": "GARY",
+      "text": "Emotionally! For atmosphere!",
+      "words": 3
+    },
+    {
+      "id": "L076",
+      "scene": 6,
+      "character": "RONALDO",
+      "text": "I would also like compensation for being called Little Cris.",
+      "words": 10
+    },
+    {
+      "id": "L077",
+      "scene": 6,
+      "character": "ROY",
+      "text": "You asked for the badge.",
+      "words": 5
+    },
+    {
+      "id": "L078",
+      "scene": 6,
+      "character": "RONALDO",
+      "text": "I paid to be a brand. You've made me a fucking lunchbox.",
+      "words": 12
+    },
+    {
+      "id": "L079",
+      "scene": 6,
+      "character": "PEP",
+      "text": "You changed the rules to win. You forgot the rules also apply to you.",
+      "words": 14
+    },
+    {
+      "id": "L080",
+      "scene": 6,
+      "character": "GARY",
+      "text": "Nobody asked for a TED Talk, Pep.",
+      "words": 7
+    },
+    {
+      "id": "L081",
+      "scene": 6,
+      "character": "PEP",
+      "text": "You sent a hundred and fifteen questions.",
+      "words": 7
+    },
+    {
+      "id": "L082",
+      "scene": 7,
+      "character": "ROY",
+      "text": "Gary. On the bench. Five minutes for being a little prick.",
+      "words": 11
+    },
+    {
+      "id": "L083",
+      "scene": 7,
+      "character": "GARY",
+      "text": "I'm the host.",
+      "words": 3
+    },
+    {
+      "id": "L084",
+      "scene": 7,
+      "character": "ROY",
+      "text": "You're eleven. Sit down.",
+      "words": 4
+    },
+    {
+      "id": "L085",
+      "scene": 7,
+      "character": "RONALDO",
+      "text": "Sometimes you must respect the manager's decision.",
+      "words": 7
+    },
+    {
+      "id": "L086",
+      "scene": 7,
+      "character": "MICAH",
+      "text": "So who pays for all this printing?",
+      "words": 7
+    },
+    {
+      "id": "L087",
+      "scene": 7,
+      "character": "GARY",
+      "text": "The sponsor.",
+      "words": 2
+    },
+    {
+      "id": "L088",
+      "scene": 7,
+      "character": "MICAH",
+      "text": "There isn't a sponsor.",
+      "words": 4
+    },
+    {
+      "id": "L089",
+      "scene": 7,
+      "character": "GARY",
+      "text": "I put one on the form.",
+      "words": 6
+    },
+    {
+      "id": "L090",
+      "scene": 7,
+      "character": "ROY",
+      "text": "Lovely. An independent decision.",
+      "words": 4
+    },
+    {
+      "id": "L091",
+      "scene": 7,
+      "character": "GARY",
+      "text": "I appeal.",
+      "words": 2
+    },
+    {
+      "id": "L092",
+      "scene": 7,
+      "character": "PEP",
+      "text": "On what grounds?",
+      "words": 3
+    },
+    {
+      "id": "L093",
+      "scene": 7,
+      "character": "GARY",
+      "text": "This entire fucking room.",
+      "words": 4
+    }
+  ]
+}
