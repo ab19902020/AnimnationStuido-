@@ -1,0 +1,143 @@
+# Older finished 'Stick to Football' party artwork (disco floor, managers' conga, 'Gary, pass the microphone' promos).
+# Reference only: composed pictures, not animation assets. Use them for the look, the staging and who stands where.
+# Numbers in a file name (18306 ...) are the original image numbers.
+gary-pass-the-mic/gary-pass-the-microphone-1:
+  title: 'Gary Pass: The Microphone!(1)'
+  size: [1254, 1254]
+  orientation: portrait
+  source: 'Gary Pass: The Microphone!(1).png'
+gary-pass-the-mic/gary-pass-the-microphone:
+  title: 'Gary Pass: The Microphone!'
+  size: [1672, 941]
+  orientation: landscape
+  source: 'Gary Pass: The Microphone!.png'
+gary-pass-the-mic/gary-passes-the-mic-in-neon:
+  title: Gary Passes the Mic in Neon
+  size: [1672, 941]
+  orientation: landscape
+  source: Gary Passes the Mic in Neon.png
+gary-pass-the-mic/gary-passes-the-mic-in-studio-mayhem:
+  title: Gary Passes the Mic in Studio Mayhem
+  size: [1672, 941]
+  orientation: landscape
+  source: Gary Passes the Mic in Studio Mayhem.png
+gary-pass-the-mic/gary-passes-the-microphone:
+  title: Gary Passes the Microphone
+  size: [1672, 941]
+  orientation: landscape
+  source: Gary Passes the Microphone.png
+gary-pass-the-mic/pundits-pass-the-mic-karaoke-chaos:
+  title: 'Pundits Pass the Mic: Karaoke Chaos'
+  size: [1672, 941]
+  orientation: landscape
+  source: 'Pundits Pass the Mic: Karaoke Chaos.png'
+managers-party/david-moyes-joins-the-neon-manager-party:
+  title: David Moyes Joins the Neon Manager Party
+  size: [1672, 941]
+  orientation: landscape
+  source: David Moyes Joins the Neon Manager Party.png
+managers-party/football-managers-neon-dance-lineup:
+  title: Football managers' neon dance lineup
+  size: [1672, 941]
+  orientation: landscape
+  source: Football managers' neon dance lineup.png
+managers-party/managers-conga-line-title-18346:
+  title: 18346(1)
+  size: [1536, 864]
+  orientation: landscape
+  source: 18346(1).png
+managers-party/managers-football-dance-party:
+  title: Managers' Football Dance Party
+  size: [1672, 941]
+  orientation: landscape
+  source: Managers' Football Dance Party.png
+managers-party/managers-party-18348:
+  title: 18348(1)
+  size: [1536, 864]
+  orientation: landscape
+  source: 18348(1).png
+managers-party/managers-party-18349:
+  title: 18349(1)
+  size: [1536, 864]
+  orientation: landscape
+  source: 18349(1).png
+managers-party/manchester-united-managers-disco-chaos-montage:
+  title: Manchester United Managers' Disco Chaos
+  size: [1672, 941]
+  orientation: landscape
+  source: Manchester United Managers' Disco Chaos.png
+managers-party/manchester-united-managers-disco-party:
+  title: Manchester United Managers’ Disco Party
+  size: [1672, 941]
+  orientation: landscape
+  source: Manchester United Managers’ Disco Party.png
+managers-party/moyes-joins-the-neon-manager-party:
+  title: Moyes joins the neon manager party
+  size: [1672, 941]
+  orientation: landscape
+  source: Moyes joins the neon manager party.png
+managers-party/moyes-leads-the-neon-manager-conga:
+  title: Moyes leads the neon manager conga
+  size: [1672, 941]
+  orientation: landscape
+  source: Moyes leads the neon manager conga.png
+managers-party/neon-football-banter-dancefloor:
+  title: Neon Football Banter Dancefloor
+  size: [1672, 941]
+  orientation: landscape
+  source: Neon Football Banter Dancefloor.png
+managers-party/neon-manager-party-with-david-moyes:
+  title: Neon manager party with David Moyes
+  size: [1672, 941]
+  orientation: landscape
+  source: Neon manager party with David Moyes.png
+managers-party/nine-football-managers-in-a-neon-nightclub:
+  title: Nine football managers in a neon nightclub
+  size: [1672, 941]
+  orientation: landscape
+  source: Nine football managers in a neon nightclub.png
+managers-party/ole-joins-the-seven-manager-conga-line:
+  title: Ole joins the seven-manager conga line
+  size: [1672, 941]
+  orientation: landscape
+  source: Ole joins the seven-manager conga line.png
+managers-party/stick-to-football-managers-conga:
+  title: Stick to Football Managers’ Conga
+  size: [1672, 941]
+  orientation: landscape
+  source: Stick to Football Managers’ Conga.png
+managers-party/stick-to-football-managers-night-out:
+  title: 'Stick to Football: Managers’ Night Out'
+  size: [1672, 941]
+  orientation: landscape
+  source: 'Stick to Football: Managers’ Night Out.png'
+managers-party/stick-to-football-same-managers-same-chaos:
+  title: 'Stick to Football: Same Managers, Same Chaos'
+  size: [1672, 941]
+  orientation: landscape
+  source: 'Stick to Football: Same Managers, Same Chaos.png'
+managers-party/stick-to-football-what-a-night-montage:
+  title: 'Stick to Football: What a Night'
+  size: [1672, 941]
+  orientation: landscape
+  source: 'Stick to Football: What a Night.png'
+trio-dance/original-trio-dance-reference-1:
+  title: Stick to Football original trio dance reference 1
+  size: [1820, 1024]
+  orientation: landscape
+  source: file_00000000103081f5aa8655aff12a9321_edit_137321515626521.png
+trio-dance/original-trio-dance-reference-2:
+  title: Stick to Football original trio dance reference 2
+  size: [2048, 1152]
+  orientation: landscape
+  source: file_00000000ef508210bd8788e4fa21fe4f_edit_137282355582421.png
+trio-dance/trio-dance-disco-floor-18306:
+  title: 18306(1)
+  size: [1536, 864]
+  orientation: landscape
+  source: 18306(1).png
+trio-dance/trio-dance-disney-logo-18307:
+  title: 18307(1)
+  size: [1536, 864]
+  orientation: landscape
+  source: 18307(1).png
