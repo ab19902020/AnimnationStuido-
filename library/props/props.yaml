@@ -1,0 +1,72 @@
+# Props. id = <set folder>/<file name>; the picture is props/<id>.png (transparent, cut out of its sheet).
+# The uncut sheets are kept in each set's source/ folder; cut_from and sheet_box say where each prop was cut.
+lunch/football:
+  title: Football
+  size: [296, 291]
+  cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
+  sheet_box: [21, 851, 317, 1142]
+lunch/fork:
+  title: Fork
+  size: [62, 370]
+  cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
+  sheet_box: [481, 418, 543, 788]
+lunch/glass-water:
+  title: Glass of water
+  size: [179, 253]
+  cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
+  sheet_box: [734, 110, 905, 355]
+lunch/hand-with-fork-evra:
+  title: Dark-skinned hand in a red United sleeve holding a fork with a piece of chicken (Evra)
+  size: [329, 418]
+  cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
+  sheet_box: [12, 1165, 341, 1583]
+lunch/hand-with-fork-ronaldo:
+  title: Light-skinned hand in a red United sleeve holding a fork with a piece of chicken (Ronaldo)
+  size: [336, 419]
+  cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
+  sheet_box: [330, 1164, 666, 1583]
+lunch/knife:
+  title: Table knife
+  size: [57, 379]
+  cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
+  sheet_box: [767, 409, 824, 788]
+lunch/plate-chicken-salad:
+  title: Plate of sliced chicken and salad
+  size: [331, 224]
+  cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
+  sheet_box: [13, 125, 344, 349]
+lunch/plate-empty:
+  title: Empty white plate
+  size: [336, 224]
+  cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
+  sheet_box: [357, 125, 693, 349]
+lunch/sauna-bucket:
+  title: Wooden sauna bucket with ladle
+  size: [302, 262]
+  cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
+  sheet_box: [636, 880, 938, 1142]
+lunch/towel-folded:
+  title: Folded white towel
+  size: [317, 221]
+  cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
+  sheet_box: [331, 905, 648, 1126]
+lunch/water-drop-large:
+  title: Water drop, large
+  size: [68, 138]
+  cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
+  sheet_box: [750, 1255, 818, 1393]
+lunch/water-drop-medium:
+  title: Water drop, medium
+  size: [51, 102]
+  cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
+  sheet_box: [780, 1418, 831, 1520]
+lunch/water-drop-small:
+  title: Water drop, small
+  size: [47, 91]
+  cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
+  sheet_box: [841, 1349, 888, 1440]
+lunch/water-jug:
+  title: Glass water jug
+  size: [294, 369]
+  cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
+  sheet_box: [65, 420, 351, 781]

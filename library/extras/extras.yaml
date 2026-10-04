@@ -1,0 +1,9 @@
+# Background cast (crowds, crew), not named characters. kind: sheet = a reference/atlas sheet that still needs cutting into parts.
+concert-crowd-and-crew:
+  title: Concert extras character and pose sheet
+  size: [941, 1672]
+  orientation: portrait
+  source: image-gen-3.png
+  kind: sheet
+  contains: 'Background cast for the arena concert: fans (with phones, cheering), security guard, backstage crew,
+    camera operator, MC, DJ, couples; head expressions, phone and crowd gestures, crew actions, extra crowd poses'

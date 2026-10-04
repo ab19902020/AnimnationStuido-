@@ -22,13 +22,19 @@ named and checked). Next: the puppet rigs, the shared mouth/eye library, the voi
 
 | Folder | What's in it |
 |---|---|
-| `library/characters/<id>/` | `character.yaml` (name, height, outfits) and `kit/<outfit>/<view>.png` (the kit sheets as uploaded), each with a `<view>.yaml` saying which drawing is which part |
-| `library/backgrounds/`, `library/sfx/`, `library/music/`, `library/fonts/` | sets, sound effects, music, fonts |
-| `episodes/<slug>/` | one folder per episode: your directive, the voiceovers, the production script, the finished video |
+| `library/INDEX.md` | **start here to find anything**: every character, background, prop and clip (generated). `library/README.md` explains how the library is organised and named |
+| `library/characters/<id>/` | `character.yaml` (name, height, outfits, reference sheets), `kit/<outfit>/<view>.png` (the kit sheets as uploaded), each with a `<view>.yaml` saying which drawing is which part, and `reference/` (model sheets, outfit line-ups, expression and pose sheets). The id is the full name in kebab-case |
+| `library/backgrounds/<setting>/` | empty sets by setting (stadiums, training-ground, club, tv-and-media, home, spa-and-pool, pub-and-restaurant, nightlife, street, concert), indexed in `backgrounds.yaml` |
+| `library/props/<set>/`, `library/extras/` | cut-out props; background cast (crowds, crew) |
+| `library/audio/` | `voiceovers/<character id>/` (the voice bank), `sfx/`, `music/` |
+| `library/reference/`, `library/fonts/` | finished artwork kept for the look; fonts |
+| `episodes/<slug>/` | one folder per episode: your directive, the voiceovers (`voiceovers/`, named `01-<character id>.wav`), the production script, the finished video |
 | `studio/` | the engine |
-| `tools/` | importing kits, fetching models |
+| `tools/` | importing kits, fetching models, `index_library.py` (rebuilds the index and checks the library is tidy) |
 
 ## Characters
+
+Full list with ids, roles and what each has: `library/INDEX.md`.
 
 | Character | Outfit | Style |
 |---|---|---|
@@ -42,9 +48,15 @@ named and checked). Next: the puppet rigs, the shared mouth/eye library, the voi
 | Micah Richards | suit | house |
 | Alan Shearer | casual | house |
 | Gary Lineker | suit | house |
+| Rio Ferdinand | casual | house |
+| Cristiano Ronaldo | home | house |
+| Wayne Rooney | casual (young cartoon) | house |
 | Roy Keane | casual | stand-in (off-style; a dark-outline kit is coming) |
 | Gary Neville | casual | stand-in (off-style; a dark-outline kit is coming) |
 | Jamie Carragher | casual | stand-in (off-style; a dark-outline kit is coming) |
+
+In the library with reference art only, no puppet kit yet: Carlos Baleba, Youri Tielemans, Andrey Santos
+(front-view three-outfit atlases) and 50 Cent (model sheets).
 
 ## Adding characters
 

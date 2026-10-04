@@ -4,9 +4,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 LIBRARY = ROOT / "library"
 CHARACTERS = LIBRARY / "characters"
-BACKGROUNDS = LIBRARY / "backgrounds"
-SFX = LIBRARY / "sfx"
-MUSIC = LIBRARY / "music"
+BACKGROUNDS = LIBRARY / "backgrounds"     # <setting>/<name>.png, indexed in backgrounds.yaml
+PROPS = LIBRARY / "props"                 # <set>/<name>.png (cut out), indexed in props.yaml
+EXTRAS = LIBRARY / "extras"               # background cast: crowds, crew
+REFERENCE = LIBRARY / "reference"         # finished artwork kept for the look, not animation assets
+AUDIO = LIBRARY / "audio"
+VOICES = AUDIO / "voiceovers"             # <character id>/ : the voice bank (episode recordings live in the episode)
+SFX = AUDIO / "sfx"
+MUSIC = AUDIO / "music"
 FONTS = LIBRARY / "fonts"
 EPISODES = ROOT / "episodes"
 MODELS = ROOT / "models"
@@ -18,6 +23,10 @@ SHEETS = VIEWS + ("hands",)
 
 def character_dir(cid):
     return CHARACTERS / cid
+
+
+def voice_dir(cid):
+    return VOICES / cid
 
 
 def build_dir(*parts):

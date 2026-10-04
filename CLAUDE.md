@@ -14,8 +14,18 @@ timing.
   `style: provisional` in `character.yaml` are off-style stand-ins until their new kit arrives.
 - Kit sheets: every sheet has a `<view>.yaml` of part labels. After `label`, look at
   `build/ingest/<id>_charts.jpg`; fix mistakes with `python3 -m studio.ingest.kit swap ...` or by editing the YAML
-  (`split` lines for touching drawings, `erase` polygons for doubled noses), then `check` the sheet. Use
-  `python3 -m studio.qc.grid` to read sheet coordinates.
+  (`split` lines for touching drawings, `erase` polygons for doubled noses or title text), then `check` the sheet:
+  `kit check` takes ONE character (`check CHARACTER [VIEW ...]`); a second name is read as a view and nothing is
+  checked. Use `python3 -m studio.qc.grid` to read sheet coordinates.
+- Filing uploads: the library layout and naming are in `library/README.md`. Characters are `library/characters/<id>/`
+  (id = full name in kebab-case, e.g. `gary-neville`, so the two Garys never clash), other art for them goes in
+  `reference/` and is described in `character.yaml`. Voice recordings for an episode go in
+  `episodes/<slug>/voiceovers/` as `01-<character id>.wav`; reusable voice material in
+  `library/audio/voiceovers/<character id>/`. Unzip uploads to the scratchpad, compare sha256 with what is already
+  in the library (a re-delivered kit is usually byte-identical: don't duplicate it), and copy files byte for byte.
+- After adding anything to `library/`, run `python3 tools/index_library.py --check`: it rewrites
+  `library/INDEX.md` (commit it) and lists anything unfiled, undescribed or unchecked. Backgrounds must be landscape
+  16:9 to be used full-frame; the index marks portrait ones.
 - Paired parts are anatomical: `_R` is the character's own right. In right-facing views the near side is the
   character's right.
 - Keep the repo root clean: no loose uploads or scratch files (use the session scratchpad).
