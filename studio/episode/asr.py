@@ -38,9 +38,39 @@ def transcribe(path):
     return s.result.text.strip()
 
 
+ONES = ("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen "
+        "eighteen nineteen").split()
+TENS = "x x twenty thirty forty fifty sixty seventy eighty ninety".split()
+
+
+def spell(n):
+    """a whole number 0-9999 in words, the way it is said aloud: 2298 -> two thousand two hundred ninety eight"""
+    if n < 20:
+        return [ONES[n]]
+    if n < 100:
+        return [TENS[n // 10]] + ([ONES[n % 10]] if n % 10 else [])
+    if n < 1000:
+        return [ONES[n // 100], "hundred"] + (spell(n % 100) if n % 100 else [])
+    return spell(n // 1000) + ["thousand"] + (spell(n % 1000) if n % 1000 else [])
+
+
+def digits_to_words(text):
+    """numerals as words, so '115' and 'a hundred and fifteen' compare equal; four-digit numbers from 1100 to 2099 are
+    read as years (1999: nineteen ninety nine)"""
+    def one(m):
+        n = int(m.group(0).replace(",", ""))
+        if 1100 <= n <= 2099:
+            return " ".join(spell(n // 100) + (spell(n % 100) if n % 100 else ["hundred"]))
+        return " ".join(spell(n)) if n < 10000 else m.group(0)
+    return re.sub(r"\d[\d,]*", one, text)
+
+
 def words(text):
-    text = text.lower().replace("’", "'").replace("-", " ")
-    return re.sub(r"[^a-z0-9' ]+", " ", text).split()
+    text = text.lower().replace("\u2019", "'").replace("-", " ")
+    text = digits_to_words(text)
+    # "a hundred and fifteen" and "one hundred fifteen" are the same number: ignore the filler words
+    ws = [w for w in re.sub(r"[^a-z0-9' ]+", " ", text).split() if w not in ("and", "a")]
+    return [w for i, w in enumerate(ws) if not (w == "one" and i + 1 < len(ws) and ws[i + 1] in ("hundred", "thousand"))]
 
 
 def wer(ref, hyp):

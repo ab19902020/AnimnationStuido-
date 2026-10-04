@@ -75,7 +75,7 @@ def main():
         worst = []
         errs = []
         for l in lines:
-            seg = x[int(max(0, l["start"] - 0.05) * sr):int((l["end"] + 0.05) * sr)]
+            seg = x[int(l["start"] * sr):int(l["end"] * sr)]            # no padding: recognition invents repeats round very short takes
             with tempfile.NamedTemporaryFile(suffix=".wav") as f:
                 sf.write(f.name, seg, sr)
                 hyp = asr.transcribe(f.name)
