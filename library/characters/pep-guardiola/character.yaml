@@ -13,3 +13,6 @@ outfits:
     - three_quarter
     - side
     - hands
+reference:
+  parts-atlas.png: 'Older single-sheet parts atlas, from before the four-sheet kit. Reference only: the kit sheets
+    in kit/ are what the puppet is built from (2D puppet parts)'

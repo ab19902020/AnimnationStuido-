@@ -16,3 +16,8 @@ outfits:
     - three_quarter
     - side
     - hands
+reference:
+  model-sheet.png: 'Original model sheet: Manchester United #8 captain in the home kit; turnaround, head views,
+    expressions, mouth shapes, hand and body poses, walk and run cycles'
+  outfits.png: 'Full-body line-up of the three outfits: grey sweatshirt and joggers, red club tracksuit, home kit
+    with captain''s armband'

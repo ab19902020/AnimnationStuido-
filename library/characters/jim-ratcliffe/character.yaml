@@ -14,3 +14,8 @@ outfits:
     - three_quarter
     - side
     - hands
+reference:
+  model-sheet.png: 'Original model sheet (style 1, 2.5D animation): turnaround, facial expressions, mouth shapes,
+    extra poses'
+  outfits.png: 'Full-body line-up of the three outfits: dark suit and white shirt, green puffer jacket with maroon
+    scarf, black club jacket and tracksuit trousers'

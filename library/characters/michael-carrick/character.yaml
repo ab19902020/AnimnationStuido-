@@ -15,3 +15,8 @@ outfits:
     - three_quarter
     - side
     - hands
+reference:
+  parts-atlas-18-part.png: 'Older single-sheet parts atlas, from before the four-sheet kit. Reference only: the
+    kit sheets in kit/ are what the puppet is built from (18 parts, front view)'
+  outfits.png: 'Full-body line-up of the three outfits: dark jumper and jeans, navy club tracksuit, dark suit with
+    red tie'

@@ -14,3 +14,9 @@ outfits:
     - three_quarter
     - side
     - hands
+reference:
+  model-sheet.png: 'United 2008 model sheet: turnaround and wardrobe variants (lunch/casual, pool/swim, sauna/recovery)'
+  expressions-lip-sync.png: 'Face and lip-sync sheet: six expressions (neutral, optimistic/hungry, suspicious, disappointed
+    at tiny lunch, exhausted, laugh), mouth shapes (rest, A, E, I, O, U, M/B/P, F/V), eye and brow set'
+  poses-comedy-actions.png: 'Six comedy action poses: training finished, lunch optimism, tiny lunch, two touch again,
+    pool exhausted, sauna deadpan'

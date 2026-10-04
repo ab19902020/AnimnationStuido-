@@ -15,3 +15,10 @@ outfits:
     - three_quarter
     - side
     - hands
+reference:
+  parts-atlas-cartoon.png: 'Older single-sheet parts atlas, from before the four-sheet kit. Reference only: the
+    kit sheets in kit/ are what the puppet is built from (cartoon puppet parts)'
+  parts-atlas-cutout.png: 'Older single-sheet parts atlas, from before the four-sheet kit. Reference only: the kit
+    sheets in kit/ are what the puppet is built from (cut-out puppet parts)'
+  parts-atlas-three-quarter.png: 'Older single-sheet parts atlas, from before the four-sheet kit. Reference only:
+    the kit sheets in kit/ are what the puppet is built from (three-quarter footballer parts)'

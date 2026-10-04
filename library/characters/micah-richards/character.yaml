@@ -14,3 +14,6 @@ outfits:
     - three_quarter
     - side
     - hands
+reference:
+  model-sheet.png: 'Model sheet: full turnaround (front, 3/4, side, back), head views, expressions, mouth shapes,
+    hand and body poses, walk cycle (navy suit and tie)'
