@@ -83,6 +83,65 @@ def stretch(img, prox, dist, k):
     return out, f(prox), f(dist)
 
 
+def shorten(img, prox, dist, k):
+    """Make a limb drawing shorter, k < 1 times the distance between its joints (the proximal joint stays put), by
+    taking the length out of its middle instead of squashing it: both rounded ends and everything drawn on them
+    (cuffs, hems, the open end showing skin) keep their size and shape. The stretch is carried by the stretch of
+    the drawing where it varies least along its axis (a plain run of sleeve, trouser or skin), eased in and out
+    so there is no seam. Returns (image, prox, dist) like `stretch`."""
+    d = dist - prox
+    Ld = float(np.linalg.norm(d))
+    a = d / max(1e-6, Ld)
+    n = np.array([-a[1], a[0]])
+    cut = (1.0 - k) * Ld                                   # length to take out
+    h, w = img.shape[:2]
+    ys, xs = np.mgrid[0:h, 0:w]
+    u = (xs - prox[0]) * a[0] + (ys - prox[1]) * a[1]       # along the limb, 0 at the proximal joint
+    s = (xs - prox[0]) * n[0] + (ys - prox[1]) * n[1]       # across it
+    solid = img[..., 3] >= 128
+    # how much the drawing changes along the limb: the silhouette's width and its colour, per step of 1 px
+    steps = np.arange(int(np.floor(u[solid].min())), int(np.ceil(u[solid].max())) + 1)
+    prof = np.zeros((len(steps), 4), np.float32)
+    ui = np.round(u).astype(int) - steps[0]
+    for i in range(len(steps)):
+        m = solid & (ui == i)
+        if m.sum() > 2:
+            prof[i, 0] = m.sum() * 0.5
+            prof[i, 1:] = img[..., :3][m].mean(0)
+    vary = np.abs(np.gradient(cv2.GaussianBlur(prof, (1, 0), 2.0, borderType=cv2.BORDER_REPLICATE), axis=0)).sum(1)
+    # the window the cut is spread over: long enough that the cut never squashes it past a sixth of its length
+    m_len = int(min(max(1.6 * cut, 0.3 * Ld), 0.85 * Ld))
+    lo, hi = int(0.12 * Ld) - steps[0], int(0.95 * Ld) - steps[0] - m_len
+    cost = np.convolve(vary, np.ones(m_len), "valid")
+    start = lo + int(np.argmin(cost[max(0, lo):max(1, hi)])) if hi > lo else max(0, lo)
+    w0 = float(steps[0] + start)                             # window start in u (source)
+
+    def squeeze(uu):                                        # source u -> output u'
+        x = np.clip((uu - w0) / m_len, 0.0, 1.0)
+        return uu - cut * x * x * (3.0 - 2.0 * x) if cut < m_len * 2 / 3 else uu - cut * x      # eased cut
+    grid = np.linspace(u.min() - 4, u.max() + 4, 4000)
+    out_u = squeeze(grid)
+    out_u = np.maximum.accumulate(out_u)                    # monotonic, so it can be inverted
+
+    # output canvas: the corners as moved by the squeeze (the far end moves up the limb by `cut`)
+    corners = np.array([[0, 0], [w, 0], [0, h], [w, h]], float)
+    cu = (corners - prox) @ a
+    moved = corners + np.outer(np.interp(cu, grid, out_u) - cu, a)
+    lo_c, hi_c = np.floor(moved.min(0)) - 2, np.ceil(moved.max(0)) + 2
+    W, H = int(hi_c[0] - lo_c[0]), int(hi_c[1] - lo_c[1])
+    gy, gx = np.mgrid[0:H, 0:W]
+    qx, qy = gx + lo_c[0], gy + lo_c[1]
+    uo = (qx - prox[0]) * a[0] + (qy - prox[1]) * a[1]
+    so = (qx - prox[0]) * n[0] + (qy - prox[1]) * n[1]
+    us = np.interp(uo, out_u, grid)                          # where in the source each output pixel comes from
+    sx = prox[0] + a[0] * us + n[0] * so
+    sy = prox[1] + a[1] * us + n[1] * so
+    out = cv2.remap(img, sx.astype(np.float32), sy.astype(np.float32), cv2.INTER_CUBIC,
+                    borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
+    f = lambda p: p + a * (float(np.interp(float((p - prox) @ a), grid, out_u)) - float((p - prox) @ a)) - lo_c
+    return out, f(prox), f(dist)
+
+
 def fill_cap(img, prox, dist, skin, frac=0.42):
     """The open top of a sleeve or trouser leg is often drawn showing skin inside. On a clothed segment, paint the
     skin-coloured pixels in the proximal cap with the segment's own clothing colour, so the joint shows cloth."""
