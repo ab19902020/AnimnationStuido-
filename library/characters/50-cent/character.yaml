@@ -1,0 +1,18 @@
+name: 50 Cent
+short: '50'
+role: artist
+note: Model sheets and a pose only; no part-by-part kit yet. Drop front, three_quarter, side and hands kit sheets
+  into kit/concert/ and run tools/import_kit.py.
+likeness: '50 Cent: dark skin, short stubble, red New York cap, thick silver chain with a ''50'' pendant, tattooed
+  forearms, relaxed confident stance, microphone in hand.'
+outfits:
+  concert:
+    description: Red New York cap, white oversized t-shirt, silver chain with '50' pendant, navy baggy jeans, white
+      sneakers.
+    sheets: []
+reference:
+  model-sheet.png: 'Model sheet: full turnaround, head views, expressions, mouth shapes, hand and body poses, leg
+    cycles'
+  concert-sheet.png: 'Concert-night character sheet (realistic style): turnaround, expressions, eye states, mouth
+    shapes, hand and body poses'
+  pose-beckoning-mic.png: 'Single full-body pose: beckoning with the microphone'

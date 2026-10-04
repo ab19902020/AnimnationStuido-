@@ -1,0 +1,21 @@
+name: Youri Tielemans
+short: Tielemans
+role: player
+height_cm: 176
+note: Front-view three-outfit parts atlas only (reference/three-outfit-parts-atlas.png); no front/three_quarter/side/hands
+  kit sheets yet.
+likeness: 'Youri Tielemans: light skin, short dark hair, round face, big eyes, sturdy compact build.'
+outfits:
+  home:
+    description: Red short-sleeve shirt with white trim, white shorts with a red stripe, black socks with red bands,
+      black boots.
+    sheets: []
+  casual:
+    description: Olive overshirt over a white tee, navy trousers, white trainers.
+    sheets: []
+  suit:
+    description: Navy suit, white shirt, black tie, black shoes.
+    sheets: []
+reference:
+  three-outfit-parts-atlas.png: 'Three-outfit parts atlas, front view: home kit, casual (olive overshirt), suit.
+    Head, face parts, torso, arms, legs and shoes laid out for each outfit'

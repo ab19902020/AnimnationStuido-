@@ -1,0 +1,19 @@
+name: Andrey Santos
+short: Santos
+role: player
+note: Front-view three-outfit wardrobe atlas only (reference/three-outfit-parts-atlas.png); no front/three_quarter/side/hands
+  kit sheets yet.
+likeness: 'Andrey Santos: warm tan skin, dark curly hair on top with faded sides, round face, sturdy compact build.'
+outfits:
+  home:
+    description: Red short-sleeve shirt with white trim, white shorts, black socks with red bands, black boots.
+    sheets: []
+  casual:
+    description: Cream crew-neck sweater, black trousers, white trainers.
+    sheets: []
+  suit:
+    description: Black blazer over an open-collar white shirt, black trousers, brown shoes.
+    sheets: []
+reference:
+  three-outfit-parts-atlas.png: 'Three-outfit wardrobe atlas, front view: home kit, casual (cream sweater), suit
+    (black blazer). Head, face parts, torso, arms, legs and shoes laid out for each outfit'

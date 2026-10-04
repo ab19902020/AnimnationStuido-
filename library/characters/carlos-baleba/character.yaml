@@ -1,0 +1,21 @@
+name: Carlos Baleba
+short: Baleba
+role: player
+note: Front-view three-outfit parts atlas only (reference/three-outfit-parts-atlas.png); no front/three_quarter/side/hands
+  kit sheets yet.
+likeness: 'Carlos Baleba: deep brown skin, short curly black hair with a skin fade, broad round face, sturdy compact
+  build.'
+outfits:
+  home:
+    description: Red short-sleeve shirt with white trim, white shorts with a red stripe, black socks with red bands,
+      red boots.
+    sheets: []
+  casual:
+    description: Maroon hoodie, blue jeans, white trainers.
+    sheets: []
+  suit:
+    description: Navy suit, white shirt, black tie, black shoes.
+    sheets: []
+reference:
+  three-outfit-parts-atlas.png: 'Three-outfit parts atlas, front view: home kit, casual (maroon hoodie), suit. Head,
+    face parts, torso, arms, legs and shoes laid out for each outfit'
