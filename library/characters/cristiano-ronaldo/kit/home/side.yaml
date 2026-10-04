@@ -1,0 +1,42 @@
+# Which drawing on side.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/cristiano-ronaldo/home/side_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: true
+guide: [1360, 153]
+parts:
+  eyes:
+  - [484, 180]
+  foot_L:
+  - [916, 934]
+  foot_R:
+  - [655, 933]
+  forearm_L:
+  - [612, 444]
+  forearm_R:
+  - [471, 446]
+  hand_L:
+  - [980, 506]
+  hand_R:
+  - [786, 505]
+  head:
+  - [146, 149]
+  mouth:
+  - [617, 226]
+  neck:
+  - [338, 266]
+  pelvis:
+  - [1047, 258]
+  shin_L:
+  - [847, 709]
+  shin_R:
+  - [660, 713]
+  thigh_L:
+  - [405, 712]
+  thigh_R:
+  - [151, 710]
+  torso:
+  - [804, 188]
+  upper_arm_L:
+  - [308, 441]
+  upper_arm_R:
+  - [127, 437]

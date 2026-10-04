@@ -1,0 +1,24 @@
+name: Cristiano Ronaldo
+short: Ronaldo
+role: player
+style: house
+height_cm: 187
+likeness: 'Cristiano Ronaldo: slim athletic build, warm tanned skin, short dark hair swept up into a textured quiff
+  with faded sides, thick dark brows, defined jaw and a confident, smug expression.'
+outfits:
+  home:
+    description: Manchester United 2008 red short-sleeve shirt with black side panels and a 7, black shorts with
+      badge and 7, white socks, black football boots.
+    sheets:
+    - front
+    - three_quarter
+    - side
+    - hands
+reference:
+  model-sheet.png: 'United 2008 model sheet: turnaround and wardrobe variations (training/lunch, swimming trunks,
+    bathrobe/sauna)'
+  expressions-lip-sync.png: 'Face and lip-sync sheet: six expressions (neutral, lunch invitation, training focus,
+    smug, suggesting exercise, confused), mouth shapes, eye and brow set'
+  poses-table-tennis.png: 'Table-tennis action sheet: six competitive poses'
+  poses-training.png: 'Six-pose training sheet: still training, lunch invitation, quick lunch, two touch, pool laps,
+    more exercise'

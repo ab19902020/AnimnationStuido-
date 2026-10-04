@@ -1,0 +1,45 @@
+# Which drawing on three_quarter.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/rio-ferdinand/casual/three_quarter_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: true
+guide: [1363, 421]
+parts:
+  eyes:
+  - [496, 185]
+  - [560, 179]
+  foot_L:
+  - [894, 954]
+  foot_R:
+  - [650, 962]
+  forearm_L:
+  - [841, 468]
+  forearm_R:
+  - [691, 466]
+  hand_L:
+  - [939, 656]
+  hand_R:
+  - [748, 661]
+  head:
+  - [174, 147]
+  mouth:
+  - [527, 302]
+  neck:
+  - [363, 322]
+  pelvis:
+  - [992, 268]
+  shin_L:
+  - [821, 793]
+  shin_R:
+  - [640, 830]
+  thigh_L:
+  - [430, 746]
+  thigh_R:
+  - [203, 913]
+  torso:
+  - [759, 228]
+  upper_arm_L:
+  - [469, 457]
+  upper_arm_R:
+  - [239, 457]
+split:
+- [600, 918, 720, 918]

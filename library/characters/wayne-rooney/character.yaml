@@ -1,0 +1,23 @@
+name: Wayne Rooney
+short: Rooney
+role: pundit
+style: house
+height_cm: 176
+likeness: 'Wayne Rooney as the younger cartoon version: round, chubby, compact face, short cropped ginger-blond
+  hair, fair skin, heavy brows and big expressive eyes; stocky compact build.'
+outfits:
+  casual:
+    description: Plain black crew-neck t-shirt, black trousers, white trainers.
+    sheets:
+    - front
+    - three_quarter
+    - side
+    - hands
+reference:
+  model-sheet.png: 'Young cartoon model sheet (black tee outfit): the look the kit sheets are drawn from'
+  model-sheet-suit.png: 'Original suit model sheet: older Rooney with beard in a navy suit, turnaround, expressions,
+    mouth shapes, poses'
+  concert-sheet.png: 'Concert-night character sheet (realistic style): turnaround, expressions, eye states, mouth
+    shapes, hand and body poses; bearded, black sweatshirt, concert-night poses'
+  concert-sheet-younger.png: 'Concert-night character sheet (realistic style): turnaround, expressions, eye states,
+    mouth shapes, hand and body poses; same sheet with the younger, clean-shaven face'

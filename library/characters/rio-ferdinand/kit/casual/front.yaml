@@ -1,0 +1,42 @@
+# Which drawing on front.png is which puppet part: a point inside each drawing (sheet pixels).
+# Draft from the auto-labeller. Check build/ingest/rio-ferdinand/casual/front_parts.jpg, fix by hand,
+# then set checked: true. Paired parts are anatomical: _R is the character's own right.
+checked: true
+guide: [1337, 412]
+parts:
+  eyes:
+  - [554, 167]
+  foot_L:
+  - [1038, 905]
+  foot_R:
+  - [843, 905]
+  forearm_L:
+  - [637, 498]
+  forearm_R:
+  - [485, 497]
+  hand_L:
+  - [1023, 609]
+  hand_R:
+  - [811, 606]
+  head:
+  - [166, 171]
+  mouth:
+  - [518, 308]
+  neck:
+  - [356, 335]
+  pelvis:
+  - [995, 260]
+  shin_L:
+  - [652, 773]
+  shin_R:
+  - [491, 771]
+  thigh_L:
+  - [303, 729]
+  thigh_R:
+  - [110, 730]
+  torso:
+  - [762, 265]
+  upper_arm_L:
+  - [308, 487]
+  upper_arm_R:
+  - [103, 499]

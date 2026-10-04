@@ -1,0 +1,21 @@
+name: Rio Ferdinand
+short: Rio
+role: pundit
+style: house
+height_cm: 189
+likeness: 'Rio Ferdinand: tall calm presence, short black hair with a neat sculpted hairline, full thick black beard,
+  warm brown skin, strong dark brows and a stern, knowing expression.'
+outfits:
+  casual:
+    description: Black zip-up bomber jacket over a black tee, black trousers, white low-top trainers.
+    sheets:
+    - front
+    - three_quarter
+    - side
+    - hands
+reference:
+  model-sheet.png: 'Model sheet: full turnaround (front, 3/4, side, back), head views, expressions, mouth shapes,
+    hand and body poses, walk cycle (black bomber jacket outfit that the kit follows)'
+  concert-sheet.png: 'Concert-night character sheet (realistic style): turnaround, expressions, eye states, mouth
+    shapes, hand and body poses'
+  poses-table-tennis.png: '2008 table-tennis pose sheet (United shirt number 5): serving, lunging, celebrating'
