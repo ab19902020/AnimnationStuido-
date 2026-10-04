@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Downloads the speech models the first time they are needed, into models/ (git-ignored).
 # GitHub releases only: HuggingFace is unreachable from cloud sessions.
-#   tools/fetch_models.sh whisper|rhubarb|diarize|all
+#   tools/fetch_models.sh whisper|rhubarb|diarize|tts|all
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p models
@@ -31,8 +31,14 @@ diarize() {   # who-speaks-when, for recordings with several voices in one file
     get -o models/nemo_en_titanet_small.onnx "$SHERPA/speaker-recongition-models/nemo_en_titanet_small.onnx"
 }
 
+tts() {   # Kokoro v1.0 multi-language (53 voices, ~350 MB): text to speech, for test runs made before the voices are recorded
+  [ -f models/kokoro-multi-lang-v1_0/model.onnx ] && return
+  echo "fetching Kokoro TTS..." >&2
+  get "$SHERPA/tts-models/kokoro-multi-lang-v1_0.tar.bz2" | tar xj -C models
+}
+
 case "${1:-all}" in
-  whisper) whisper ;; rhubarb) rhubarb ;; diarize) diarize ;;
-  all) whisper; rhubarb; diarize ;;
-  *) echo "usage: $0 whisper|rhubarb|diarize|all" >&2; exit 2 ;;
+  whisper) whisper ;; rhubarb) rhubarb ;; diarize) diarize ;; tts) tts ;;
+  all) whisper; rhubarb; diarize; tts ;;
+  *) echo "usage: $0 whisper|rhubarb|diarize|tts|all" >&2; exit 2 ;;
 esac
