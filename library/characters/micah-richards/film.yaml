@@ -1,0 +1,6 @@
+# Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
+# given face landmarks. Check build/film/micah-richards_check.jpg after any change.
+drawings:
+  front: {kit: suit/front, faces: F, ed: 79}     # his eyes sit wide: sized as if 79 px apart
+  q34:   {kit: suit/three_quarter, faces: R}
+  side:  {kit: suit/side, faces: R}

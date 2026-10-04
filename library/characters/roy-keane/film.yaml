@@ -1,0 +1,6 @@
+# Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
+# given face landmarks. Check build/film/roy-keane_check.jpg after any change.
+drawings:
+  front: {kit: casual/front, faces: F}
+  q34:   {kit: casual/three_quarter, faces: R}
+  side:  {kit: casual/side, faces: R}

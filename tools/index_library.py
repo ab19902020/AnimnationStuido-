@@ -135,7 +135,8 @@ def render():
     out += [f"- `{g}/`: {len(v)} pictures" for g, v in groups.items()]
     out.append("")
 
-    sfx = [p for p in (AUDIO / "sfx").glob("**/*") if p.is_file() and p.name != ".gitkeep"]
+    AUDIO_EXT = (".wav", ".flac", ".ogg", ".mp3", ".m4a")
+    sfx = [p for p in (AUDIO / "sfx").glob("**/*") if p.is_file() and p.suffix.lower() in AUDIO_EXT]
     music = [p for p in (AUDIO / "music").glob("**/*") if p.is_file() and p.name not in (".gitkeep", "CREDITS.md")]
     nvoice = sum(r[4] for r in chars)
     out += ["## Audio", "",

@@ -158,4 +158,4 @@ Older finished 'Stick to Football' party artwork, kept for the look and the stag
 
 ## Audio
 
-Voice bank: 0 clips in 20 character folders; sound effects: 0; music: 0. See [audio/README.md](audio/README.md) for what goes where.
+Voice bank: 0 clips in 20 character folders; sound effects: 36; music: 0. See [audio/README.md](audio/README.md) for what goes where.
