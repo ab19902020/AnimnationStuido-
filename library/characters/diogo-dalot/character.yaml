@@ -1,0 +1,11 @@
+name: Diogo Dalot
+short: Dalot
+role: player
+style: house
+note: Drawn once, full body, on the squad sheet (library/reference/squad/manchester-united-squad.png, box [568, 593,
+  757, 946]); no kit sheets yet. Filmed from that drawing (film.yaml).
+likeness: 'Full-back: light skin, short dark hair, stubble; pointing to his left.'
+outfits:
+  home:
+    description: Manchester United home kit, number 2.
+    sheets: []

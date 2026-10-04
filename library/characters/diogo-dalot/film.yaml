@@ -1,0 +1,4 @@
+# Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
+# given face landmarks. Check build/film/diogo-dalot_check.jpg after any change.
+drawings:
+  squad: {sheet: ../../reference/squad/manchester-united-squad.png, box: [568, 593, 757, 946], faces: F}     # the squad sheet

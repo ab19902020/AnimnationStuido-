@@ -1,0 +1,15 @@
+name: Kobbie Mainoo
+short: Mainoo
+role: player
+style: house
+height_cm: 180
+note: Model sheet only (reference/model-sheet.png, from the All or Something repo); no kit sheets yet. Filmed from the
+  sheet's drawings (film.yaml).
+likeness: 'Young midfielder: dark brown skin, short black hair, slim build.'
+outfits:
+  home:
+    description: Manchester United home kit, number 37.
+    sheets: []
+reference:
+  model-sheet.png: 'Model sheet (from All or Something): hero drawing, turnaround, six mouth shapes (A E I O U closed),
+    eight expressions, eye positions, six speaking poses, walk and run cycles'

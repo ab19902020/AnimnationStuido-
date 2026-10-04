@@ -1,0 +1,11 @@
+name: Joshua Zirkzee
+short: Zirkzee
+role: player
+style: house
+note: Drawn once, full body, on the squad sheet (library/reference/squad/manchester-united-squad.png, box [928, 183,
+  1103, 538]); no kit sheets yet. Filmed from that drawing (film.yaml).
+likeness: 'Forward: light brown skin, big curly afro, thin moustache; one finger up, other hand on hip.'
+outfits:
+  home:
+    description: Manchester United home kit, number 11.
+    sheets: []

@@ -1,0 +1,7 @@
+# Group character sheets: one drawing of each player, used as their film drawing (film.yaml points at the box).
+manchester-united-squad:
+  title: Manchester United character sheet, current players + Eric Cantona (16 drawings)
+  size: [1122, 1402]
+  players: [bruno-fernandes, amad-diallo, kobbie-mainoo, mason-mount, manuel-ugarte, joshua-zirkzee,
+    matheus-cunha, bryan-mbeumo, benjamin-sesko, diogo-dalot, matthijs-de-ligt, lisandro-martinez, leny-yoro,
+    patrick-dorgu, noussair-mazraoui, eric-cantona]

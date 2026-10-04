@@ -70,3 +70,43 @@ lunch/water-jug:
   size: [294, 369]
   cut_from: lunch/source/evra-and-ronaldo-lunch-atlas.png
   sheet_box: [65, 420, 351, 781]
+music/bass-guitar:
+  title: Red four-string bass guitar
+  size: [227, 695]
+  cut_from: music/source/instruments-sheet.png
+  sheet_box: [1019, 11, 1246, 706]
+music/cable-black:
+  title: Coiled black instrument cable
+  size: [199, 239]
+  cut_from: music/source/instruments-sheet.png
+  sheet_box: [1027, 734, 1226, 973]
+music/cable-red:
+  title: Coiled red instrument cable
+  size: [199, 233]
+  cut_from: music/source/instruments-sheet.png
+  sheet_box: [1027, 972, 1226, 1205]
+music/drum-kit:
+  title: Red five-piece drum kit with two crash cymbals and a hi-hat
+  size: [731, 618]
+  cut_from: music/source/instruments-sheet.png
+  sheet_box: [6, 34, 737, 652]
+music/electric-guitar:
+  title: Red single-cut electric guitar
+  size: [252, 680]
+  cut_from: music/source/instruments-sheet.png
+  sheet_box: [739, 17, 991, 697]
+music/keyboard-on-stand:
+  title: Red synth keyboard on an X stand
+  size: [716, 521]
+  cut_from: music/source/instruments-sheet.png
+  sheet_box: [8, 694, 724, 1215]
+music/microphone:
+  title: Handheld microphone
+  size: [92, 289]
+  cut_from: music/source/instruments-sheet.png
+  sheet_box: [762, 808, 854, 1097]
+music/microphone-stand:
+  title: Microphone on a straight stand
+  size: [169, 537]
+  cut_from: music/source/instruments-sheet.png
+  sheet_box: [864, 699, 1033, 1236]

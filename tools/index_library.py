@@ -60,7 +60,7 @@ def characters():
     for yml in sorted(CHARACTERS.glob("*/character.yaml")):
         cdir, c = yml.parent, load(yml)
         ref = cdir / "reference"
-        files = {p.name for p in ref.glob("*.png")} if ref.exists() else set()
+        files = {p.name for p in ref.iterdir() if p.suffix.lower() in (".png", ".jpg", ".jpeg")} if ref.exists() else set()
         described = set(c.get("reference", {}))
         problems.extend(f"reference file not described in {cdir.name}/character.yaml: {f}" for f in sorted(files - described))
         problems.extend(f"{cdir.name}/character.yaml describes a missing reference file: {f}" for f in sorted(described - files))

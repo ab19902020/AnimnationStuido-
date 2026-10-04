@@ -1,0 +1,11 @@
+name: Lisandro Martínez
+short: Martínez
+role: player
+style: house
+note: Drawn once, full body, on the squad sheet (library/reference/squad/manchester-united-squad.png, box [928, 593,
+  1103, 946]); no kit sheets yet. Filmed from that drawing (film.yaml).
+likeness: 'Defender: light skin, dark hair with a fade, short beard, sleeve tattoo; fist raised.'
+outfits:
+  home:
+    description: Manchester United home kit, number 6.
+    sheets: []

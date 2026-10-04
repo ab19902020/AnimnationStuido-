@@ -1,0 +1,4 @@
+# Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
+# given face landmarks. Check build/film/cristiano-ronaldo_check.jpg after any change.
+drawings:
+  front: {kit: home/front, faces: F}

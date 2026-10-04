@@ -1,0 +1,15 @@
+name: Senne Lammens
+short: Lammens
+role: player
+style: house
+height_cm: 193
+note: Model sheet only (reference/model-sheet.png, from the All or Something repo); no kit sheets yet. Filmed from the
+  sheet's drawings (film.yaml).
+likeness: 'Goalkeeper: light skin, short fair hair.'
+outfits:
+  home:
+    description: Black goalkeeper kit and gloves, number 1.
+    sheets: []
+reference:
+  model-sheet.png: 'Model sheet (from All or Something): hero drawing, turnaround, six mouth shapes, eight expressions,
+    eye positions, six speaking poses, walk and run cycles'

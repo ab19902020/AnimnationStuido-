@@ -1,0 +1,11 @@
+name: Manuel Ugarte
+short: Ugarte
+role: player
+style: house
+note: Drawn once, full body, on the squad sheet (library/reference/squad/manchester-united-squad.png, box [748, 183,
+  920, 538]); no kit sheets yet. Filmed from that drawing (film.yaml).
+likeness: 'Midfielder: light olive skin, dark swept hair, determined look; fists by his sides.'
+outfits:
+  home:
+    description: Manchester United home kit, number 25.
+    sheets: []

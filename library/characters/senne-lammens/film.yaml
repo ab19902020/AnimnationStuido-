@@ -1,0 +1,4 @@
+# Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
+# given face landmarks. Check build/film/senne-lammens_check.jpg after any change.
+drawings:
+  front: {sheet: reference/model-sheet.png, box: [5, 100, 288, 832], faces: F}   # the hero drawing

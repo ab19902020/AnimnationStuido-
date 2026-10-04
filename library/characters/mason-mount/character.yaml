@@ -1,0 +1,11 @@
+name: Mason Mount
+short: Mount
+role: player
+style: house
+note: Drawn once, full body, on the squad sheet (library/reference/squad/manchester-united-squad.png, box [568, 183,
+  740, 538]); no kit sheets yet. Filmed from that drawing (film.yaml).
+likeness: 'Midfielder: light skin, swept brown hair, short beard; arms folded.'
+outfits:
+  home:
+    description: Manchester United home kit, number 7.
+    sheets: []

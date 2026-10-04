@@ -1,0 +1,11 @@
+name: Amad Diallo
+short: Amad
+role: player
+style: house
+note: Drawn once, full body, on the squad sheet (library/reference/squad/manchester-united-squad.png, box [203, 183,
+  377, 538]); no kit sheets yet. Filmed from that drawing (film.yaml).
+likeness: 'Winger: dark brown skin, short curly black hair, beaming grin; pointing with his right hand, left fist clenched.'
+outfits:
+  home:
+    description: Manchester United home kit, number 16.
+    sheets: []

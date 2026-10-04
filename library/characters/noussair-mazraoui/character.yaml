@@ -1,0 +1,11 @@
+name: Noussair Mazraoui
+short: Mazraoui
+role: player
+style: house
+note: Drawn once, full body, on the squad sheet (library/reference/squad/manchester-united-squad.png, box [388, 998,
+  560, 1375]); no kit sheets yet. Filmed from that drawing (film.yaml).
+likeness: 'Full-back: light brown skin, curly dark hair with a fade, full beard; arms folded.'
+outfits:
+  home:
+    description: Manchester United home kit, number 3.
+    sheets: []

@@ -1,0 +1,11 @@
+name: Patrick Dorgu
+short: Dorgu
+role: player
+style: house
+note: Drawn once, full body, on the squad sheet (library/reference/squad/manchester-united-squad.png, box [203, 998,
+  382, 1375]); no kit sheets yet. Filmed from that drawing (film.yaml).
+likeness: 'Left-back: dark brown skin, curly black hair, smiling; thumbs up.'
+outfits:
+  home:
+    description: Manchester United home kit, number 13.
+    sheets: []

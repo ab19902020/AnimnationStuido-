@@ -1,0 +1,15 @@
+name: Luke Shaw
+short: Shaw
+role: player
+style: house
+height_cm: 181
+note: Model sheet only (reference/model-sheet.png, from the All or Something repo); no kit sheets yet. Filmed from the
+  sheet's drawings (film.yaml).
+likeness: 'Left-back: light skin, short brown hair, full beard, stocky build.'
+outfits:
+  home:
+    description: Manchester United home kit, number 23.
+    sheets: []
+reference:
+  model-sheet.png: 'Model sheet (from All or Something): hero drawing, turnaround, ten mouth shapes, six expressions,
+    gesture poses (pointing, celebrate, talking, shrug), walk and run cycles'

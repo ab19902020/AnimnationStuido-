@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Downloads the speech models the first time they are needed, into models/ (git-ignored).
 # GitHub releases only: HuggingFace is unreachable from cloud sessions.
-#   tools/fetch_models.sh whisper|rhubarb|diarize|tts|all
+#   tools/fetch_models.sh whisper|rhubarb|diarize|tts|separate|all [...]
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p models
@@ -37,8 +37,16 @@ tts() {   # Kokoro v1.0 multi-language (53 voices, ~350 MB): text to speech, for
   get "$SHERPA/tts-models/kokoro-multi-lang-v1_0.tar.bz2" | tar xj -C models
 }
 
-case "${1:-all}" in
-  whisper) whisper ;; rhubarb) rhubarb ;; diarize) diarize ;; tts) tts ;;
-  all) whisper; rhubarb; diarize; tts ;;
-  *) echo "usage: $0 whisper|rhubarb|diarize|tts|all" >&2; exit 2 ;;
-esac
+separate() {   # Spleeter 2-stem (fp16, ~40 MB): a song split into voice and band, for singing lip sync
+  [ -f models/sherpa-onnx-spleeter-2stems-fp16/vocals.fp16.onnx ] && return
+  echo "fetching Spleeter..." >&2
+  get "$SHERPA/source-separation-models/sherpa-onnx-spleeter-2stems-fp16.tar.bz2" | tar xj -C models
+}
+
+for target in "${@:-all}"; do
+  case "$target" in
+    whisper) whisper ;; rhubarb) rhubarb ;; diarize) diarize ;; tts) tts ;; separate) separate ;;
+    all) whisper; rhubarb; diarize; tts; separate ;;
+    *) echo "usage: $0 whisper|rhubarb|diarize|tts|separate|all ..." >&2; exit 2 ;;
+  esac
+done

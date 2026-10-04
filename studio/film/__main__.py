@@ -1,6 +1,7 @@
 """Make an episode the All or Something way.
 
     python3 -m studio.film SLUG lines                 cut every line from its take: build/lines/, lines.json
+    python3 -m studio.film SLUG song                  a music video's song: beats, hits, singing (build/song.json)
     python3 -m studio.film SLUG timeline              print the dialogue edit (marks, line times)
     python3 -m studio.film SLUG sound                 the mix: build/episode_audio.wav
     python3 -m studio.film SLUG still T [T ...]       single frames: build/stills/
@@ -132,6 +133,10 @@ def main():
                                    getattr(L, "EXTRA", None))
         else:                                  # one take per line (text-to-speech stand-ins)
             voices.build(ep.BUILD, L.lines(), L.MAXGAP, L.GAPS, L.TEMPO, getattr(L, "EXTRA", None))
+    elif cmd == "song":                        # a music video: the beat grid, hits and singing mouths
+        from studio.film import song
+        src = next(p for p in (d / "song.wav", d / "song.mp3", d / "song.flac") if p.exists())
+        song.analyse(src, ep.BUILD)
     elif cmd == "timeline":
         import importlib
         TL = importlib.import_module("film.timeline").TL

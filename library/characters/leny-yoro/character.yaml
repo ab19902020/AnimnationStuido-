@@ -1,0 +1,11 @@
+name: Leny Yoro
+short: Yoro
+role: player
+style: house
+note: Drawn once, full body, on the squad sheet (library/reference/squad/manchester-united-squad.png, box [18, 998, 195,
+  1375]); no kit sheets yet. Filmed from that drawing (film.yaml).
+likeness: 'Defender: brown skin, long twisted braids, stern look.'
+outfits:
+  home:
+    description: Manchester United home kit, number 15.
+    sheets: []

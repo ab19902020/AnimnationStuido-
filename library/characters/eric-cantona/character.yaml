@@ -1,0 +1,15 @@
+name: Eric Cantona
+short: Cantona
+role: player
+style: house
+note: Legend. reference/pointing.png is a full-body hero drawing; he is also on the squad sheet (library/reference/squad,
+  box [570, 995, 860, 1385], waist-up crop). No kit sheets yet.
+likeness: Close-cropped dark hair, heavy brows, stubble beard, collar up; proud, chin raised.
+outfits:
+  home:
+    description: 1990s Manchester United home shirt with the collar turned up, long sleeves, SHARP sponsor, white shorts
+      with number 7, black socks, black boots.
+    sheets: []
+reference:
+  pointing.png: 'Full-body hero drawing (1122 x 1402): collar up, chin raised, looking and pointing to the viewer''s
+    right, the other fist clenched; 1990s home kit'

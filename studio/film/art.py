@@ -120,6 +120,18 @@ def cut_sheet(cid, path, box, holes=()):
     keep = cv2.erode(keep, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))     # 2 px inside the outline
     a = cv2.GaussianBlur(keep.astype(np.float32), (0, 0), 0.9)
     a = np.clip((a - 0.25) / 0.5, 0, 1)
+    # the paper between the legs of a standing figure: the ground shadow under the boots closes it off from the
+    # paper round the drawing, so it is found from below the crotch, in the middle of the feet
+    holes = list(holes)
+    ys_, xs_ = np.nonzero(a > 0.5)
+    if len(ys_):
+        top, bot = ys_.min(), ys_.max()
+        low = ys_ > bot - 0.04 * (bot - top)
+        fxm = int(xs_[low].mean())
+        for fy in np.linspace(top + 0.74 * (bot - top), top + 0.95 * (bot - top), 12):
+            if a[int(fy), fxm] > 0.5 and g[int(fy), fxm] > 222:
+                holes.append((fxm / 4 + x0, int(fy) / 4 + y0))
+                break
     for hx, hy in holes:                         # paper enclosed by the drawing (between an arm and the body)
         sx, sy = int((hx - x0) * 4), int((hy - y0) * 4)
         r = 60
@@ -130,8 +142,12 @@ def cut_sheet(cid, path, box, holes=()):
         k = int(np.argmin((yy_ + max(0, sy - r) - sy) ** 2 + (xx_ + max(0, sx - r) - sx) ** 2))
         sx, sy = int(xx_[k] + max(0, sx - r)), int(yy_[k] + max(0, sy - r))
         hole = np.zeros((h + 2, w + 2), np.uint8)
-        cv2.floodFill(ff, hole, (sx, sy), 0, (6, 6, 6), (6, 6, 6), flags)
+        # against the seed's own colour (a neighbour-to-neighbour fill creeps along light skin into a face)
+        cv2.floodFill(ff, hole, (sx, sy), 0, (12, 12, 12), (12, 12, 12), flags | cv2.FLOODFILL_FIXED_RANGE)
         hm = (cv2.dilate(hole[1:-1, 1:-1], np.ones((3, 3), np.uint8)) > 0) & (g > 150)
+        if hm.sum() > 0.12 * w * h:                 # it leaked into the figure: leave the paper rather than lose it
+            print(f"{cid}: hole at {hx},{hy} would take {hm.sum() / (w * h):.0%} of the drawing; skipped", file=sys.stderr)
+            continue
         a[hm] = 0
     rgba = np.dstack([cv2.cvtColor(im, cv2.COLOR_BGR2RGB), (a * 255).astype(np.uint8)])
     return rgba, (x0, y0)

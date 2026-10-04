@@ -11,30 +11,47 @@ Folder = id = the full name in kebab-case. Episodes refer to a character by id.
 |---|---|---|---|---|---|---|
 | 50 Cent | [`50-cent`](characters/50-cent/) | artist | concert | no kit yet | 3 | 0 |
 | Alan Shearer | [`alan-shearer`](characters/alan-shearer/) | pundit | casual | 4/4 sheets checked | 1 | 0 |
+| Amad Diallo | [`amad-diallo`](characters/amad-diallo/) | player | home | no kit yet | 0 | 0 |
 | Andrey Santos | [`andrey-santos`](characters/andrey-santos/) | player | home, casual, suit | no kit yet | 1 | 0 |
+| Benjamin Šeško | [`benjamin-sesko`](characters/benjamin-sesko/) | player | home | no kit yet | 1 | 0 |
 | Bruno Fernandes | [`bruno-fernandes`](characters/bruno-fernandes/) | player | home | 4/4 sheets checked | 2 | 0 |
+| Bryan Mbeumo | [`bryan-mbeumo`](characters/bryan-mbeumo/) | player | home | no kit yet | 0 | 0 |
 | Carlos Baleba | [`carlos-baleba`](characters/carlos-baleba/) | player | home, casual, suit | no kit yet | 1 | 0 |
 | Cristiano Ronaldo | [`cristiano-ronaldo`](characters/cristiano-ronaldo/) | player | home | 4/4 sheets checked | 4 | 0 |
+| Diogo Dalot | [`diogo-dalot`](characters/diogo-dalot/) | player | home | no kit yet | 0 | 0 |
+| Eric Cantona | [`eric-cantona`](characters/eric-cantona/) | player | home | no kit yet | 1 | 0 |
 | Erling Haaland | [`erling-haaland`](characters/erling-haaland/) | player | home | 4/4 sheets checked | 3 | 0 |
 | Gary Lineker | [`gary-lineker`](characters/gary-lineker/) | presenter | suit | 4/4 sheets checked | 1 | 0 |
 | Gary Neville (stand-in, off-style) | [`gary-neville`](characters/gary-neville/) | pundit | casual | 4/4 sheets checked | 0 | 0 |
+| Harry Maguire | [`harry-maguire`](characters/harry-maguire/) | player | home | no kit yet | 1 | 0 |
 | Jamie Carragher (stand-in, off-style) | [`jamie-carragher`](characters/jamie-carragher/) | pundit | casual | 4/4 sheets checked | 0 | 0 |
 | Jim Ratcliffe | [`jim-ratcliffe`](characters/jim-ratcliffe/) | owner | casual | 4/4 sheets checked | 2 | 0 |
-| Matheus Cunha | [`matheus-cunha`](characters/matheus-cunha/) | player | home | 4/4 sheets checked | 1 | 0 |
+| Joshua Zirkzee | [`joshua-zirkzee`](characters/joshua-zirkzee/) | player | home | no kit yet | 0 | 0 |
+| Kobbie Mainoo | [`kobbie-mainoo`](characters/kobbie-mainoo/) | player | home | no kit yet | 1 | 0 |
+| Leny Yoro | [`leny-yoro`](characters/leny-yoro/) | player | home | no kit yet | 0 | 0 |
+| Lisandro Martínez | [`lisandro-martinez`](characters/lisandro-martinez/) | player | home | no kit yet | 0 | 0 |
+| Luke Shaw | [`luke-shaw`](characters/luke-shaw/) | player | home | no kit yet | 1 | 0 |
+| Manuel Ugarte | [`manuel-ugarte`](characters/manuel-ugarte/) | player | home | no kit yet | 0 | 0 |
+| Mason Mount | [`mason-mount`](characters/mason-mount/) | player | home | no kit yet | 0 | 0 |
+| Matheus Cunha | [`matheus-cunha`](characters/matheus-cunha/) | player | home | 4/4 sheets checked | 2 | 0 |
+| Matthijs de Ligt | [`matthijs-de-ligt`](characters/matthijs-de-ligt/) | player | home | no kit yet | 0 | 0 |
 | Micah Richards | [`micah-richards`](characters/micah-richards/) | pundit | suit | 4/4 sheets checked | 1 | 0 |
-| Michael Carrick | [`michael-carrick`](characters/michael-carrick/) | manager | casual | 4/4 sheets checked | 2 | 0 |
+| Michael Carrick | [`michael-carrick`](characters/michael-carrick/) | manager | casual | 4/4 sheets checked | 3 | 0 |
+| Noussair Mazraoui | [`noussair-mazraoui`](characters/noussair-mazraoui/) | player | home | no kit yet | 0 | 0 |
 | Patrice Evra | [`patrice-evra`](characters/patrice-evra/) | player | home | 4/4 sheets checked | 3 | 0 |
+| Patrick Dorgu | [`patrick-dorgu`](characters/patrick-dorgu/) | player | home | no kit yet | 0 | 0 |
 | Pep Guardiola | [`pep-guardiola`](characters/pep-guardiola/) | manager | casual | 4/4 sheets checked | 1 | 0 |
 | Rio Ferdinand | [`rio-ferdinand`](characters/rio-ferdinand/) | pundit | casual | 4/4 sheets checked | 3 | 0 |
 | Roy Keane (stand-in, off-style) | [`roy-keane`](characters/roy-keane/) | pundit | casual | 4/4 sheets checked | 0 | 0 |
+| Senne Lammens | [`senne-lammens`](characters/senne-lammens/) | player | home | no kit yet | 1 | 0 |
 | Wayne Rooney | [`wayne-rooney`](characters/wayne-rooney/) | pundit | casual | 4/4 sheets checked | 4 | 0 |
-| Youri Tielemans | [`youri-tielemans`](characters/youri-tielemans/) | player | home, casual, suit | no kit yet | 1 | 0 |
+| Youri Tielemans | [`youri-tielemans`](characters/youri-tielemans/) | player | home, casual, suit | no kit yet | 2 | 0 |
 
 Puppet kit = the front, three-quarter, side and hands sheets, labelled part by part and checked by eye. "no kit yet" characters have only reference art. Reference sheets live in each character's `reference/` folder, described in its `character.yaml`.
 
 ## Backgrounds
 
-37 empty sets, by setting. Landscape fits the 16:9 episodes as they are; **portrait** ones (941x1672) need a landscape version or a crop first. Full details in [backgrounds.yaml](backgrounds/backgrounds.yaml).
+40 empty sets, by setting. Landscape fits the 16:9 episodes as they are; **portrait** ones (941x1672) need a landscape version or a crop first. Full details in [backgrounds.yaml](backgrounds/backgrounds.yaml).
 
 ### Stadiums
 
@@ -95,6 +112,9 @@ Puppet kit = the front, three-quarter, side and hands sheets, labelled part by p
 |---|---|---|
 | [`pub-and-restaurant/pub`](backgrounds/pub-and-restaurant/pub.png) | Empty Cozy British Football Pub | landscape 1672x941 |
 | [`pub-and-restaurant/restaurant`](backgrounds/pub-and-restaurant/restaurant.png) | Empty warm restaurant interior | landscape 1672x941 |
+| [`pub-and-restaurant/united-pub-stage`](backgrounds/pub-and-restaurant/united-pub-stage.png) | United pub stage, front view, empty room (red curtain, drum kit, mic stand, amps, scarves and bunting) | landscape 1672x941 |
+| [`pub-and-restaurant/united-pub-stage-crowd`](backgrounds/pub-and-restaurant/united-pub-stage-crowd.png) | United pub stage, front view, fans in the foreground (the same framing as united-pub-stage) | landscape 1672x941 |
+| [`pub-and-restaurant/united-pub-stage-side-crowd`](backgrounds/pub-and-restaurant/united-pub-stage-side-crowd.png) | United pub stage from the left, fans in the foreground, the bar and stairs on the right | landscape 1672x941 |
 
 ### Nightlife
 
@@ -125,7 +145,7 @@ Puppet kit = the front, three-quarter, side and hands sheets, labelled part by p
 
 ## Props
 
-14 cut-out props (transparent PNG). Uncut sheets are in each set's `source/` folder.
+22 cut-out props (transparent PNG). Uncut sheets are in each set's `source/` folder.
 
 | id | Prop |
 |---|---|
@@ -143,6 +163,14 @@ Puppet kit = the front, three-quarter, side and hands sheets, labelled part by p
 | [`lunch/water-drop-medium`](props/lunch/water-drop-medium.png) | Water drop, medium |
 | [`lunch/water-drop-small`](props/lunch/water-drop-small.png) | Water drop, small |
 | [`lunch/water-jug`](props/lunch/water-jug.png) | Glass water jug |
+| [`music/bass-guitar`](props/music/bass-guitar.png) | Red four-string bass guitar |
+| [`music/cable-black`](props/music/cable-black.png) | Coiled black instrument cable |
+| [`music/cable-red`](props/music/cable-red.png) | Coiled red instrument cable |
+| [`music/drum-kit`](props/music/drum-kit.png) | Red five-piece drum kit with two crash cymbals and a hi-hat |
+| [`music/electric-guitar`](props/music/electric-guitar.png) | Red single-cut electric guitar |
+| [`music/keyboard-on-stand`](props/music/keyboard-on-stand.png) | Red synth keyboard on an X stand |
+| [`music/microphone`](props/music/microphone.png) | Handheld microphone |
+| [`music/microphone-stand`](props/music/microphone-stand.png) | Microphone on a straight stand |
 
 ## Extras (background cast)
 
@@ -158,4 +186,4 @@ Older finished 'Stick to Football' party artwork, kept for the look and the stag
 
 ## Audio
 
-Voice bank: 0 clips in 20 character folders; sound effects: 36; music: 0. See [audio/README.md](audio/README.md) for what goes where.
+Voice bank: 0 clips in 37 character folders; sound effects: 36; music: 0. See [audio/README.md](audio/README.md) for what goes where.

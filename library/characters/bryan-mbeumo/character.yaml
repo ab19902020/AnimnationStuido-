@@ -1,0 +1,11 @@
+name: Bryan Mbeumo
+short: Mbeumo
+role: player
+style: house
+note: Drawn once, full body, on the squad sheet (library/reference/squad/manchester-united-squad.png, box [203, 593,
+  377, 946]); no kit sheets yet. Filmed from that drawing (film.yaml).
+likeness: 'Forward: brown skin, shaved head, full black beard; fist clenched.'
+outfits:
+  home:
+    description: Manchester United home kit, number 19.
+    sheets: []

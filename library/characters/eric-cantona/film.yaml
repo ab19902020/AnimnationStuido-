@@ -1,0 +1,4 @@
+# Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
+# given face landmarks. Check build/film/eric-cantona_check.jpg after any change.
+drawings:
+  pointing: {sheet: reference/pointing.png, box: [150, 20, 1030, 1392], faces: R}     # the hero drawing

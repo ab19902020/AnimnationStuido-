@@ -187,3 +187,18 @@ tv-and-media/press-conference-room:
   size: [1672, 941]
   orientation: landscape
   source: Empty Football Press Conference Room.png
+pub-and-restaurant/united-pub-stage:
+  title: United pub stage, front view, empty room (red curtain, drum kit, mic stand, amps, scarves and bunting)
+  size: [1672, 941]
+  orientation: landscape
+  source: uploaded in chat (music video, 4 October 2026)
+pub-and-restaurant/united-pub-stage-crowd:
+  title: United pub stage, front view, fans in the foreground (the same framing as united-pub-stage)
+  size: [1672, 941]
+  orientation: landscape
+  source: uploaded in chat (music video, 4 October 2026)
+pub-and-restaurant/united-pub-stage-side-crowd:
+  title: United pub stage from the left, fans in the foreground, the bar and stairs on the right
+  size: [1672, 941]
+  orientation: landscape
+  source: uploaded in chat (music video, 4 October 2026)
