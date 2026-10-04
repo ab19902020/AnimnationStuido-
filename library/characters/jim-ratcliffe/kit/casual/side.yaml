@@ -41,3 +41,6 @@ parts:
   - [453, 534]
   upper_arm_R:
   - [140, 533]
+face:
+  mouth: [289, 259]
+  mouth_width: 62
