@@ -5,9 +5,11 @@ directive; Claude cuts the puppets, lip-syncs the voices, acts, stages and shoot
 episode (landscape 16:9).
 
 **Status: being built.** Done: the character library and kit ingest, the puppet rigs, and a first end-to-end
-episode pipeline, run as a test on *The Appeals Department* with text-to-speech voices (see "Making an episode"). Not
-done: limb animation that looks right (the rigs' joints show; walks need art drawn for it), real recordings in
-place of the stand-in voices, final props.
+episode pipeline, run as a test on *The Appeals Department* with text-to-speech voices (see "Making an episode"), and a
+posable rig that walks, gestures and moves its head, built from one T-pose drawing (see "Walking, gesturing: T-pose
+rigs"; Bruno Fernandes so far). Not done: that rig for the other characters (it needs a T-pose drawing each; the kit
+sheets' loose limbs show their joints), the rig in the episode pipeline and lip sync on it, real recordings in place of
+the stand-in voices, final props.
 
 ## How it works (the South Park way)
 
@@ -71,6 +73,33 @@ python3 -m studio.ingest.chart CHARACTER               # build/ingest/<id>_chart
 ```
 
 and checks the chart by eye before the character is used.
+
+## Walking, gesturing: T-pose rigs
+
+A character can be rigged from **one drawing of them standing with their arms out** (a T-pose, nothing overlapping,
+transparent background): that is the ideal source for a cut-out puppet, because every part lifts off whole. It goes
+in `library/characters/<id>/rig/<outfit>/tpose.png` with a `tpose.yaml` beside it (polygons that cut it into parts,
+the overlaps to paint in, the joints; see Bruno's). Then:
+
+```bash
+python3 -m studio.rig.tpose bruno-fernandes            # cut the parts: build/rig/<id>/<outfit>/tpose/ (parts.jpg to look at)
+python3 -m studio.anim.gait bruno-fernandes --clip     # build/anim/<id>/: the cycles as strips, walk_test.mp4
+```
+
+The parts (head, torso, sleeves, bare arms, shorts, legs, boots) have what hides behind their neighbours painted in, so
+nothing opens up when they turn. The arms and legs are strips that **bend along an arc** at the elbow, wrist and knee
+(constant thickness, no join showing) and the hand and boot ride exactly on the bent limb. `studio/anim/figure.py` poses
+and draws it (`Figure.draw(frame, pose, x, y, scale)`; a pose is joint angles, offsets and squashes). `studio/anim/gait.py`
+makes the poses: `walk(phase, dirn)` (sideways across the screen, both boots pointing the way he goes),
+`walk_toward(phase)` (down the screen), `idle(t)` (breathing, weight shifts, the head looking about) and `wave(t)`; an
+`amount` from 0 to 1 starts and stops a walk. The feet are planted (checked: they slide under 0.1 px a frame), the
+pelvis height follows from the legs, the pelvis rolls and sways over the planted foot, the torso counters, the head lags
+the bounce, the arms trail. Move the figure across the screen at `Gait.speed` times the draw scale and the feet stay put.
+
+It is a front-on drawing, so it cannot turn: a true side or three-quarter walk needs those views drawn (the kit sheets'
+side and three-quarter views are separate puppets; this rig is for the front). Mouth shapes for speech are not on this
+rig yet (the head is one piece); the existing mouth-set approach in `studio/episode/mouths.py` carves them from the
+drawing's face when it is wanted.
 
 ## Making an episode
 

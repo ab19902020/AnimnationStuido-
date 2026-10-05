@@ -7,30 +7,30 @@ to it, is in [README.md](README.md).
 
 Folder = id = the full name in kebab-case. Episodes refer to a character by id.
 
-| Character | id | Role | Outfits | Puppet kit | Reference sheets | Voice clips |
-|---|---|---|---|---|---|---|
-| 50 Cent | [`50-cent`](characters/50-cent/) | artist | concert | no kit yet | 3 | 0 |
-| Alan Shearer | [`alan-shearer`](characters/alan-shearer/) | pundit | casual | 4/4 sheets checked | 1 | 0 |
-| Andrey Santos | [`andrey-santos`](characters/andrey-santos/) | player | home, casual, suit | no kit yet | 1 | 0 |
-| Bruno Fernandes | [`bruno-fernandes`](characters/bruno-fernandes/) | player | home | 4/4 sheets checked | 2 | 0 |
-| Carlos Baleba | [`carlos-baleba`](characters/carlos-baleba/) | player | home, casual, suit | no kit yet | 1 | 0 |
-| Cristiano Ronaldo | [`cristiano-ronaldo`](characters/cristiano-ronaldo/) | player | home | 4/4 sheets checked | 4 | 0 |
-| Erling Haaland | [`erling-haaland`](characters/erling-haaland/) | player | home | 4/4 sheets checked | 3 | 0 |
-| Gary Lineker | [`gary-lineker`](characters/gary-lineker/) | presenter | suit | 4/4 sheets checked | 1 | 0 |
-| Gary Neville (stand-in, off-style) | [`gary-neville`](characters/gary-neville/) | pundit | casual | 4/4 sheets checked | 0 | 0 |
-| Jamie Carragher (stand-in, off-style) | [`jamie-carragher`](characters/jamie-carragher/) | pundit | casual | 4/4 sheets checked | 0 | 0 |
-| Jim Ratcliffe | [`jim-ratcliffe`](characters/jim-ratcliffe/) | owner | casual | 4/4 sheets checked | 2 | 0 |
-| Matheus Cunha | [`matheus-cunha`](characters/matheus-cunha/) | player | home | 4/4 sheets checked | 1 | 0 |
-| Micah Richards | [`micah-richards`](characters/micah-richards/) | pundit | suit | 4/4 sheets checked | 1 | 0 |
-| Michael Carrick | [`michael-carrick`](characters/michael-carrick/) | manager | casual | 4/4 sheets checked | 2 | 0 |
-| Patrice Evra | [`patrice-evra`](characters/patrice-evra/) | player | home | 4/4 sheets checked | 3 | 0 |
-| Pep Guardiola | [`pep-guardiola`](characters/pep-guardiola/) | manager | casual | 4/4 sheets checked | 1 | 0 |
-| Rio Ferdinand | [`rio-ferdinand`](characters/rio-ferdinand/) | pundit | casual | 4/4 sheets checked | 3 | 0 |
-| Roy Keane (stand-in, off-style) | [`roy-keane`](characters/roy-keane/) | pundit | casual | 4/4 sheets checked | 0 | 0 |
-| Wayne Rooney | [`wayne-rooney`](characters/wayne-rooney/) | pundit | casual | 4/4 sheets checked | 4 | 0 |
-| Youri Tielemans | [`youri-tielemans`](characters/youri-tielemans/) | player | home, casual, suit | no kit yet | 1 | 0 |
+| Character | id | Role | Outfits | Puppet kit | T-pose rig | Reference sheets | Voice clips |
+|---|---|---|---|---|---|---|---|
+| 50 Cent | [`50-cent`](characters/50-cent/) | artist | concert | no kit yet | - | 3 | 0 |
+| Alan Shearer | [`alan-shearer`](characters/alan-shearer/) | pundit | casual | 4/4 sheets checked | - | 1 | 0 |
+| Andrey Santos | [`andrey-santos`](characters/andrey-santos/) | player | home, casual, suit | no kit yet | - | 1 | 0 |
+| Bruno Fernandes | [`bruno-fernandes`](characters/bruno-fernandes/) | player | home | 4/4 sheets checked | home | 2 | 0 |
+| Carlos Baleba | [`carlos-baleba`](characters/carlos-baleba/) | player | home, casual, suit | no kit yet | - | 1 | 0 |
+| Cristiano Ronaldo | [`cristiano-ronaldo`](characters/cristiano-ronaldo/) | player | home | 4/4 sheets checked | - | 4 | 0 |
+| Erling Haaland | [`erling-haaland`](characters/erling-haaland/) | player | home | 4/4 sheets checked | - | 3 | 0 |
+| Gary Lineker | [`gary-lineker`](characters/gary-lineker/) | presenter | suit | 4/4 sheets checked | - | 1 | 0 |
+| Gary Neville (stand-in, off-style) | [`gary-neville`](characters/gary-neville/) | pundit | casual | 4/4 sheets checked | - | 0 | 0 |
+| Jamie Carragher (stand-in, off-style) | [`jamie-carragher`](characters/jamie-carragher/) | pundit | casual | 4/4 sheets checked | - | 0 | 0 |
+| Jim Ratcliffe | [`jim-ratcliffe`](characters/jim-ratcliffe/) | owner | casual | 4/4 sheets checked | - | 2 | 0 |
+| Matheus Cunha | [`matheus-cunha`](characters/matheus-cunha/) | player | home | 4/4 sheets checked | - | 1 | 0 |
+| Micah Richards | [`micah-richards`](characters/micah-richards/) | pundit | suit | 4/4 sheets checked | - | 1 | 0 |
+| Michael Carrick | [`michael-carrick`](characters/michael-carrick/) | manager | casual | 4/4 sheets checked | - | 2 | 0 |
+| Patrice Evra | [`patrice-evra`](characters/patrice-evra/) | player | home | 4/4 sheets checked | - | 3 | 0 |
+| Pep Guardiola | [`pep-guardiola`](characters/pep-guardiola/) | manager | casual | 4/4 sheets checked | - | 1 | 0 |
+| Rio Ferdinand | [`rio-ferdinand`](characters/rio-ferdinand/) | pundit | casual | 4/4 sheets checked | - | 3 | 0 |
+| Roy Keane (stand-in, off-style) | [`roy-keane`](characters/roy-keane/) | pundit | casual | 4/4 sheets checked | - | 0 | 0 |
+| Wayne Rooney | [`wayne-rooney`](characters/wayne-rooney/) | pundit | casual | 4/4 sheets checked | - | 4 | 0 |
+| Youri Tielemans | [`youri-tielemans`](characters/youri-tielemans/) | player | home, casual, suit | no kit yet | - | 1 | 0 |
 
-Puppet kit = the front, three-quarter, side and hands sheets, labelled part by part and checked by eye. "no kit yet" characters have only reference art. Reference sheets live in each character's `reference/` folder, described in its `character.yaml`.
+Puppet kit = the front, three-quarter, side and hands sheets, labelled part by part and checked by eye. T-pose rig = the outfits that have a single drawing of the character standing arms out, cut into a posable puppet that walks and gestures (`studio.rig.tpose`, `studio.anim.gait`). "no kit yet" characters have only reference art. Reference sheets live in each character's `reference/` folder, described in its `character.yaml`.
 
 ## Backgrounds
 

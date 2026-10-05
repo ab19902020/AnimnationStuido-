@@ -6,7 +6,7 @@
 Checked: every character has a character.yaml; every kit sheet is there, labelled and checked by eye; every file in
 a character's reference/ folder is described in its character.yaml (and the other way round); every background,
 prop, extra and reference scene on disk is in its index yaml (and the other way round); every character has a
-voice folder."""
+voice folder; every T-pose rig (rig/<outfit>/tpose.png) has its tpose.yaml."""
 import argparse
 import sys
 from pathlib import Path
@@ -67,7 +67,13 @@ def characters():
         if not (VOICES / cdir.name).is_dir():
             problems.append(f"no voice folder for {cdir.name}: library/audio/voiceovers/{cdir.name}/")
         voices = [p for p in (VOICES / cdir.name).glob("**/*") if p.is_file() and p.name != ".gitkeep"]
-        rows.append((cdir.name, c, kit_status(cdir, c), len(files), len(voices)))
+        rigs = []
+        for png in sorted((cdir / "rig").glob("*/tpose.png")):
+            if (png.parent / "tpose.yaml").exists():
+                rigs.append(png.parent.name)
+            else:
+                problems.append(f"T-pose without a tpose.yaml (how to cut it): {cdir.name}/rig/{png.parent.name}/")
+        rows.append((cdir.name, c, kit_status(cdir, c), len(files), len(voices), ", ".join(rigs) or "-"))
     return rows
 
 
@@ -88,14 +94,15 @@ def render():
     chars = characters()
     out += ["## Characters", "",
             "Folder = id = the full name in kebab-case. Episodes refer to a character by id.", "",
-            "| Character | id | Role | Outfits | Puppet kit | Reference sheets | Voice clips |",
-            "|---|---|---|---|---|---|---|"]
-    for cid, c, kit, nref, nvoice in chars:
+            "| Character | id | Role | Outfits | Puppet kit | T-pose rig | Reference sheets | Voice clips |",
+            "|---|---|---|---|---|---|---|---|"]
+    for cid, c, kit, nref, nvoice, rigs in chars:
         style = c.get("style")
         tag = " (stand-in, off-style)" if style == "provisional" else ""
         out.append(f"| {c['name']}{tag} | [`{cid}`](characters/{cid}/) | {c.get('role', '')} | "
-                   f"{', '.join(c.get('outfits', {})) or '-'} | {kit} | {nref} | {nvoice} |")
+                   f"{', '.join(c.get('outfits', {})) or '-'} | {kit} | {rigs} | {nref} | {nvoice} |")
     out += ["", "Puppet kit = the front, three-quarter, side and hands sheets, labelled part by part and checked by eye. "
+            "T-pose rig = the outfits that have a single drawing of the character standing arms out, cut into a posable puppet that walks and gestures (`studio.rig.tpose`, `studio.anim.gait`). "
             "\"no kit yet\" characters have only reference art. Reference sheets live in each character's `reference/` folder, described in its `character.yaml`.", ""]
 
     bg = check_index(BACKGROUNDS / "backgrounds.yaml", BACKGROUNDS, "backgrounds", skip=("source",))

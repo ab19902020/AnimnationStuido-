@@ -33,4 +33,8 @@ timing.
   `build/` or the preview mp4 (both git-ignored). For a talking shot use the kit's assembled guide figure as the body
   with the head, eyes and mouth drawn over it (`Puppet`): the rig's loose limbs show their joints and look wrong.
   Review by rendering stills (`render --stills T ...`) and looking, then `check --video`.
+- T-pose rigs (`library/characters/<id>/rig/<outfit>/tpose.png` + `tpose.yaml`): `python3 -m studio.rig.tpose ID` cuts the
+  parts, `studio/anim/figure.py` poses and draws them (arms and legs bend along arcs at the joints), `studio/anim/gait.py`
+  walks, idles and waves them (`python3 -m studio.anim.gait ID --clip`). After a change to a pose or the cuts, look at
+  the strips and stills it writes in `build/anim/<id>/` and run its checks before saying it is right.
 - Keep the repo root clean: no loose uploads or scratch files (use the session scratchpad).

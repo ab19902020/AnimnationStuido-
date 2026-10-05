@@ -1,0 +1,64 @@
+# How tpose.png is cut into the parts of a puppet (studio.rig.tpose). Coordinates are tpose.png pixels, y down.
+# Side parts are written for the character's own right (image left); the left side is the same polygon mirrored about
+# `axis`, unless that part is written out for both sides (the left sleeve is longer: it carries the captain's armband).
+# A pixel belongs to the first part, in the order below, whose polygon holds it.
+image: tpose.png
+axis: 700                 # the body's centre line
+floor: 1092               # the ground under the boots
+
+parts:
+  head:                   # hair, ears, face and beard: cut along the underside of the beard, over the neck
+    poly: [[480, 0], [920, 0], [920, 372], [754, 372], [750, 369], [744, 373], [736, 378], [728, 382], [720, 385],
+           [712, 386], [704, 386.5], [696, 385.5], [688, 383], [680, 380], [672, 376], [664, 371], [656, 366],
+           [650, 372], [480, 372]]
+  boot_R:                 # the boot, from its collar down; the sock goes inside it
+    mirror: true
+    poly: [[500, 1002], [556, 1002], [566, 996], [574, 986], [612, 984], [620, 988], [622, 1000], [632, 1014],
+           [646, 1009], [653, 996], [700, 996], [700, 1100], [500, 1100]]
+  torso:                  # the shirt body: collar, neck, chest, hem. Sleeves are cut off along a slanted seam.
+    poly: [[560, 360], [840, 360], [840, 380], [818, 496], [830, 500], [832, 676], [820, 677], [800, 681],
+           [780, 685], [740, 689], [700, 690], [660, 689], [620, 685], [600, 681], [580, 677], [568, 676],
+           [570, 500], [582, 496], [560, 380]]
+  sleeve_R:
+    poly: [[473, 380], [560, 380], [582, 496], [582, 520], [476, 520], [477, 462], [473, 440]]
+  sleeve_L:
+    poly: [[942, 380], [840, 380], [818, 496], [818, 520], [940, 520], [940, 462], [942, 440]]
+  limb_R:                 # bare arm: forearm with its tattoo, wrist and hand
+    poly: [[100, 380], [473, 380], [473, 440], [477, 462], [476, 520], [100, 520]]
+  limb_L:
+    poly: [[1300, 380], [942, 380], [942, 440], [940, 462], [940, 520], [1300, 520]]
+  pelvis:                 # shorts
+    poly: [[530, 640], [870, 640], [870, 823], [530, 823]]
+  leg_R:                  # thigh (bare skin under the hem) and sock
+    mirror: true
+    poly: [[540, 823], [692, 823], [692, 1100], [540, 1100]]
+
+# Hidden overlaps: what is drawn behind a part's neighbour, so no gap opens when the pieces turn
+overlaps:
+  neck: {x: [656, 750], top: 352}               # neck skin up under the beard (torso)
+  waist: {rows: 44}                             # shorts waist up under the shirt hem (pelvis)
+  thigh: {rows: 60, ref: 824}                   # thigh skin up under the shorts, down behind the sock (leg)
+  sock: {ref: 982, down: 34}                    # sock down inside the boot (leg)
+  forearm: {R: {cuff: 473, to: 548}, L: {cuff: 942, to: 852}}     # bare arm run in under the sleeve (limb)
+  shoulder: {R: {x: 560, y: 443, r: 51}, L: {x: 840, y: 443, r: 51}}   # the sleeve's rounded end under the torso
+
+# How far each bending joint is spread: the drawn limb bends smoothly over this length (pixels) about the joint
+bends: {elbow: 72, wrist: 50, knee: 84}
+
+# Joints, rest positions on tpose.png
+joints:
+  root: [700, 770]                              # hips: the pelvis turns about it
+  waist: [700, 684]
+  neck: [700, 384]
+  shoulder_R: [560, 443]
+  shoulder_L: [840, 443]
+  elbow_R: [440, 444]
+  elbow_L: [975, 446]
+  wrist_R: [312, 443]
+  wrist_L: [1090, 446]
+  hip_R: [628, 770]
+  hip_L: [772, 770]
+  knee_R: [627, 835]
+  knee_L: [773, 835]
+  ankle_R: [614, 995]
+  ankle_L: [786, 995]

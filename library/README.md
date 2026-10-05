@@ -9,6 +9,8 @@ library/
     character.yaml         name, short name, role, height, look, outfits, and a description of every reference sheet
     kit/<outfit>/          the puppet kit: front, three_quarter, side and hands sheets (.png), each with a .yaml
                            saying which drawing is which part
+    rig/<outfit>/          a T-pose rig source: tpose.png (the character standing, arms out, nothing overlapping)
+                           and tpose.yaml (how it is cut into parts and where the joints are)
     reference/             everything else drawn for them: model sheets, outfit line-ups, expression and pose
                            sheets, older part atlases
   backgrounds/<setting>/ empty sets, by setting: stadiums, training-ground, club, tv-and-media, home, spa-and-pool,

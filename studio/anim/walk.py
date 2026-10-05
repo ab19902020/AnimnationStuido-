@@ -20,7 +20,8 @@ stocky figure takes short steps and a tall one long. The arms swing against the 
 counter-turns against the hips, the head stays level.
 Angles follow skeleton.py: degrees, clockwise on screen; a hanging limb swung forward (to screen-right) is negative.
 
-Status: prototype, not used by anything yet. On the current kits the result is not good enough (limb ends show at
+Status: prototype, not used by anything yet. For a character with a T-pose drawing, studio.anim.gait is the working
+version (planted feet, smooth bends, a rig built for it). On the current kits the result is not good enough (limb ends show at
 the knees and elbows, the head reads as stuck on): the kits' loose limbs are drawn at the wrong lengths and without
 joint-centred ends. Kept as the starting point for walks once kits are drawn for animation.""" 
 import argparse
