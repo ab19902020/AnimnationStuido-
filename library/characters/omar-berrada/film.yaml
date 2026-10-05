@@ -1,0 +1,4 @@
+# Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
+# given face landmarks. Check build/film/omar-berrada_check.jpg after any change.
+drawings:
+  front: {sheet: reference/model-sheet.png, box: [10, 98, 292, 864], faces: F, marks: {mouth: [178, 325, 217, 323, 198, 321], chin: 360, neck: [198, 382]}}   # the hero drawing

@@ -38,12 +38,14 @@ Folder = id = the full name in kebab-case. Episodes refer to a character by id.
 | Micah Richards | [`micah-richards`](characters/micah-richards/) | pundit | suit | 4/4 sheets checked | 1 | 0 |
 | Michael Carrick | [`michael-carrick`](characters/michael-carrick/) | manager | casual | 4/4 sheets checked | 3 | 0 |
 | Noussair Mazraoui | [`noussair-mazraoui`](characters/noussair-mazraoui/) | player | home | no kit yet | 0 | 0 |
+| Omar Berrada | [`omar-berrada`](characters/omar-berrada/) | executive | suit | no kit yet | 1 | 0 |
 | Patrice Evra | [`patrice-evra`](characters/patrice-evra/) | player | home | 4/4 sheets checked | 3 | 0 |
 | Patrick Dorgu | [`patrick-dorgu`](characters/patrick-dorgu/) | player | home | no kit yet | 0 | 0 |
 | Pep Guardiola | [`pep-guardiola`](characters/pep-guardiola/) | manager | casual | 4/4 sheets checked | 1 | 0 |
 | Rio Ferdinand | [`rio-ferdinand`](characters/rio-ferdinand/) | pundit | casual | 4/4 sheets checked | 3 | 0 |
 | Roy Keane (stand-in, off-style) | [`roy-keane`](characters/roy-keane/) | pundit | casual | 4/4 sheets checked | 0 | 0 |
 | Senne Lammens | [`senne-lammens`](characters/senne-lammens/) | player | home | no kit yet | 1 | 0 |
+| Steve Holland | [`steve-holland`](characters/steve-holland/) | coach | casual | no kit yet | 1 | 0 |
 | Wayne Rooney | [`wayne-rooney`](characters/wayne-rooney/) | pundit | casual | 4/4 sheets checked | 4 | 0 |
 | Youri Tielemans | [`youri-tielemans`](characters/youri-tielemans/) | player | home, casual, suit | no kit yet | 2 | 0 |
 
@@ -186,4 +188,4 @@ Older finished 'Stick to Football' party artwork, kept for the look and the stag
 
 ## Audio
 
-Voice bank: 0 clips in 37 character folders; sound effects: 36; music: 0. See [audio/README.md](audio/README.md) for what goes where.
+Voice bank: 0 clips in 39 character folders; sound effects: 36; music: 0. See [audio/README.md](audio/README.md) for what goes where.

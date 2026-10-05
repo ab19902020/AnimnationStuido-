@@ -658,7 +658,7 @@ def draw_fg_fans(img, opt, t, energy):
     col = (0.035, 0.018, 0.022, 1.0)
     p0 = S.phase(t)
     xs = (np.linspace(-0.04, 1.04, n) + rng.uniform(-0.025, 0.025, n)) * OW
-    rs = rng.uniform(0.072, 0.094, n) * OH
+    rs = rng.uniform(0.072, 0.094, n) * OH * opt.get("scale", 1.0)
     arms = rng.random(n) < opt.get("arms", 0.45)
     side = rng.choice([-1.0, 1.0], n)
     fists = []

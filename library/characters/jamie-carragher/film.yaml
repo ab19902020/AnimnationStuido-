@@ -1,0 +1,4 @@
+# Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
+# given face landmarks. Check build/film/jamie-carragher_check.jpg after any change.
+drawings:
+  front: {kit: casual/front, faces: F}

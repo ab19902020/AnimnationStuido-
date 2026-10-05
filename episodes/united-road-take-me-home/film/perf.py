@@ -12,7 +12,8 @@ from film.timeline import LINES, TL, bar
 
 BAND = ["bruno", "ronaldo", "cunha", "maguire", "mainoo", "shaw", "sesko"]
 CROWD = ["gary", "roy", "rio", "rooney", "evra", "carrick", "ratcliffe", "lammens", "tielemans", "amad", "mount",
-         "ugarte", "zirkzee", "mbeumo", "dalot", "deligt", "martinez", "yoro", "dorgu", "mazraoui", "cantona"]
+         "ugarte", "zirkzee", "mbeumo", "dalot", "deligt", "martinez", "yoro", "dorgu", "mazraoui", "cantona",
+         "holland", "berrada", "shearer", "lineker", "carragher", "micah"]
 WHO = BAND + CROWD
 END = TL["total"]
 
@@ -134,4 +135,5 @@ for c in CROWD:
     if c not in ("roy", "cantona"):
         sing(PERF, c, CHORUSES, gain=0.7, lag=1)
 sing(PERF, "gary", [(L(0) - 0.2, Le(34))], gain=0.75, lag=1)        # every word
+sing(PERF, "rooney", [(L(0) - 0.2, Le(34))], gain=0.8, lag=1)       # and so does Rooney
 sing(PERF, "roy", GLORY, gain=0.9, lag=1)

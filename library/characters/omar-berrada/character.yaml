@@ -1,0 +1,14 @@
+name: Omar Berrada
+short: Berrada
+role: executive
+style: house
+note: Model sheet only (reference/model-sheet.png, from the All or Something repo); no kit sheets yet. Filmed from the
+  sheet's drawings (film.yaml).
+likeness: 'Club CEO: short dark hair, trimmed beard, dark suit and red tie.'
+outfits:
+  suit:
+    description: Dark suit, white shirt, red tie.
+    sheets: []
+reference:
+  model-sheet.png: 'Model sheet (from All or Something, style 1, 2.5D): dark suit, red tie; turnaround, head views, expressions,
+    nine mouth shapes, gesture poses (arms crossed, explaining, pointing, clipboard, phone)'

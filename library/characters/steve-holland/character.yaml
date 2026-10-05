@@ -1,0 +1,14 @@
+name: Steve Holland
+short: Holland
+role: coach
+style: house
+note: Model sheet only (reference/model-sheet.png, from the All or Something repo); no kit sheets yet. Filmed from the
+  sheet's drawings (film.yaml).
+likeness: 'Coach: shaved head, stubble, black club tracksuit.'
+outfits:
+  casual:
+    description: Black Manchester United club tracksuit.
+    sheets: []
+reference:
+  model-sheet.png: 'Model sheet (from All or Something): hero drawing, turnaround, head views, ten mouth shapes, six
+    expressions, gesture poses (pointing, celebrate, talking, shrug), walk and run'
