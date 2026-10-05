@@ -49,13 +49,19 @@ OCCL = {k: {"kit": KIT, "monitors": MONITORS} for k in ("F", "FC")}
 
 # the lamps on the truss: soft beams swinging with the bars
 RED, WHITE, AMBER = (1.0, 0.16, 0.10), (1.0, 0.92, 0.82), (1.0, 0.55, 0.15)
-LAMPS = {k: [dict(at=(527, 112), aim=75, colors=[WHITE, RED]), dict(at=(603, 132), aim=95, colors=[RED, RED, AMBER]),
-             dict(at=(672, 112), aim=100, colors=[RED, WHITE]), dict(at=(836, 112), aim=90, colors=[WHITE, RED, RED]),
-             dict(at=(1002, 112), aim=80, colors=[RED, WHITE]), dict(at=(1072, 132), aim=85, colors=[RED, AMBER, RED]),
-             dict(at=(1143, 112), aim=105, colors=[WHITE, RED])] for k in ("F", "FC")}
+BLUE, MAGENTA, CYAN = (0.20, 0.42, 1.0), (1.0, 0.18, 0.66), (0.12, 0.95, 1.0)
+LAMPS = {k: [
+    dict(at=(527, 112), aim=75, colors=[WHITE, RED, MAGENTA, BLUE], swing=24, power=0.23),
+    dict(at=(603, 132), aim=95, colors=[RED, AMBER, MAGENTA, CYAN], swing=28, power=0.24),
+    dict(at=(672, 112), aim=100, colors=[BLUE, WHITE, RED, MAGENTA], swing=25, power=0.23),
+    dict(at=(836, 112), aim=90, colors=[WHITE, RED, BLUE, CYAN, MAGENTA], swing=30, power=0.27),
+    dict(at=(1002, 112), aim=80, colors=[MAGENTA, WHITE, BLUE, RED], swing=25, power=0.23),
+    dict(at=(1072, 132), aim=85, colors=[AMBER, RED, CYAN, MAGENTA], swing=28, power=0.24),
+    dict(at=(1143, 112), aim=105, colors=[WHITE, BLUE, RED, MAGENTA], swing=24, power=0.23),
+] for k in ("F", "FC")}
 
 # ---------------------------------------------------------------- the band (feet, height: 1x px of plate F)
-DRUMS = dict(grips={"R": (846, 388), "L": (916, 386)}, len=0.31, h=322, fist="harry-maguire:fist",
+DRUMS = dict(grips={"R": (846, 388), "L": (916, 386)}, len=0.31, h=322, fist=None,
              drums={"hat": (995, 372), "snare": (935, 402), "tom": (778, 394), "crash_l": (765, 338),
                     "crash_r": (968, 326)})
 BAND_F = {
@@ -91,12 +97,13 @@ def layers(fans=False, focus=None, fg_blur=8.0, bg_blur=5.0, hide=(), **over):
             over.setdefault(n, {})["blur"] = fg_blur
         for n in far:
             over.setdefault(n, {})["blur"] = bg_blur
+        over.setdefault(focus, {})["look_cam"] = True
     up = [n for n in UPSTAGE if n not in hide]
     fr = [n for n in FRONT if n not in hide]
-    lay = [("actors", band(*up, **over)), ("occl", "kit")]
+    lay = [("actors", band(*up, **over))]
     if "maguire" not in hide:
         lay.append(("sticks", dict(DRUMS, blur=over.get("maguire", {}).get("blur", 0.0))))
-    lay += [("actors", band(*fr, **over)), ("occl", "monitors")]
+    lay += [("occl", "kit"), ("actors", band(*fr, **over)), ("occl", "monitors")]
     if fans:
         lay.append(("fans", "FC"))
     return lay
@@ -125,10 +132,10 @@ def pushed(cam, f):
 
 
 # lighting by section
-CALM = dict(lights=0.7, beams=0.55, flash=0.35, punch=0.0, haze=0.15)
-VERSE = dict(lights=0.85, beams=0.7, flash=0.5, punch=0.6, haze=0.2)
-CHORUS = dict(lights=1.0, beams=1.0, flash=1.0, punch=1.0, shake=0.25, haze=0.25)
-ANTHEM = dict(lights=1.2, beams=1.1, flash=1.2, punch=1.3, shake=0.45, haze=0.3, fans_jump=1.3)
+CALM = dict(lights=0.82, beams=0.78, flash=0.45, punch=0.10, haze=0.20)
+VERSE = dict(lights=1.00, beams=1.02, flash=0.72, punch=0.70, haze=0.28)
+CHORUS = dict(lights=1.28, beams=1.38, flash=1.35, punch=1.25, shake=0.32, haze=0.40)
+ANTHEM = dict(lights=1.48, beams=1.58, flash=1.55, punch=1.45, shake=0.52, haze=0.48, fans_jump=1.38)
 
 
 def on(who, t0, t1, size="mcu", push=1.06, dx=0.0, dy=0.0, roll=0.0, **kw):
@@ -216,8 +223,7 @@ DR = {  # crowd drawings
     "mbeumo": "bryan-mbeumo:squad", "dalot": "diogo-dalot:squad",
     "martinez": "lisandro-martinez:squad", "yoro": "leny-yoro:squad", "dorgu": "patrick-dorgu:squad",
     "mazraoui": "noussair-mazraoui:squad", "cantona": "eric-cantona:pointing",
-    "holland": "steve-holland:front", "berrada": "omar-berrada:front", "shearer": "alan-shearer:front",
-    "lineker": "gary-lineker:front", "carragher": "jamie-carragher:front", "micah": "micah-richards:front",
+    "holland": "steve-holland:front", "berrada": "omar-berrada:front",
 }
 
 
@@ -232,7 +238,7 @@ def solo(a, x=960, back=()):
 
 
 FAR = ("amad", "mount", "dalot", "zirkzee", "mbeumo", "ugarte", "martinez", "dorgu", "mazraoui", "lammens",
-       "tielemans", "micah", "carragher", "shearer", "lineker", "evra", "holland", "carrick", "rio", "gary")
+       "tielemans", "evra", "holland", "carrick", "rio", "gary")
 
 
 def far(people, n=7, seed=0):
@@ -255,7 +261,7 @@ def misery(who, t0, t1, back, bg=0):
 GANG = ("roy", "rooney", "rio", "carrick")          # at the front of the crowd all night
 
 
-def gang(back=("gary", "evra", "shearer"), lead=("roy", "rooney")):
+def gang(back=("gary", "evra", "tielemans"), lead=("roy", "rooney")):
     """the four of them: two in front, the other two just behind, more faces at the back"""
     rest = [w for w in GANG if w not in lead]
     out = [person(w, x, 60, eye_y=328, blur=3.0) for w, x in zip(back, (960, 270, 1650))]
@@ -323,7 +329,7 @@ add(wide(0.0, b(2), (836, 470, 1.0), (836, 455, 1.12), dark=lights_up, lights=0.
     on("cunha", b(6), b(8), "ms", push=1.06, dx=0.05, **VERSE),
     on("sesko", b(8), b(10), "ms", push=1.06, dx=-0.05, **VERSE),
     on("mainoo", b(10), b(12), "ms", push=1.06, **VERSE),
-    crowd(b(12), b(13), packed(("rio", "evra"), ("micah", "carrick", "carragher"), ("lineker", "amad", "mount", "dalot")), bg=2),
+    crowd(b(12), b(13), packed(("rio", "evra"), ("ugarte", "carrick", "zirkzee"), ("tielemans", "amad", "mount", "dalot")), bg=2),
     wide(b(13), b(14), (836, 440, 1.2), (836, 425, 1.3), **VERSE),
     on("bruno", b(14), b(16), "mcu", push=1.10, **VERSE))
 
@@ -331,7 +337,7 @@ add(wide(0.0, b(2), (836, 470, 1.0), (836, 455, 1.12), dark=lights_up, lights=0.
 add(on("bruno", b(16), b(18), "ms", push=1.08, dx=0.04, **VERSE),
     stage_wide(b(18), b(20), (760, 360, 1.9), (800, 355, 2.0), **VERSE),
     on("bruno", b(20), b(21), "cu", push=1.04, **VERSE),
-    crowd(b(21), b(22), packed(("rooney", "evra"), ("micah", "carragher", "shearer"), ("lineker", "holland", "berrada", "ratcliffe")), bg=1),
+    crowd(b(21), b(22), packed(("rooney", "evra"), ("ugarte", "zirkzee", "tielemans"), ("lammens", "holland", "berrada", "ratcliffe")), bg=1),
     on("bruno", b(22), b(24), "ms", push=1.05, dx=0.08, **VERSE),
     on("sesko", b(24), b(25), "mcu", push=1.06, **VERSE),
     crowd(b(25), b(26), solo("gary", back=(("roy", 1450),)), bg=2),
@@ -340,7 +346,7 @@ add(on("bruno", b(16), b(18), "ms", push=1.08, dx=0.04, **VERSE),
 # CHORUS 1, bars 27-36: lights up, the fans jump, a cut every bar
 add(wide(b(27), b(28), (836, 430, 1.25), (836, 420, 1.32), **CHORUS),
     on("bruno", b(28), b(29), "mcu", push=1.05, roll=-3.0, **CHORUS),
-    crowd(b(29), b(30), gang(back=("gary", "micah", "evra")), bg=3, lights=0.7),
+    crowd(b(29), b(30), gang(back=("gary", "ugarte", "evra")), bg=3, lights=0.7),
     on("maguire", b(30), b(31), "mcu", push=1.08, **CHORUS),
     on("bruno", b(31), b(32), "cu", push=1.05, **CHORUS),
     on("shaw", b(32), b(33), "mcu", push=1.05, roll=-2.0, **CHORUS),
@@ -377,7 +383,7 @@ SOLO = dict(CHORUS, spot=dict(at="yoro", r=105, dark=0.6), flash=1.2)
 add(stage_wide(b(57), b(58), (640, 372, 1.6), (610, 376, 1.75), **SOLO),
     on("yoro", b(58), b(59), "mcu", push=1.08, roll=-4.0, **SOLO),
     two("yoro", "sesko", b(59), b(60), size="ms", roll=3.0, **SOLO),
-    reverse(b(60), b(61), ("evra", "rio", "roy", "rooney", "carrick"), ("gary", "shearer", "micah", "carragher", "lineker", "holland"), ("ratcliffe", "berrada", "amad", "mount", "zirkzee", "mbeumo", "dalot"), lights=0.9),
+    reverse(b(60), b(61), ("evra", "rio", "roy", "rooney", "carrick"), ("gary", "tielemans", "ugarte", "zirkzee", "lammens", "holland"), ("ratcliffe", "berrada", "amad", "mount", "zirkzee", "mbeumo", "dalot"), lights=0.9),
     on("yoro", b(61), b(62), "mcu", push=1.08, dy=0.03, **SOLO),
     on("bruno", b(62), b(63), "ms", push=1.04, **CHORUS),
     on("yoro", b(63), b(64), "ms", push=1.12, roll=-5.0, **SOLO))
@@ -388,7 +394,7 @@ add(stage_wide(b(64), b(66), (836, 380, 1.6), (780, 330, 2.6), **BRIDGE),
     on("bruno", b(66), b(68), "mcu", push=1.10, **BRIDGE),
     crowd(b(68), b(69), packed(("carrick", "ratcliffe"), ("tielemans", "holland", "berrada"), ("lammens", "dalot", "mount", "amad")), bg=2, lights=0.3),
     on("bruno", b(69), b(70), "cu", push=1.05, **BRIDGE),
-    crowd(b(70), b(71), gang(lead=("rio", "carrick"), back=("gary", "lineker", "shearer")), bg=3, lights=0.3),
+    crowd(b(70), b(71), gang(lead=("rio", "carrick"), back=("gary", "lammens", "tielemans")), bg=3, lights=0.3),
     on("bruno", b(71), b(72), "cu", push=1.08, **BRIDGE))
 
 # BUILD, bars 72-75: the drums come in; a cut on every bar; the camera pulls back
@@ -401,43 +407,43 @@ add(stage_wide(b(75), b(76), (836, 372, 1.7), (836, 362, 1.9), **ANTHEM),
     on("bruno", b(76), b(77), "mcu", push=1.05, roll=-3.0, **ANTHEM),
     crowd(b(77), b(78), packed(("zirkzee", "mbeumo"), ("ugarte", "martinez", "lammens"), ("dorgu", "amad", "dalot", "mazraoui")), bg=0, lights=0.8),
     on("sesko", b(78), b(79), "ms", push=1.06, roll=3.0, **ANTHEM),
-    crowd(b(79), b(80), gang(back=("gary", "carragher", "evra")), bg=1, lights=0.8),
+    crowd(b(79), b(80), gang(back=("gary", "zirkzee", "evra")), bg=1, lights=0.8),
     on("cunha", b(80), b(81), "ms", push=1.06, **ANTHEM),
     on("maguire", b(81), b(82), "mcu", push=1.08, **ANTHEM),
     wide(b(82), b(83), (836, 420, 1.3), (836, 470, 1.0), **ANTHEM))
 
 # OUTRO, bars 83-97: the anthem; the crowd one face after another
 add(stage_wide(b(83), b(84), (836, 372, 1.7), (836, 365, 1.85), **ANTHEM),
-    misery("ratcliffe", b(84), b(85), back=("gary", "rooney", "evra", "rio", "micah"), bg=2),
+    misery("ratcliffe", b(84), b(85), back=("gary", "rooney", "evra", "rio", "ugarte"), bg=2),
     on("bruno", b(85), b(86), "mcu", push=1.05, roll=2.5, **ANTHEM),
-    reverse(b(86), b(87), ("rio", "carrick", "roy", "rooney", "gary"), ("evra", "micah", "shearer", "lineker", "carragher", "holland"), ("berrada", "ratcliffe", "lammens", "tielemans", "mbeumo", "martinez", "yoro"), lights=0.8),
+    reverse(b(86), b(87), ("rio", "carrick", "roy", "rooney", "gary"), ("evra", "ugarte", "tielemans", "lammens", "zirkzee", "holland"), ("berrada", "ratcliffe", "lammens", "tielemans", "mbeumo", "martinez", "yoro"), lights=0.8),
     on("mainoo", b(87), b(88), "ms", push=1.06, **ANTHEM),
-    crowd(b(88), b(89), gang(lead=("rooney", "rio"), back=("evra", "micah", "gary")), bg=0, lights=0.8),
+    crowd(b(88), b(89), gang(lead=("rooney", "rio"), back=("evra", "ugarte", "gary")), bg=0, lights=0.8),
     on("shaw", b(89), b(89, 0.5), "mcu", push=1.04, roll=-2.5, **ANTHEM),
     on("deligt", b(89, 0.5), b(90), "mcu", push=1.04, roll=2.5, **ANTHEM),
-    crowd(b(90), b(91), packed(("shearer", "lineker"), ("micah", "carragher", "evra"), ("amad", "mount", "dalot", "zirkzee")), bg=1, lights=0.8),
+    crowd(b(90), b(91), packed(("tielemans", "lammens"), ("ugarte", "zirkzee", "evra"), ("amad", "mount", "dalot", "mbeumo")), bg=1, lights=0.8),
     on("bruno", b(91), b(92), "cu", push=1.05, **ANTHEM),
     wide(b(92), b(93), (836, 440, 1.2), (836, 425, 1.3), **ANTHEM),
     crowd(b(93), b(94), solo("roy", back=(("gary", 520), ("rio", 1400))), bg=2, lights=0.8),
     on("sesko", b(94), b(95), "mcu", push=1.06, roll=-3.0, **ANTHEM),
-    misery("berrada", b(95), b(96), back=("carrick", "shearer", "lineker", "carragher", "amad"), bg=3),
+    misery("berrada", b(95), b(96), back=("carrick", "tielemans", "lammens", "zirkzee", "amad"), bg=3),
     on("maguire", b(96), b(97), "mcu", push=1.08, **ANTHEM))
 
 # FINALE, bars 97-108: To Old Trafford... Glory, glory Man United: Roy goes
 add(wide(b(97), b(98), (836, 470, 1.0), (836, 440, 1.2), **ANTHEM),
     on("bruno", b(98), b(99), "mcu", push=1.05, **ANTHEM),
-    reverse(b(99), b(100), ("carrick", "rooney", "roy", "rio", "gary"), ("shearer", "evra", "micah", "holland", "carragher", "lineker"), ("amad", "mount", "zirkzee", "mbeumo", "dalot", "martinez", "ratcliffe"), lights=0.95),
+    reverse(b(99), b(100), ("carrick", "rooney", "roy", "rio", "gary"), ("tielemans", "evra", "ugarte", "holland", "zirkzee", "lammens"), ("amad", "mount", "zirkzee", "mbeumo", "dalot", "martinez", "ratcliffe"), lights=0.95),
     stage_wide(b(100), b(101), (836, 372, 1.7), (836, 365, 1.85), **ANTHEM),
     on("bruno", b(101), b(102), "cu", push=1.05, **ANTHEM),
     crowd(b(102), b(103), gang(lead=("rooney", "roy"), back=("evra", "zirkzee", "gary")), bg=1, lights=0.9),
     on("cunha", b(103), b(104), "ms", push=1.06, roll=3.0, **ANTHEM),
     wide(b(104), b(105), (836, 430, 1.25), (836, 420, 1.3), **ANTHEM),
     crowd(b(105), b(106, 0.5), solo("roy", back=(("gary", 500), ("rio", 1420))), bg=2, lights=1.0, shake=0.6),
-    crowd(b(106, 0.5), b(107), gang(back=("gary", "evra", "shearer")), bg=3, lights=1.0, shake=0.6),
+    crowd(b(106, 0.5), b(107), gang(back=("gary", "evra", "tielemans")), bg=3, lights=1.0, shake=0.6),
     on("bruno", b(107), b(108), "mcu", push=1.06, roll=-3.0, **ANTHEM))
 
 # CANTONA, bars 108-111: Give Cantona on his own
-add(crowd(b(108), b(108, 0.5), gang(back=("gary", "evra", "micah")), bg=0, lights=0.6),
+add(crowd(b(108), b(108, 0.5), gang(back=("gary", "evra", "ugarte")), bg=0, lights=0.6),
     crowd(b(108, 0.5), b(110), [person("cantona", 900, 92, eye_y=300)], bg=1, blur=9.0,
           lights=0.5, spot=dict(at="cantona", r=420, dark=0.55, fin=0.15)),
     on("bruno", b(110), b(111), "ms", push=1.05, **ANTHEM))
@@ -470,7 +476,8 @@ CAPTIONS = [
     (b(108, 0.6), b(110) - 0.15, "name", "ERIC CANTONA", "On his own."),
 ]
 WHIPS = []
-STROBE = [(b(63), b(64))]
+STROBE = [(b(35, 0.72), b(36)), (b(56, 0.72), b(57)), (b(63, 0.35), b(64)),
+          (b(82, 0.72), b(83)), (b(107, 0.55), b(108)), (b(115, 0.30), b(115, 0.90))]
 
 
 def shot_at(t):
