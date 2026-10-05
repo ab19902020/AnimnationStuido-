@@ -35,5 +35,6 @@ timing.
   `film.yaml` and a checked `build/film/<id>_check.jpg` (the `cast` skill). Review by rendering stills
   (`EP_RES=960x540 python3 -m studio.film SLUG still T ...`) and looking, then `render`, `sheet` and `check`.
   Commit the sources and the finished `<slug>.mp4`; never `build/`. `studio/episode/` (the cut-out pipeline) is
-  retired for episodes, but its speech tools are still used.
+  retired for episodes, but its speech tools are still used. A music video (a song to be performed) follows the
+  `music-video` skill: `song` analyses the track, stage shots perform it.
 - Keep the repo root clean: no loose uploads or scratch files (use the session scratchpad).

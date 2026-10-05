@@ -6,6 +6,7 @@
     python3 -m studio.film SLUG sound                 the mix: build/episode_audio.wav
     python3 -m studio.film SLUG still T [T ...]       single frames: build/stills/
     python3 -m studio.film SLUG render [--jobs N]     the film: episodes/<slug>/<slug>.mp4 (with the mix); N = cores
+                      [--range A B]     only seconds A to B, to look at: build/preview.mp4
     python3 -m studio.film SLUG check                 re-hear every line in the finished mix (Whisper)
     python3 -m studio.film SLUG sheet                 a contact sheet of every shot: build/contact.jpg
     python3 -m studio.film SLUG lips                  the mouths at the stressed words and closures: build/lips.jpg
@@ -33,7 +34,9 @@ def prepare():
         keys.update(a[1] for a in s.get("actors", []))
         for kind, val in s.get("layers", []):
             if kind == "actors":
-                keys.update(a[1] for a in val)
+                keys.update(a["draw"] if isinstance(a, dict) else a[1] for a in val)
+            if kind == "sticks" and val.get("fist"):
+                keys.add(val["fist"])
     keys.update(getattr(D, "DRAW", {}).values())
     need = {}
     for k in sorted(keys):
@@ -160,13 +163,18 @@ def main():
         TL = importlib.import_module("film.timeline").TL
         jobs = int(args[args.index("--jobs") + 1]) if "--jobs" in args else (os.cpu_count() or 4)
         n = int(math.ceil(TL["total"] * FPS))
-        q = (n + jobs - 1) // jobs
+        f0 = 0
+        preview = "--range" in args                     # a stretch only: --range A B (seconds) -> build/preview.mp4
+        if preview:
+            i = args.index("--range")
+            f0, n = int(float(args[i + 1]) * FPS), int(float(args[i + 2]) * FPS)
+        q = (n - f0 + jobs - 1) // jobs
         procs = []
         # one thread per job: the jobs share the cores instead of fighting over them
         env = dict(os.environ, FILM_EPISODE=slug, PYTHONPATH=f"{d}:{os.getcwd()}", OMP_NUM_THREADS="1",
                    OPENBLAS_NUM_THREADS="1", MKL_NUM_THREADS="1", FILM_THREADS="1")
         for k in range(jobs):
-            a, b = k * q, min(n, (k + 1) * q)
+            a, b = f0 + k * q, min(n, f0 + (k + 1) * q)
             log = open(ep.path(f"render{k}.log"), "w")
             procs.append(subprocess.Popen([sys.executable, "-m", "studio.film.render", "chunk", str(a), str(b),
                                            str(ep.path(f"part{k}.mp4"))], env=env, stdout=log, stderr=log))
@@ -176,11 +184,13 @@ def main():
         if failed:
             raise SystemExit("render failed: see " + ", ".join(str(ep.path(f"render{k}.log")) for k in failed))
         ep.path("parts.txt").write_text("".join(f"file 'part{k}.mp4'\n" for k in range(jobs)))
-        out = d / f"{slug}.mp4"
-        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(ep.path("parts.txt")),
-                        "-i", str(ep.path("episode_audio.wav")), "-map", "0:v", "-map", "1:a", "-c:v", "libx264",
-                        "-preset", "slow", "-crf", "20", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "256k",
-                        "-shortest", "-movflags", "+faststart", str(out)], check=True)
+        out = ep.path("preview.mp4") if preview else d / f"{slug}.mp4"
+        audio = ep.path("episode_audio.wav")
+        a_in = ["-ss", f"{f0 / FPS:.3f}", "-i", str(audio)] if preview else ["-i", str(audio)]
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(ep.path("parts.txt"))]
+                       + a_in + ["-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "20",
+                                 "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "256k", "-shortest", "-movflags",
+                                 "+faststart", str(out)], check=True)
         print(out)
     elif cmd == "check":
         from studio.film import audio

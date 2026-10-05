@@ -1,4 +1,4 @@
 # Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
 # given face landmarks. Check build/film/jim-ratcliffe_check.jpg after any change.
 drawings:
-  front: {kit: casual/front, faces: F}
+  front: {kit: casual/front, faces: F, marks: {eyes: [[1315, 236, 17.5, 15.5], [1370.5, 236.5, 18, 16]], mouth: [1319, 300, 1369, 302, 1344, 298], chin: 335, neck: [1344, 368]}}

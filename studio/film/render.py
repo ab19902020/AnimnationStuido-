@@ -22,6 +22,7 @@ from studio.film import engine as E
 from studio.film import graphics as G
 from studio.film.cast import CAST
 from studio.film.engine import FPS, OH, OW, RS
+from studio.film.shots import ease
 
 D = importlib.import_module("film.direction")
 PERF = importlib.import_module("film.perf").PERF
@@ -131,9 +132,9 @@ def world_resolver(s, who, pos):
 # ---------------------------------------------------------------- shots
 def render_single(s, t, extra_dx=0.0):
     u = (t - s["t"]) / max(1e-3, s["end"] - s["t"])
-    p = s["push"][0] + (s["push"][1] - s["push"][0]) * D.ease(u)
+    p = s["push"][0] + (s["push"][1] - s["push"][0]) * ease(u)
     if s.get("punch") and t >= s["punch"][0]:          # a snap punch-in on the punchline (3 frames)
-        p *= 1 + (s["punch"][1] - 1) * D.ease((t - s["punch"][0]) / 0.1)
+        p *= 1 + (s["punch"][1] - 1) * ease((t - s["punch"][0]) / 0.1)
     dx, dy = drift(t, s, s["drift"])
     if s.get("shake"):
         sx, sy = shake(t, 9.0)
@@ -195,10 +196,10 @@ def cam_at(s, t):
         if k == 0 and t < ks[0][0]:
             return ks[0][1]
         if k + 1 < len(ks):
-            u = D.ease((t - ks[k][0]) / max(1e-3, ks[k + 1][0] - ks[k][0]))
+            u = ease((t - ks[k][0]) / max(1e-3, ks[k + 1][0] - ks[k][0]))
             return tuple(a + (b - a) * u for a, b in zip(ks[k][1], ks[k + 1][1]))
         return ks[k][1]
-    u = D.ease((t - s["t"]) / max(1e-3, s["end"] - s["t"]), s.get("ease", "inout"))
+    u = ease((t - s["t"]) / max(1e-3, s["end"] - s["t"]), s.get("ease", "inout"))
     return tuple(a + (b - a) * u for a, b in zip(s["cam0"], s["cam1"]))
 
 
@@ -300,6 +301,9 @@ def render_frame(f):
         img = render_single(s, t)
     elif kind == "group":
         img = render_group(s, t)
+    elif kind == "stage":                                     # a music video's stage (studio/film/stage.py)
+        from studio.film import stage
+        img = stage.render(s, t)
     else:
         img = render_world(s, t)
     # whip pan: the camera swings across the cut with a directional motion blur

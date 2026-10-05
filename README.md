@@ -6,8 +6,9 @@ sound and the finish. Give Claude the script and say "produce it" (the `produce`
 
 **Status.** Done: the character library and kit ingest, and the film engine (`studio/film`, the method All or
 Something was made with). A 60-second test of *The Appeals Department* is made with the actors' recordings:
-`episodes/the-appeals-department/the-appeals-department.mp4` (Scene 1 and the start of Scene 2). Not done: the rest
-of that episode. Gary Neville, Roy Keane and Jamie Carragher are still on off-style stand-in kits.
+`episodes/the-appeals-department/the-appeals-department.mp4` (Scene 1 and the start of Scene 2). A music video,
+*United Road (Take Me Home)*: `episodes/united-road-take-me-home/` (the `music-video` skill). Not done: the rest of
+The Appeals Department. Gary Neville, Roy Keane and Jamie Carragher are still on off-style stand-in kits.
 
 ## How it works (the All or Something method)
 
@@ -111,6 +112,11 @@ python3 -m studio.film SLUG render                               # episodes/SLUG
 python3 -m studio.film SLUG sheet                                # build/contact.jpg: three frames of every shot
 python3 -m studio.film SLUG lips                                 # build/lips.jpg: the mouths at the stressed words
 ```
+
+A **music video** is an episode with `song.mp3` and `lyrics.md` in place of the voiceovers: `python3 -m studio.film
+SLUG song` works out the beat grid, the bars, the drum hits, the lyrics' timing and the singers' mouths
+(`studio/film/song.py`), and stage shots (`studio/film/stage.py`) put a band and a crowd on a set, playing, singing
+and dancing to it. The steps are in `.claude/skills/music-video/SKILL.md`.
 
 The earlier cut-out pipeline (`studio/episode/`, read from `cast.yaml`, `beats.yaml`, `cues.yaml`, `staging.yaml`
 and `shots.yaml`) is retired for episodes: its loose-limbed rigs showed their joints. Its speech tools

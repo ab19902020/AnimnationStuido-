@@ -1,4 +1,4 @@
 # Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
 # given face landmarks. Check build/film/eric-cantona_check.jpg after any change.
 drawings:
-  pointing: {sheet: reference/pointing.png, box: [150, 20, 1030, 1392], faces: R}     # the hero drawing
+  pointing: {sheet: reference/pointing.png, box: [150, 20, 1030, 1392], faces: R, marks: {eyes: [[445, 207, 29, 23], [534, 196, 21, 24]], mouth: [467, 295, 537, 288, 501, 286], chin: 325, neck: [505, 352]}, head: [290, 20, 605, 360]}     # the hero drawing

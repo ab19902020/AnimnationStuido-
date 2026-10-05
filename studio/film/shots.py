@@ -64,6 +64,15 @@ def world(t, plate, cam0, cam1=None, layers=(), grade="studio", drift=0.6, blur=
     return d
 
 
+def stage(t, plate, cams, layers, grade="stage", drift=0.5, **extra):
+    """a music video's stage (studio/film/stage.py): the plate at cams [(t, (cx, cy, zoom[, roll deg]))], layers
+    of actors (by their feet and height), the plate's occluders, a foreground crowd; extra: lights, beams, haze,
+    flash, punch, shake, dark, rim, blur, energy, fans_jump"""
+    d = dict(t=t, kind="stage", plate=plate, cams=cams, layers=list(layers), grade=grade, drift=drift)
+    d.update(extra)
+    return d
+
+
 def group(t, actors, cams, bg, fg=None, table_y=None, grade="studio", drift=0.5, **extra):
     """several characters composited like a single; cams: [(t, (stage x, stage y, zoom))]"""
     d = dict(t=t, kind="group", actors=actors, cams=cams, table_y=table_y, bg=bg, fg=fg, grade=grade, drift=drift)

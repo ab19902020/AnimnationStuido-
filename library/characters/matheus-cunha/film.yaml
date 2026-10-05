@@ -1,5 +1,5 @@
 # Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
 # given face landmarks. Check build/film/matheus-cunha_check.jpg after any change.
 drawings:
-  front: {kit: home/front, faces: F}
-  points: {sheet: ../../reference/squad/manchester-united-squad.png, box: [18, 593, 197, 946], faces: F}     # the squad sheet
+  front: {kit: home/front, faces: F, marks: {mouth: [1261, 290, 1342, 289, 1300, 296], chin: 322, neck: [1300, 352]}}
+  points: {sheet: ../../reference/squad/manchester-united-squad.png, box: [18, 593, 197, 946], faces: F, marks: {mouth: [100, 691, 133, 686, 115, 698], chin: 712, neck: [113, 730]}}     # the squad sheet

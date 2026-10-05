@@ -1,5 +1,5 @@
 # Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
 # given face landmarks. Check build/film/kobbie-mainoo_check.jpg after any change.
 drawings:
-  front: {sheet: reference/model-sheet.png, box: [5, 100, 288, 832], faces: F}   # the hero drawing
+  front: {sheet: reference/model-sheet.png, box: [5, 100, 288, 832], faces: F, marks: {mouth: [117, 278, 174, 277, 146, 283], chin: 308, neck: [146, 330]}}   # the hero drawing
   squad: {sheet: ../../reference/squad/manchester-united-squad.png, box: [388, 183, 562, 538], faces: F}     # the squad sheet

@@ -23,7 +23,10 @@ Which drawings a character has is library/characters/<id>/film.yaml:
   x8       a second upscale pass for small drawings seen large
   marks    hand-set landmarks where detection can't see them (beards): {eyes, mouth, chin, neck, head}
   head     the head's box [x0, y0, x1, y1] (sheet px) if the automatic one (top of the figure) is wrong
-  plain    no face to animate (backs, walking poses seen small)"""
+  plain    no face to animate (backs, walking poses seen small)
+  holes    points in paper the drawing encloses that the cut keeps (between an arm and the body)
+  auto_holes  false: keep flat paper-coloured patches inside the figure (cream boots, a white shirt drawn flat);
+           by default they are taken out as enclosed paper (between the legs, closed off by the ground shadow)"""
 import argparse
 import json
 import sys
@@ -89,7 +92,7 @@ def cut_kit(cid, ref):
     return out, (int(x0), int(y0))
 
 
-def cut_sheet(cid, path, box, holes=()):
+def cut_sheet(cid, path, box, holes=(), auto_holes=True):
     """a drawing on paper: the box upscaled, then the paper flood-filled away from the box border (the ink outline
     stops it); everything inside the outline is kept, so white eyes and shirts stay solid. -> (RGBA 4x, (x0, y0))"""
     img = cv2.imread(str(CHARACTERS / cid / path), cv2.IMREAD_COLOR)
@@ -120,18 +123,23 @@ def cut_sheet(cid, path, box, holes=()):
     keep = cv2.erode(keep, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))     # 2 px inside the outline
     a = cv2.GaussianBlur(keep.astype(np.float32), (0, 0), 0.9)
     a = np.clip((a - 0.25) / 0.5, 0, 1)
-    # the paper between the legs of a standing figure: the ground shadow under the boots closes it off from the
-    # paper round the drawing, so it is found from below the crotch, in the middle of the feet
-    holes = list(holes)
-    ys_, xs_ = np.nonzero(a > 0.5)
-    if len(ys_):
-        top, bot = ys_.min(), ys_.max()
-        low = ys_ > bot - 0.04 * (bot - top)
-        fxm = int(xs_[low].mean())
-        for fy in np.linspace(top + 0.74 * (bot - top), top + 0.95 * (bot - top), 12):
-            if a[int(fy), fxm] > 0.5 and g[int(fy), fxm] > 222:
-                holes.append((fxm / 4 + x0, int(fy) / 4 + y0))
-                break
+    # paper the drawing encloses (between the legs, closed off by the ground shadow under the boots; between an arm
+    # and the body): flat patches of exactly the paper's colour inside the figure. Nothing drawn is that flat and
+    # that colour (white shorts are shaded, eye whites are whiter, cream boots are textured)
+    if auto_holes and paper.any():
+        pc = np.median(im[paper].reshape(-1, 3).astype(np.float32), 0)
+        f = im.astype(np.float32)
+        dist = np.abs(f - pc).max(2)
+        mu = cv2.blur(f, (9, 9))
+        sd = np.sqrt(np.maximum(0, cv2.blur(f * f, (9, 9)) - mu * mu)).max(2)
+        cand = ((a > 0.5) & (dist < 6) & (sd < 2.5)).astype(np.uint8)
+        ys_, _ = np.nonzero(a > 0.5)
+        below = ys_.min() + 0.42 * (ys_.max() - ys_.min()) if len(ys_) else 0     # under the shoulders only: eye
+        n3, lab3, st3, _ = cv2.connectedComponentsWithStats(cand, 4)                # whites and collars are flat white
+        for k in range(1, n3):
+            if st3[k, cv2.CC_STAT_AREA] > 0.0008 * w * h and st3[k, cv2.CC_STAT_TOP] > below:
+                m3 = cv2.dilate((lab3 == k).astype(np.uint8), np.ones((11, 11), np.uint8)) > 0     # and its halo
+                a[m3 & (g > 175)] = 0
     for hx, hy in holes:                         # paper enclosed by the drawing (between an arm and the body)
         sx, sy = int((hx - x0) * 4), int((hy - y0) * 4)
         r = 60
@@ -256,7 +264,8 @@ def make(cid, name, d):
         crop, off = cut_kit(cid, d["kit"])
         part = upscale_rgba(crop)
     else:
-        part, off = cut_sheet(cid, d["sheet"], d["box"], [tuple(h) for h in d.get("holes", [])])
+        part, off = cut_sheet(cid, d["sheet"], d["box"], [tuple(h) for h in d.get("holes", [])],
+                              d.get("auto_holes", True))
     K = 4
     if d.get("close_mouth"):
         part = close_mouth(part, K, off, *d["close_mouth"])

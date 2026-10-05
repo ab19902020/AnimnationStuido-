@@ -2,3 +2,4 @@
 # given face landmarks. Check build/film/harry-maguire_check.jpg after any change.
 drawings:
   front: {sheet: reference/model-sheet.png, box: [5, 100, 288, 832], faces: F}   # the hero drawing
+  fist: {sheet: reference/model-sheet.png, box: [100, 1118, 160, 1186], plain: true, auto_holes: false}   # a drummer's grip
