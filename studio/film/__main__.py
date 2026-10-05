@@ -6,7 +6,9 @@
     python3 -m studio.film SLUG sound                 the mix: build/episode_audio.wav
     python3 -m studio.film SLUG still T [T ...]       single frames: build/stills/
     python3 -m studio.film SLUG render [--jobs N]     the film: episodes/<slug>/<slug>.mp4 (with the mix); N = cores
-                      [--chunks K]      in K pieces, N at a time, the most crowded first (default 6 per job)
+                      [--chunks K]      in K pieces, N at a time, the most crowded first (default 6 per job),
+                                        as many at once as FILM_MEM_GB (default 12.5) allows
+                      [--resume]        keep the pieces a failed render finished
                       [--range A B]     only seconds A to B, to look at: build/preview.mp4
     python3 -m studio.film SLUG check                 re-hear every line in the finished mix (Whisper)
     python3 -m studio.film SLUG sheet                 a contact sheet of every shot: build/contact.jpg
@@ -202,28 +204,57 @@ def main():
         import time
         D = importlib.import_module("film.direction")
 
+        def people(a, b):                                # the most people any frame of a stretch has on screen
+            return max(sum(len(v) for kd, v in D.shot_at(f / FPS).get("layers", []) if kd == "actors")
+                       for f in range(a, b, 15))
+
         def cost(a, b):                                  # a frame costs more the more people are in it
-            tot = 0.0
-            for f in range(a, b, 15):
-                s = D.shot_at(f / FPS)
-                tot += 1 + 0.12 * sum(len(v) for kd, v in s.get("layers", []) if kd == "actors")
-            return tot
-        # the heaviest chunks first, so the cores finish together
-        waiting, running, failed = sorted(enumerate(ranges), key=lambda kr: -cost(*kr[1])), [], []
+            return sum(1 + 0.12 * sum(len(v) for kd, v in D.shot_at(f / FPS).get("layers", []) if kd == "actors")
+                       for f in range(a, b, 15))
+
+        def peak_gb(a, b):                               # what a chunk grows to: every drawing it meets stays loaded
+            return 1.6 + 0.15 * people(a, b)              # (measured: 3.6 GB for a crowd of fourteen)
+
+        budget = float(os.environ.get("FILM_MEM_GB", 12.5))   # the session's limit is 14.3 GB, encoders included
+        # resume: a chunk already rendered (its part and a .done for the same frames) is not rendered again
+        done = set()
+        if "--resume" in args:
+            for k, (a, b) in enumerate(ranges):
+                dk = ep.path(f"part{k}.done")
+                if dk.exists() and dk.read_text().split() == [str(a), str(b)] and ep.path(f"part{k}.mp4").exists():
+                    done.add(k)
+            if done:
+                print(f"resuming: {len(done)} of {len(ranges)} chunks already rendered")
+        for k in range(len(ranges)):
+            if k not in done:
+                ep.path(f"part{k}.done").unlink(missing_ok=True)
+        # the heaviest chunks first, so the cores finish together, as many at once as the cores and the memory allow
+        waiting = sorted(((k, r) for k, r in enumerate(ranges) if k not in done), key=lambda kr: -cost(*kr[1]))
+        running, failed = [], []
         while waiting or running:
             while waiting and len(running) < jobs:
-                k, (a, b) = waiting.pop(0)
+                use = sum(g for _, _, g in running)
+                pick = next((i for i, (k, r) in enumerate(waiting) if use + peak_gb(*r) <= budget), None)
+                if pick is None:
+                    if running:
+                        break
+                    pick = 0                             # alone it must run whatever it costs
+                k, (a, b) = waiting.pop(pick)
                 log = open(ep.path(f"render{k}.log"), "w")
                 running.append((k, subprocess.Popen([sys.executable, "-m", "studio.film.render", "chunk", str(a), str(b),
-                                                     str(ep.path(f"part{k}.mp4"))], env=env, stdout=log, stderr=log)))
+                                                     str(ep.path(f"part{k}.mp4"))], env=env, stdout=log, stderr=log),
+                                peak_gb(a, b)))
             time.sleep(2)
-            for k, p in list(running):
+            for item in list(running):
+                k, p, _ = item
                 if p.poll() is not None:
-                    running.remove((k, p))
+                    running.remove(item)
                     if p.returncode:
                         failed.append(k)
+                    else:
+                        ep.path(f"part{k}.done").write_text(f"{ranges[k][0]} {ranges[k][1]}")
             if failed:
-                for _, p in running:
+                for _, p, _ in running:
                     p.kill()
                 break
         if failed:

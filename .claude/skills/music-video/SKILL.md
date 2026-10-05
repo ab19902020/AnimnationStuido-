@@ -33,14 +33,24 @@ voice as an animator leads the sound). Check the printed lines:
   tie): one beat of the four should stand clearly above the others;
 - the bar count, then the timed lines (`timeline.LINES`): every section of the film hangs off them.
 
+Where an instrument plays (a harmonica bit, a sax solo): look for the bars where the voice is silent and a lead
+line carries the tune (a log-frequency spectrogram of `build/stems/accompaniment.wav` shows it), and ask the audio
+tagger (`tools/fetch_models.sh tagging`: CED, AudioSet's classes, per bar). The tagger is weak on heavily produced
+mixes; when it cannot say, put the instrument where the evidence points and tell the user the time, so they can
+move it.
+
 ## 3. The film package
 
 - `timeline.py`: the song's bars and lyric lines as marks (`bar(n)`, `LINES`), `TL` with a tail for the end card.
 - `perf.py`: who sings what (`sing(PERF, who, spans, gain=...)`: the lead takes every note at gain 1; backing
-  singers the choruses at 0.8; a crowd singing along at 0.7, a frame late), and the dancing
+  singers every line at 0.85 (anyone shown at a mic sings); players without a mic the choruses at 0.55; a crowd
+  singing along with every word at 0.7, a frame late; `PLAYS = {who: spans}` for an instrument that only plays in
+  its bits, like a harmonica), and the dancing
   (`GROOVE = Groove({who: [(t0, t1, move, amount)]})`: bounce, sway, headbang, jump, hop, rock, nod, pump, shuffle,
   lean), section by section. Give the dancing an arc: small in the verses, big in the choruses, everything in the
-  last chorus. Faces: `BASE` and `EXPR` (one character's change of heart is a story).
+  last chorus. Faces: `BASE` and `EXPR` (one character's change of heart is a story). Someone the song is not for
+  (a villain of the piece) stands still with a sour face while everyone jumps, never sings, nods out of time
+  (`awkward`), stares into the lens, and gets a cutaway under a rain cloud (`cloud=True`) with a caption.
 - `direction.py`: `PLATES`, `OCCL` (what is in front of whom: the drum kit, the monitors), `LAMPS` (beams),
   the band's blocking by feet and height in plate px (`BAND_F`; an instrument with `inst`, a mic with `mic`, the
   drummer's `DRUMS` with his fist drawing), and the shot list, cut on the bars: wides and stage wides, close shots
@@ -53,6 +63,10 @@ voice as an animator leads the sound). Check the printed lines:
   so heads match, with `look_at` on the band (`person` does it: eyes up at the stage, converging on the lens), the
   stage's moving lights sweeping over them (`sweep`). Never a front row in silhouette there: dark backs of heads
   put the camera behind the crowd.
+- A busy floor: the wides and stage wides have a row of fans in silhouette between the lens and the stage
+  (`fg_fans`: the camera is behind the crowd there), and every crowd shot a far row of small faces behind its
+  people. Instruments a whole drawing cannot hold with its hands down go on a rack: the harmonica in a neck rack
+  (`inst="harmonica"`), up at the lips while he plays.
 - `props.py`: plates cleaned for the band (the stand painted out), the room behind the crowd made night (dark
   windows, the room's own lamps glowing, the stage's red spill), the fans cut from a crowd plate, overlays.
 - `sound.py`: the song as supplied plus a crowd before and after it.
