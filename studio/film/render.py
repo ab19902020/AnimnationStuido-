@@ -338,6 +338,7 @@ def chunk(a, b, out):
         cv2.setNumThreads(int(os.environ["FILM_THREADS"]))
     p = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s",
                           f"{OW}x{OH}", "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "medium", "-crf", "14",
+                          "-threads", "1", "-rc-lookahead", "10",          # lean: four chunks share the machine's memory
                           "-pix_fmt", "yuv420p", str(out)], stdin=subprocess.PIPE)
     for f in range(a, b):
         p.stdin.write(render_frame(f).tobytes())

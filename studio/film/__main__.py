@@ -168,22 +168,44 @@ def main():
         if preview:
             i = args.index("--range")
             f0, n = int(float(args[i + 1]) * FPS), int(float(args[i + 2]) * FPS)
-        q = (n - f0 + jobs - 1) // jobs
-        procs = []
+        # the film in many short chunks, `jobs` of them rendering at a time: shots differ a lot in cost (a crowd of
+        # twenty faces against a close-up), and short chunks keep every core busy to the end
+        nch = int(args[args.index("--chunks") + 1]) if "--chunks" in args else (6 * jobs if not preview else jobs)
+        q = (n - f0 + nch - 1) // nch
+        ranges = [(f0 + k * q, min(n, f0 + (k + 1) * q)) for k in range(nch) if f0 + k * q < n]
         # one thread per job: the jobs share the cores instead of fighting over them
         env = dict(os.environ, FILM_EPISODE=slug, PYTHONPATH=f"{d}:{os.getcwd()}", OMP_NUM_THREADS="1",
                    OPENBLAS_NUM_THREADS="1", MKL_NUM_THREADS="1", FILM_THREADS="1")
-        for k in range(jobs):
-            a, b = f0 + k * q, min(n, f0 + (k + 1) * q)
-            log = open(ep.path(f"render{k}.log"), "w")
-            procs.append(subprocess.Popen([sys.executable, "-m", "studio.film.render", "chunk", str(a), str(b),
-                                           str(ep.path(f"part{k}.mp4"))], env=env, stdout=log, stderr=log))
-        for p in procs:
-            p.wait()
-        failed = [k for k, p in enumerate(procs) if p.returncode]
+        import time
+        D = importlib.import_module("film.direction")
+
+        def cost(a, b):                                  # a frame costs more the more people are in it
+            tot = 0.0
+            for f in range(a, b, 15):
+                s = D.shot_at(f / FPS)
+                tot += 1 + 0.12 * sum(len(v) for kd, v in s.get("layers", []) if kd == "actors")
+            return tot
+        # the heaviest chunks first, so the cores finish together
+        waiting, running, failed = sorted(enumerate(ranges), key=lambda kr: -cost(*kr[1])), [], []
+        while waiting or running:
+            while waiting and len(running) < jobs:
+                k, (a, b) = waiting.pop(0)
+                log = open(ep.path(f"render{k}.log"), "w")
+                running.append((k, subprocess.Popen([sys.executable, "-m", "studio.film.render", "chunk", str(a), str(b),
+                                                     str(ep.path(f"part{k}.mp4"))], env=env, stdout=log, stderr=log)))
+            time.sleep(2)
+            for k, p in list(running):
+                if p.poll() is not None:
+                    running.remove((k, p))
+                    if p.returncode:
+                        failed.append(k)
+            if failed:
+                for _, p in running:
+                    p.kill()
+                break
         if failed:
             raise SystemExit("render failed: see " + ", ".join(str(ep.path(f"render{k}.log")) for k in failed))
-        ep.path("parts.txt").write_text("".join(f"file 'part{k}.mp4'\n" for k in range(jobs)))
+        ep.path("parts.txt").write_text("".join(f"file 'part{k}.mp4'\n" for k in range(len(ranges))))
         out = ep.path("preview.mp4") if preview else d / f"{slug}.mp4"
         audio = ep.path("episode_audio.wav")
         a_in = ["-ss", f"{f0 / FPS:.3f}", "-i", str(audio)] if preview else ["-i", str(audio)]
