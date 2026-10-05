@@ -17,7 +17,7 @@ from film.timeline import LINES, TL, bar
 BAND = ["bruno", "sesko", "cunha", "maguire", "mainoo", "shaw", "deligt", "yoro"]
 CROWD = ["gary", "roy", "rio", "rooney", "evra", "carrick", "ratcliffe", "lammens", "tielemans", "amad", "mount",
          "ugarte", "zirkzee", "mbeumo", "dalot", "martinez", "dorgu", "mazraoui", "cantona",
-         "holland", "berrada", "shearer", "lineker", "carragher", "micah"]
+         "holland", "berrada"]
 WHO = BAND + CROWD
 END = TL["total"]
 
@@ -155,8 +155,8 @@ sing(PERF, "yoro", [(a, min(b, bar(56))) for a, b in CHORUSES if a < bar(56)] + 
      gain=0.6)
 for c in CROWD:                                          # every United fan sings every word
     if c not in ("roy", "cantona") + MISERABLE:
-        sing(PERF, c, ALL, gain=0.7, lag=1)
-        sing(PERF, c, CHORUSES, gain=0.85, lag=1)
-sing(PERF, "gary", ALL, gain=0.85, lag=1)
-sing(PERF, "rooney", ALL, gain=0.85, lag=1)
-sing(PERF, "roy", [(bar(83), Le(len(LINES) - 1) + 0.3)], gain=0.9, lag=1)   # Roy, at last, from the outro
+        sing(PERF, c, ALL, gain=0.7, lag=0)
+        sing(PERF, c, CHORUSES, gain=0.85, lag=0)
+sing(PERF, "gary", ALL, gain=0.85, lag=0)
+sing(PERF, "rooney", ALL, gain=0.85, lag=0)
+sing(PERF, "roy", [(bar(83), Le(len(LINES) - 1) + 0.3)], gain=0.9, lag=0)   # Roy, at last, from the outro
