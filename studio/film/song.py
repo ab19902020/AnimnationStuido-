@@ -369,27 +369,81 @@ def align_lyrics(v16, lines, cache):
     return words, out_lines, phones
 
 
-SING_LEAD = 2          # frames: a mouth read off the voice opens as the note is already sounding; drawn two frames
-                       # ahead it is open when the note starts, as an animator leads the sound
+SING_LEAD = 2          # frames: the mouth leads the soundtrack very slightly, as an animator would
+
+
+def _word_visemes(word):
+    """A stable, coarse mouth sequence from the aligned lyric word.
+
+    Phones remain authoritative wherever the force aligner found them. This is only the fallback inside an aligned
+    word, replacing the old frame-by-frame spectral guessing that made singing mouths jump between shapes.
+    """
+    w = "".join(ch for ch in word.lower() if ch.isalpha())
+    if len(w) > 2 and w.endswith("e") and not w.endswith(("ee", "oe")):
+        w = w[:-1]                                             # usually a silent final e
+    seq, i = [], 0
+    pairs = {"th": "L", "sh": "U", "ch": "U", "ph": "FV", "oo": "U", "ee": "E",
+             "ea": "E", "ou": "O", "ow": "O", "ai": "AI", "ay": "AI", "oi": "O"}
+    one = {
+        "m": "MBP", "b": "MBP", "p": "MBP", "f": "FV", "v": "FV", "l": "L", "r": "R",
+        "s": "CDG", "z": "CDG", "c": "CDG", "d": "CDG", "t": "CDG", "k": "CDG", "g": "CDG",
+        "n": "CDG", "j": "U", "q": "U", "w": "U", "y": "I", "o": "O", "u": "U",
+        "i": "I", "e": "E", "a": "AI",
+    }
+    while i < len(w):
+        q = w[i:i + 2]
+        if q in pairs:
+            v, i = pairs[q], i + 2
+        else:
+            v, i = one.get(w[i]), i + 1
+        if v and (not seq or seq[-1] != v):
+            seq.append(v)
+    if not seq:
+        return ["CDG"]
+    if len(seq) > 4:                                         # singing reads better with held shapes than rapid chatter
+        keep = np.linspace(0, len(seq) - 1, 4).round().astype(int)
+        seq = [seq[i] for i in keep]
+    return seq
 
 
 def lead_track(d, n):
-    """the lead singer's mouth per frame: the aligned phones where the aligner found them (one frame early,
-    closures held, as for speech), the shapes read off the voice (SING_LEAD frames early) everywhere else ->
-    [[viseme, amp]]"""
+    """Lead singer mouth, locked to aligned phones and aligned lyric words.
+
+    Exact force-aligned phones win. Where the phone aligner cannot follow a held sung word, the known word timing
+    supplies a small stable viseme sequence. Spectrum-derived shapes are used only in genuine gaps outside lyric
+    words, so long notes and repeated 'home' lines no longer flicker between unrelated mouths.
+    """
     from studio.film import face
     sing = d["sing"]
     ev = face.viseme_events([dict(p=p, s=a, e=b) for p, a, b in d.get("phones", [])])
     tr = face.track(ev, n)
-    covered = np.zeros(n, bool)
+    phone_covered = np.zeros(n, bool)
     for p, a, b in d.get("phones", []):
-        covered[int(a * FPS):int(b * FPS) + 1] = True
+        phone_covered[max(0, int(a * FPS)):min(n, int(b * FPS) + 1)] = True
+
+    word_vis = [None] * n
+    for a, b, word, _line in d.get("words", []):
+        f0 = max(0, int(round(a * FPS)))
+        f1 = min(n, max(f0 + 1, int(round(b * FPS))))
+        seq = _word_visemes(word)
+        span = max(1, f1 - f0)
+        for f in range(f0, f1):
+            q = (f - f0) / span
+            word_vis[f] = seq[min(len(seq) - 1, int(q * len(seq)))]
+
     out = []
     for f in range(n):
-        v, amp = sing[min(f + SING_LEAD, len(sing) - 1)]
-        if covered[f] and tr[f] != "REST":
+        spec_v, amp = sing[min(f + SING_LEAD, len(sing) - 1)]
+        if phone_covered[f] and tr[f] != "REST":
             v = tr[f]
-        elif covered[f] and v not in ("REST", "MBP"):
-            v = "REST" if amp < 0.6 else v
+        elif word_vis[f] is not None:
+            v = word_vis[f]
+        else:
+            v = spec_v
         out.append([v, amp])
+
+    # One-frame changes are almost always visual chatter, not a readable sung consonant.
+    for i in range(1, n - 1):
+        if out[i][0] not in ("MBP", "FV") and out[i - 1][0] == out[i + 1][0] != out[i][0]:
+            out[i][0] = out[i - 1][0]
     return out
