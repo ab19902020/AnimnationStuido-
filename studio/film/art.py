@@ -157,6 +157,22 @@ def cut_sheet(cid, path, box, holes=(), auto_holes=True):
             print(f"{cid}: hole at {hx},{hy} would take {hm.sum() / (w * h):.0%} of the drawing; skipped", file=sys.stderr)
             continue
         a[hm] = 0
+    # the holes' fringe: the paper there is shaded and noisy at its edges, which the fills stop short of. Grow each
+    # hole into the paper-like pixels round it (light and colourless), never across the ink outline, and only so
+    # far (white shorts behind a gap in a line stay)
+    gone = (keep > 0) & (a < 0.05)
+    if gone.any():
+        f = im.astype(np.int16)
+        paperish = ((g > 140) & ((f.max(2) - f.min(2)) < 26)).astype(np.uint8)
+        grow = gone.astype(np.uint8)
+        k5 = np.ones((5, 5), np.uint8)
+        for _ in range(10):                                  # 2 px a step: up to 20 px (5 px of the sheet)
+            nxt = cv2.dilate(grow, k5) & paperish
+            if not (nxt & (1 - grow)).any():
+                break
+            grow |= nxt
+        a[grow > 0] = 0
+        a = np.minimum(a, np.clip((cv2.GaussianBlur((grow == 0).astype(np.float32), (0, 0), 0.8) - 0.25) / 0.5, 0, 1))
     rgba = np.dstack([cv2.cvtColor(im, cv2.COLOR_BGR2RGB), (a * 255).astype(np.uint8)])
     return rgba, (x0, y0)
 

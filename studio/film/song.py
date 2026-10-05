@@ -137,6 +137,31 @@ def sing_track(v16, n):
     return [[v, round(float(a), 2)] for v, a in zip(vis, amp)]
 
 
+def attacks(y, sr):
+    """the drums' attacks, timed finely (3 ms hop, short window, backtracked to where the attack starts)"""
+    import librosa
+    perc = librosa.effects.percussive(y, margin=3.0)
+    hop, n_fft = 128, 1024
+    env = librosa.onset.onset_strength(y=perc, sr=sr, hop_length=hop, n_fft=n_fft, center=False)
+    on = librosa.onset.onset_detect(onset_envelope=env, sr=sr, hop_length=hop, backtrack=True, units="time",
+                                    delta=0.15)
+    return on + n_fft / sr                               # uncentred frames: the attack enters at the frame's end
+
+
+def snap(times, on, window):
+    """times shifted by their median offset to the nearest true attacks (beat trackers and band onsets report
+    their windows' centres: tens of ms off the real hit) -> (shifted times, offset s)"""
+    times = np.asarray(times, np.float64)
+    if not len(times) or not len(on):
+        return times, 0.0
+    j = np.clip(np.searchsorted(on, times), 1, len(on) - 1)
+    near = np.where(np.abs(on[j] - times) < np.abs(on[j - 1] - times), on[j], on[j - 1])
+    d = near - times
+    d = d[np.abs(d) < window]
+    off = float(np.median(d)) if len(d) else 0.0
+    return times + off, off
+
+
 def analyse(song, build):
     import librosa
     vpath, apath = separate(song, build / "stems")
@@ -149,21 +174,46 @@ def analyse(song, build):
     kick = band_onsets(perc, sr, 30, 140, 0.18)
     snare = band_onsets(perc, sr, 1500, 5000, 0.2)
     crash = band_onsets(perc, sr, 7000, 11000, 0.35, wait=0.4)
-    # downbeats: the beat phase (of four) where the kick lands hardest
-    kt = np.array([k[0] for k in kick]) if kick else np.zeros(0)
-    ks = np.array([k[1] for k in kick]) if kick else np.zeros(0)
-    score = []
-    for p in range(4):
-        s = 0.0
-        for b in beats[p::4]:
-            m = np.abs(kt - b) < 0.06
-            s += ks[m].max() if m.any() else 0.0
-        score.append(s)
+    # everything onto the true attacks: the beat grid and the band onsets are each some tens of ms off them
+    acc44, sr44 = librosa.load(str(apath), sr=44100, mono=True)
+    on = attacks(acc44, sr44)
+    beats, boff = snap(beats, on, 0.1)
+    shifts = {"beats": boff}
+    for name, hits in (("kick", kick), ("snare", snare), ("crash", crash)):
+        t2, off = snap([h[0] for h in hits], on, 0.06)
+        for h, tt in zip(hits, t2):
+            h[0] = round(float(tt), 3)
+        shifts[name] = off
+    print("onto the attacks: " + ", ".join(f"{k} {v * 1000:+.0f} ms" for k, v in shifts.items()))
+    # downbeats: the beat phase (of four) where the chords change. That is the bar line; a rock kick lands on 1 and 3
+    # alike, so it only breaks a tie (kick on 1 and 3, snare on 2 and 4)
+    hop = 512
+    chroma = librosa.feature.chroma_cqt(y=librosa.effects.harmonic(acc), sr=sr, hop_length=hop)
+    seg = librosa.util.sync(chroma, librosa.time_to_frames(beats, sr=sr, hop_length=hop), aggregate=np.median)
+    seg = seg / (np.linalg.norm(seg, axis=0, keepdims=True) + 1e-9)       # seg[:, j + 1]: beat j to beat j + 1
+    change = np.zeros(4)
+    for j in range(1, min(len(beats), seg.shape[1] - 1)):
+        change[j % 4] += 1 - float(seg[:, j + 1] @ seg[:, j])
+    change /= max(1e-9, change.max())
+
+    def drums(kind, p):
+        t = np.array([h[0] for h in kind]) if kind else np.zeros(0)
+        st = np.array([h[1] for h in kind]) if kind else np.zeros(0)
+        tot = 0.0
+        for b in beats[p::2]:
+            m = np.abs(t - b) < 0.05
+            tot += st[m].max() if m.any() else 0.0
+        return tot
+    beat = np.array([drums(kick, p % 2) - drums(snare, p % 2) for p in range(4)])
+    beat = beat / max(1e-9, np.abs(beat).max())
+    score = change + 0.25 * beat
     p = int(np.argmax(score))
+    print("bar line: chord change per beat " + " ".join(f"{c:.2f}" for c in change)
+          + ", kick-snare " + " ".join(f"{c:+.2f}" for c in beat) + f" -> beat {p}")
     v16, _ = librosa.load(str(vpath), sr=16000, mono=True)
     lyr = song.parent / "lyrics.md"
     words, lines, phones = align_lyrics(v16, lyric_lines(lyr), build) if lyr.exists() else ([], [], [])
-    out = dict(duration=round(dur, 3), tempo=round(float(np.atleast_1d(tempo)[0]), 2),
+    out = dict(duration=round(dur, 3), tempo=round(float(np.atleast_1d(tempo)[0]), 2), shifts=shifts,
                beats=[round(float(b), 3) for b in beats], downbeats=[round(float(b), 3) for b in beats[p::4]],
                hits=dict(kick=kick, snare=snare, crash=crash),
                loud=[round(float(v), 1) for v in per_frame(y, sr, n)],
@@ -208,8 +258,9 @@ class Song:
         nxt = self.D[i + 1] if i + 1 < len(self.D) else self.D[i] + 4 * self.period
         return float(4 * (t - self.D[i]) / max(1e-3, nxt - self.D[i]))
 
-    def hit(self, kind, t, decay=0.12, lead=0.0):
-        """the envelope of the latest hit of a kind (1 on the hit, decaying), with its strength"""
+    def hit(self, kind, t, decay=0.12, lead=0.5 / FPS):
+        """the envelope of the latest hit of a kind (1 on the hit, decaying), with its strength. A frame shows the
+        instant it starts at; half a frame of lead puts a hit on the frame nearest it, not the one after"""
         h = self.H[kind]
         i = int(np.searchsorted(h, t + lead, side="right")) - 1
         if i < 0:
@@ -318,9 +369,14 @@ def align_lyrics(v16, lines, cache):
     return words, out_lines, phones
 
 
+SING_LEAD = 2          # frames: a mouth read off the voice opens as the note is already sounding; drawn two frames
+                       # ahead it is open when the note starts, as an animator leads the sound
+
+
 def lead_track(d, n):
     """the lead singer's mouth per frame: the aligned phones where the aligner found them (one frame early,
-    closures held, as for speech), the shapes read off the voice everywhere else -> [[viseme, amp]]"""
+    closures held, as for speech), the shapes read off the voice (SING_LEAD frames early) everywhere else ->
+    [[viseme, amp]]"""
     from studio.film import face
     sing = d["sing"]
     ev = face.viseme_events([dict(p=p, s=a, e=b) for p, a, b in d.get("phones", [])])
@@ -330,7 +386,7 @@ def lead_track(d, n):
         covered[int(a * FPS):int(b * FPS) + 1] = True
     out = []
     for f in range(n):
-        v, amp = sing[min(f, len(sing) - 1)]
+        v, amp = sing[min(f + SING_LEAD, len(sing) - 1)]
         if covered[f] and tr[f] != "REST":
             v = tr[f]
         elif covered[f] and v not in ("REST", "MBP"):

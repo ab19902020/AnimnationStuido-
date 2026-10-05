@@ -57,10 +57,57 @@ def _plate(k):
     return big
 
 
+# the back of the pub (what the crowd has behind them, seen from the stage): the windows' glass (1x px)
+PUB = "pub-and-restaurant/pub"
+WINDOWS = [[(1416, 158), (1492, 158), (1492, 382), (1416, 382)], [(1610, 92), (1672, 92), (1672, 384), (1610, 384)]]
+
+
+def _pub():
+    """the pub at night, the gig on: the windows dark (lit windows across the street), the room dim and warm with
+    its own lamps glowing, the stage's red light spilling over the floor and the booths"""
+    big = _x4(PUB).astype(np.float32) / 255.0
+    H, W = big.shape[:2]
+    s1 = cv2.resize(big, (W // 4, H // 4), interpolation=cv2.INTER_AREA)
+    lum = s1.max(2)
+    # the room's own lights: its brightest warm parts (the lamps, the sconces, the fire)
+    warm = ((s1[..., 0] > s1[..., 2] + 0.10) & (lum > 0.80)) | (s1.min(2) > 0.93)     # the bulbs burn white
+    warm[540:] = False                                       # the floor's sunlight is not a lamp
+    warm = cv2.morphologyEx(warm.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
+    lamps = cv2.GaussianBlur(cv2.dilate(warm.astype(np.float32), np.ones((3, 3), np.uint8)), (0, 0), 1.5)
+    win = np.zeros((H // 4, W // 4), np.float32)
+    for poly in WINDOWS:
+        cv2.fillPoly(win, [np.int32(poly)], 1.0)
+    win = cv2.GaussianBlur(win, (0, 0), 1.0)
+    up = lambda m: cv2.resize(m, (W, H), interpolation=cv2.INTER_LINEAR)[..., None]   # noqa: E731
+    lamps, win = up(lamps), up(win)
+    yy = np.linspace(0, 1, H, dtype=np.float32)[:, None, None]
+    # no sun on the floor at night: the floor's patches of light flattened into the boards around them
+    fl = np.clip((yy - 0.55) / 0.05, 0, 1)
+    soft = cv2.GaussianBlur(big, (0, 0), 60)
+    big = big * (1 - fl) + (soft + 0.35 * (big - soft)) * fl
+    # dim and warm, a little brighter low down where the stage light reaches
+    room = big * (0.30 + 0.16 * yy) * np.float32([1.0, 0.80, 0.72])
+    room += (0.10 * yy ** 1.5) * np.float32([0.85, 0.12, 0.08])                    # the stage's red spill
+    out = room * (1 - lamps) + big * np.float32([1.0, 0.93, 0.82]) * lamps
+    # night outside: the street dark blue, its white window frames lit warm
+    L = big.mean(2, keepdims=True)
+    night = L * np.float32([0.10, 0.13, 0.28]) + np.clip(L - 0.82, 0, 1) * 4.0 * np.float32([0.95, 0.70, 0.30])
+    out = out * (1 - win) + night * win
+    return (np.clip(out, 0, 1) * 255).astype(np.uint8)
+
+
 def plate_image(k):
-    """F: the front view, empty; FC: the same with the fans in the foreground (both without the mic stand)"""
+    """F: the front view, empty; FC: the same with the fans in the foreground (both without the mic stand); PUB:
+    the back of the pub at night, behind the crowd"""
     if k in ("F", "FC"):
         return _plate(k)
+    if k == "PUB":
+        cache = ep.path("plate_PUB.png")
+        if cache.exists():
+            return cv2.cvtColor(cv2.imread(str(cache)), cv2.COLOR_BGR2RGB)
+        img = _pub()
+        cv2.imwrite(str(cache), cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+        return img
     return None
 
 

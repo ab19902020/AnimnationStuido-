@@ -10,9 +10,9 @@ from studio.film.stage import Groove, sing
 from film.direction import SHOTS
 from film.timeline import LINES, TL, bar
 
-BAND = ["bruno", "ronaldo", "cunha", "maguire", "mainoo", "shaw", "sesko"]
+BAND = ["bruno", "sesko", "cunha", "maguire", "mainoo", "shaw", "deligt"]
 CROWD = ["gary", "roy", "rio", "rooney", "evra", "carrick", "ratcliffe", "lammens", "tielemans", "amad", "mount",
-         "ugarte", "zirkzee", "mbeumo", "dalot", "deligt", "martinez", "yoro", "dorgu", "mazraoui", "cantona",
+         "ugarte", "zirkzee", "mbeumo", "dalot", "martinez", "yoro", "dorgu", "mazraoui", "cantona",
          "holland", "berrada", "shearer", "lineker", "carragher", "micah"]
 WHO = BAND + CROWD
 END = TL["total"]
@@ -55,7 +55,7 @@ DANCE = {
                    (sec(CHORUS2), "hop", 0.7), (sec(BREAK), "pump", 0.8), (sec(BREAK), "bounce", 0.8),
                    (sec(BRIDGE), "sway", 0.9), (sec(BUILD), "bounce", 1.0), (sec(CHORUS3), "jump", 0.9),
                    (sec(OUTRO), "jump", 1.0), (sec(FINALE), "jump", 1.1), (sec(CODA), "bounce", 0.8)),
-    "ronaldo": spans((sec(INTRO), "rock", 0.9), (sec(VERSE1), "rock", 0.9), (sec(CHORUS1), "rock", 1.2),
+    "sesko": spans((sec(INTRO), "rock", 0.9), (sec(VERSE1), "rock", 0.9), (sec(CHORUS1), "rock", 1.2),
                      (sec(CHORUS1), "hop", 0.5), (sec(VERSE2), "rock", 1.0), (sec(CHORUS2), "rock", 1.2),
                      (sec(CHORUS2), "hop", 0.6), (sec(BREAK), "rock", 1.5), (sec(BREAK), "lean", -4.0),
                      (sec(BRIDGE), "sway", 0.6), (sec(BUILD), "rock", 1.2), (sec(CHORUS3), "rock", 1.2),
@@ -74,7 +74,7 @@ DANCE = {
                     (sec(CHORUS3), "bounce", 1.1), (sec(OUTRO), "hop", 0.8), (sec(FINALE), "hop", 1.0),
                     (sec(CODA), "bounce", 0.8)),
 }
-for bv in ("shaw", "sesko"):
+for bv in ("shaw", "deligt"):
     DANCE[bv] = spans((sec(INTRO), "sway", 0.6), (sec(VERSE1), "sway", 0.8), (sec(VERSE1), "bounce", 0.4),
                       (sec(CHORUS1), "hop", 0.7), (sec(VERSE2), "sway", 0.8), (sec(CHORUS2), "hop", 0.8),
                       (sec(BREAK), "bounce", 0.9), (sec(BRIDGE), "sway", 1.0), (sec(BUILD), "bounce", 0.9),
@@ -103,8 +103,8 @@ DANCE["cantona"] = spans((sec(CODA), "nod", 0.5))
 GROOVE = Groove(DANCE)
 
 # ---------------------------------------------------------------- faces
-BASE = dict(bruno=(0.35, 0.45), ronaldo=(-0.2, 0.4), cunha=(0.25, 0.65), maguire=(-0.35, 0.2), mainoo=(0.3, 0.5),
-            shaw=(0.2, 0.4), sesko=(0.3, 0.4), gary=(0.6, 0.8), roy=(-0.75, -0.45), rio=(0.3, 0.7),
+BASE = dict(bruno=(0.35, 0.45), sesko=(-0.1, 0.45), cunha=(0.25, 0.65), maguire=(-0.35, 0.2), mainoo=(0.3, 0.5),
+            shaw=(0.2, 0.4), deligt=(0.3, 0.4), gary=(0.6, 0.8), roy=(-0.75, -0.45), rio=(0.3, 0.7),
             rooney=(0.2, 0.6), evra=(0.4, 0.8), carrick=(0.0, 0.25), ratcliffe=(0.1, 0.2), cantona=(-0.3, 0.1))
 EXPR = {
     "roy": [(sec(CHORUS3)[0], sec(OUTRO)[1], -0.3, 0.1, 0.6),          # thawing
@@ -115,21 +115,21 @@ EXPR = {
 for c in CROWD:
     if c not in BASE:
         BASE[c] = (0.35, 0.6)
-# where they look: the band at the crowd (the lens in the front shots), Ronaldo at his guitar in the solo,
+# where they look: the band at the crowd (the lens in the front shots), Šeško at his guitar in the solo,
 # Maguire at his drums; the crowd up at the stage
-GAZE = {"ronaldo": [(bar(57), bar(61), ("dir", 0.15, 0.75, 0.05))],
+GAZE = {"sesko": [(bar(57), bar(61), ("dir", 0.15, 0.75, 0.05))],
         "maguire": [(bar(2), END, ("dir", 0.0, 0.45, 0.0))],
         "cantona": [(0.0, END, ("dir", 0.6, -0.15, 0.25))]}
 for c in CROWD:
     GAZE.setdefault(c, [(0.0, END, ("dir", 0.05 * ((zlib.crc32(c.encode()) % 5) - 2), -0.22, 0.0))])
-for b in ("bruno", "cunha", "mainoo", "shaw", "sesko"):
+for b in ("bruno", "cunha", "mainoo", "shaw", "deligt"):
     GAZE.setdefault(b, [])
 
 PERF = Performance(TL, {}, WHO, {w: w for w in WHO}, {}, lambda lid: None, base=BASE, gaze=GAZE, expr=EXPR,
                    rest_target={w: "cam" for w in WHO}, cuts=[s["t"] for s in SHOTS])
 
 sing(PERF, "bruno", LEAD, gain=1.0)
-for bv in ("shaw", "sesko", "ronaldo", "cunha"):
+for bv in ("shaw", "deligt", "sesko", "cunha"):
     sing(PERF, bv, CHORUSES, gain=0.8)
 for c in CROWD:
     if c not in ("roy", "cantona"):

@@ -24,8 +24,14 @@ python3 -m studio.film SLUG song        # build/song.json and build/stems/
 
 `song.json` holds the beat grid, the bars (`downbeats`), the kick, snare and crash hits, the loudness, the lyrics
 timed line by line and word by word, and the singers' mouths per frame (`lead`: the aligned phones where the
-aligner could follow the singing, shapes read off the separated voice everywhere else). Check the printed bar
-count and look at the timed lines (`timeline.LINES`): every section of the film hangs off them.
+aligner could follow the singing, shapes read off the separated voice everywhere else, two frames ahead of the
+voice as an animator leads the sound). Check the printed lines:
+
+- `onto the attacks`: the beat tracker and the band onsets each report their windows' centres, tens of ms off the
+  real hits; everything is moved by its measured median offset onto the drums' true attacks (printed per kind);
+- `bar line`: the bar starts where the chords change (a rock kick lands on 1 and 3 alike, so the kick only breaks a
+  tie): one beat of the four should stand clearly above the others;
+- the bar count, then the timed lines (`timeline.LINES`): every section of the film hangs off them.
 
 ## 3. The film package
 
@@ -38,10 +44,17 @@ count and look at the timed lines (`timeline.LINES`): every section of the film 
 - `direction.py`: `PLATES`, `OCCL` (what is in front of whom: the drum kit, the monitors), `LAMPS` (beams),
   the band's blocking by feet and height in plate px (`BAND_F`; an instrument with `inst`, a mic with `mic`, the
   drummer's `DRUMS` with his fist drawing), and the shot list, cut on the bars: wides and stage wides, close shots
-  with the lens on one player and everyone else out of focus (`on`), two-shots, and crowd shots from the stage
-  (`crowd`, people placed by their eyes and eye distance so heads match, a front row of fans in silhouette).
+  with the lens on one player and everyone else out of focus (`on`), two-shots (only of neighbours: two players far
+  apart make a shot of whoever stands between them), and crowd shots from the stage (`crowd`, `reverse`).
   Lighting per section (`CALM`, `VERSE`, `CHORUS`, `ANTHEM`), a follow spot for a solo or a quiet bridge, a strobe.
-- `props.py`: plates cleaned for the band (the stand painted out), the fans cut from a crowd plate, overlays.
+- Crowd shots are taken from the stage, so everything in them must say so: behind the people the back of the room
+  (never the stage: a plate showing the stage behind a crowd makes them look away from the band), the stage's own
+  floor and lit edge across the bottom of the frame (`stage_edge`), the people placed by their eyes and eye distance
+  so heads match, with `look_at` on the band (`person` does it: eyes up at the stage, converging on the lens), the
+  stage's moving lights sweeping over them (`sweep`). Never a front row in silhouette there: dark backs of heads
+  put the camera behind the crowd.
+- `props.py`: plates cleaned for the band (the stand painted out), the room behind the crowd made night (dark
+  windows, the room's own lamps glowing, the stage's red spill), the fans cut from a crowd plate, overlays.
 - `sound.py`: the song as supplied plus a crowd before and after it.
 
 ## 4. Look, render, check
@@ -50,9 +63,19 @@ Stills of every kind of shot (`EP_RES=960x540 python3 -m studio.film SLUG still 
 of one section with sound (`render --range A B`, then frame strips a quarter beat apart), then the full render
 (`render`), `sheet` and `lips`. Go through `.claude/skills/produce/checklist.md` and the music-video points:
 
-- every cut on a bar line (or a beat inside a bar), never in the middle of a beat;
-- the lead's mouth closed in the gaps between lines and on the M of every "home"; nobody mouths in a silence;
-- dancing on the beat, everyone a few milliseconds apart, nobody frozen in a chorus;
-- the drummer's sticks hit on the hits; strumming on the eighths; keys pressed on the beat;
-- no sharp prop or hand in front of a blurred player (blur the layer with the player);
-- crowd: heads of matching size, a front row in silhouette, nobody floating full-body.
+- every cut on a bar line (or a beat inside a bar), never in the middle of a beat, landing on the frame nearest
+  it (direction.py moves every cut half a frame early); no jump cuts: consecutive shots of the same player change
+  size clearly (1.4x or more) or angle;
+- the lead's mouth closed in the gaps between lines and on the M of every "home"; nobody mouths in a silence; plot
+  the mouth against the voice for a few lines: the mouth opens with the voice, not after it;
+- dancing on the beat (the dip of a bounce, the landing of a jump on the beat), everyone a few milliseconds apart,
+  nobody frozen in a chorus; a headbang carried by the body, the face's nod held small (a big one squashes the face);
+- everything facing the right way: a right-handed guitarist's neck to his left (the viewer's right); the keyboard
+  seen from behind, the hands on the keys out of sight; the hi-hat on the drummer's left;
+- the drummer plays what the song plays: pull the frames at each eighth of a bar (the hat on every eighth, the
+  snare on 2 and 4 where the song's snare is); strumming down through the strings on the beat;
+- no sharp prop or hand in front of a blurred player (blur the layer with the player); no paper-white left between
+  an arm and the body (the cut grows each hole into its pale fringe; check white shorts survive it, or set
+  `auto_holes: false`);
+- crowd: heads of matching size, eyes on the band, the back of the room behind them, the stage's edge in front,
+  nobody floating full-body.

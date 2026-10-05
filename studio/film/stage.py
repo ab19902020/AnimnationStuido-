@@ -7,29 +7,39 @@ A stage shot (studio.film.shots.stage) is a camera in a plate, as a world shot i
         who, draw            the performer (perf.py) and the drawing ("<character id>:<drawing>")
         feet, h              where the soles are and how tall the drawing stands
         mirror, clip         flipped; faded out below this y (plate px, or layout px when screen)
-        inst                 "guitar", "bass" or "keys": the instrument is hung on the drawing's own hands, which
-                             are put back over it; the arms are warped (never cut) so the strumming hand moves on
-                             the eighth notes and the fretting hand slides up and down the neck
+        inst                 "guitar", "bass" or "keys": a guitar or bass is hung on the drawing's own hands,
+                             which are put back over it, the neck to the player's left (a right-handed player); the
+                             arms are warped (never cut) so the strumming hand goes down through the strings on the
+                             beat and up on the off-beat and the fretting hand slides along the neck. The keyboard is
+                             seen as the audience sees it, from behind: its back panel stands on the stage in front
+                             of the player's hands (on the keys behind it), the forearms dipping as he plays
         mic                  a mic stand at the mouth (True, or {"side": -1 / 1, "drop": eye distances below})
         dance                scale of the groove (1 by default; 0: stands still)
         blur                 out of focus (px at 1920): the players the lens is not on
         eye, ed              (screen actors) placed by the point between the eyes and the eye distance (layout px)
                              instead of feet and height, so heads match whatever a drawing's proportions
+        look_at              eyes on a point (layout px): the crowd watching the band (a three-quarter head's
+                             pupils are turned back to where it looks, from how much narrower its far eye is)
   ("occl", mask)             the plate's own furniture in front (the drum kit, the monitors), sharp (or blurred
                              with the shot's "occl_blur" when the lens is on someone behind it)
   ("sticks", spec)           the drummer's sticks in his fists (spec: grips, drums (plate px), len, h, fist: a
-                             drawing of his fist, blur): the left stick keeps the eighth notes on the hi-hat and
-                             takes the snare on the strong backbeats, the right keeps time and takes the toms, both
-                             go to the cymbals on the crashes; accents are played from higher up
+                             drawing of his fist, blur), a rock beat as the song plays it: the right hand crosses to
+                             the hi-hat on the eighth notes, the left cracks the snare on 2 and 4, fills go round
+                             the toms and both go to the cymbals on a crash that opens a bar; accents from higher up
   ("fans", key)              a foreground crowd cut from a plate (props.fans_image(key)), jumping on the beat
-  ("fg_fans", opt)           a front row of fans in silhouette between the lens and a crowd shot's people: heads,
-                             fists pumping on the beat, a scarf held up; out of focus, rimmed by the stage light
+  ("fg_fans", opt)           a front row of fans in silhouette between the lens and the people: heads, fists
+                             pumping on the beat, a scarf held up (for a camera behind a crowd, never one on stage)
+  ("stage_edge", opt)        a crowd shot taken from the stage: the stage floor across the bottom of the frame, its
+                             lit front edge, a wedge monitor in a corner, out of focus (opt: y, monitor, mic, blur)
   ("props", fn)              an episode function fn(img, shot, t, M, scale) -> img (and the shot's "props":
                              overlays drawn over everything, like a title)
 
 and, over the picture: the plate's lamps and beams pulsing with the kick (shot "lights": 0..1), beams swinging
-through haze (LAMPS in direction.py), a flash on the crashes, a strobe in STROBE spans, a camera punch on the kick
-("punch") and a shake ("shake"), a roll (the fourth number of a camera key), the "stage" grade with bloom.
+through haze (LAMPS in direction.py; the haze glows with the lamps and beams, never the band), moving lights
+sweeping a crowd shot ("sweep": n, amount, colors; a pass every two bars, flaring on the kick), a flash on the
+crashes, a strobe in STROBE spans, a camera punch on the kick ("punch") and a shake ("shake"), a roll (the fourth
+number of a camera key), the "stage" grade (the plate behind the band taken down, "plate_tone", so the band stands
+out; bloom on the lights only; a vignette) or the "crowd" grade.
 
 Dancing (perf.py's GROOVE = Groove({who: [(t0, t1, move, amount)]})): bounce (a knee dip on every beat), sway
 (side to side over two beats), headbang, jump (every beat) / hop (every other beat), rock (a guitarist's lean on
@@ -106,8 +116,9 @@ class Groove:
                 out["tilt"] += 2.0 * w * math.sin(math.pi * pos + k + 0.6)
             elif move == "headbang":
                 d = max(0.0, math.cos(2 * math.pi * p)) ** 1.6
-                out["nod"] += 17.0 * w * d
-                out["sy"] -= 0.014 * w * d
+                out["nod"] += 8.0 * w * d
+                out["sy"] -= 0.032 * w * d
+                out["rot"] += 1.2 * w * d * (1 if bi % 2 else -1)
                 out["tilt"] += 3.0 * w * math.sin(math.pi * pos)
             elif move in ("jump", "hop"):
                 u = p if move == "jump" else ((bi % 2) + p) / 2
@@ -192,7 +203,7 @@ INSTRUMENTS = {
                    length=0.50, tilt=9.0, strum_amp=0.45),
     "bass": dict(img="music/bass-guitar", tail=(128, 655), nut=(125, 128), strum=(126, 598), horn=(52, 415),
                  length=0.60, tilt=9.0, strum_amp=0.30),
-    "keys": dict(img="music/keyboard-on-stand", keys_y=108, x0=48, x1=668, width=0.62),
+    "keys": dict(img="music/keyboard-on-stand"),              # the stand only: the audience sees the back
     "mic": dict(img="music/microphone-stand", grille=(55, 32), base=(87, 543)),
 }
 
@@ -309,7 +320,7 @@ def play_strings(lay, inst, Ms2, key, t, mirror, H_screen, playing):
     sgn = 1.0 if span > 0 else -1.0
     lift = abs(span) * math.tan(math.radians(spec["tilt"]))
     pos = S.beat_index(t) + S.phase(t)
-    strum = -spec["strum_amp"] * r * math.cos(2 * math.pi * 2 * pos) * playing
+    strum = spec["strum_amp"] * r * math.sin(2 * math.pi * 2 * pos) * playing   # down through the strings on the beat
     slide = 0.25 * r * math.sin(2 * math.pi * pos / 8) * playing
     out_R = -sgn                                             # the outside of the strumming arm
     move_hand(lay, hR[0], hR[1], r, 0.0, strum, out_R)
@@ -351,31 +362,149 @@ def play_strings(lay, inst, Ms2, key, t, mirror, H_screen, playing):
     return out
 
 
-def play_keys(lay, Ms2, key, t, playing):
-    spec = INSTRUMENTS["keys"]
+@functools.lru_cache(maxsize=1)
+def keys_back():
+    """the keyboard as the audience sees it: its back panel (black, the red end cheeks, a sliver of the top, the jack
+    sockets, a vent, a sticker) -> (RGBA premultiplied, 2 px per prop px, with a 4 prop px margin; the jacks in prop
+    px from the panel's top left)"""
+    from PIL import ImageDraw, ImageFont
+    from studio.film.graphics import BEBAS
+    W, H, m, c = 716, 86, 4, 8                               # prop px; margin; canvas px per prop px (4x over 2x)
+    CW, CH = (W + 2 * m) * c, (H + 2 * m) * c
+    yy = (np.arange(CH, dtype=np.float32)[:, None] / c - m) / H   # 0 at the panel's top .. 1 at its bottom
+    xx = np.arange(CW, dtype=np.float32)[None, :] / c - m
+
+    def rrect(x0, y0, x1, y1, rad):
+        msk = np.zeros((CH, CW), np.uint8)
+        x0, y0, x1, y1, rad = (int((v + m) * c) if i < 4 else int(v * c) for i, v in enumerate((x0, y0, x1, y1, rad)))
+        cv2.rectangle(msk, (x0 + rad, y0), (x1 - rad, y1), 255, -1)
+        cv2.rectangle(msk, (x0, y0 + rad), (x1, y1 - rad), 255, -1)
+        for cx, cy in ((x0 + rad, y0 + rad), (x1 - rad, y0 + rad), (x0 + rad, y1 - rad), (x1 - rad, y1 - rad)):
+            cv2.circle(msk, (cx, cy), rad, 255, -1, cv2.LINE_AA)
+        return msk.astype(np.float32) / 255.0
+
+    def paint(img, msk, col):
+        col = np.broadcast_to(np.asarray(col, np.float32), img[..., :3].shape) if np.ndim(col) == 1 else col
+        img[..., :3] = img[..., :3] * (1 - msk[..., None]) + col * msk[..., None]
+        img[..., 3] = np.maximum(img[..., 3], msk)
+
+    img = np.zeros((CH, CW, 4), np.float32)
+    paint(img, rrect(-4, -4, W + 4, H + 4, 15), INK)                                   # the outline
+    body = rrect(0, 0, W, H, 11)
+    shade = (0.17 - 0.09 * np.clip(yy, 0, 1))[..., None] * np.float32([1.0, 0.98, 1.04])
+    paint(img, body, np.broadcast_to(shade, (CH, CW, 3)))
+    cheek = body * ((xx < 40) | (xx > W - 40)).astype(np.float32)
+    red = (np.float32([0.80, 0.09, 0.11]) * (1.0 - 0.32 * np.clip(yy, 0, 1))[..., None])
+    paint(img, cheek, np.broadcast_to(red, (CH, CW, 3)))
+    for x in (40, W - 40):                                                              # the cheeks' seams
+        paint(img, body * (np.abs(xx - x) < 1.8).astype(np.float32), INK)
+    top = body * (yy < 0.10).astype(np.float32)                                         # the top, edge on
+    paint(img, top * ((xx > 40) & (xx < W - 40)).astype(np.float32), (0.30, 0.30, 0.33))
+    paint(img, body * (np.abs(yy - 0.10) < 0.012).astype(np.float32), INK)
+    paint(img, body * (np.abs(yy - 0.94) < 0.03).astype(np.float32), (0.05, 0.05, 0.06))   # the base's lip
+    # the connector bay with five jacks and the power inlet
+    paint(img, rrect(424, 24, 664, 70, 5), (0.05, 0.05, 0.06))
+    paint(img, rrect(424, 24, 664, 26, 1), (0.24, 0.24, 0.26))
+    jacks = [(448 + 30 * i, 47) for i in range(5)]
+    for jx, jy in jacks:
+        for rad, col in ((9.5, INK), (8.0, (0.66, 0.66, 0.70)), (5.0, (0.20, 0.20, 0.22)), (3.4, (0.01, 0.01, 0.01))):
+            msk = np.zeros((CH, CW), np.uint8)
+            cv2.circle(msk, (int((jx + m) * c), int((jy + m) * c)), int(rad * c), 255, -1, cv2.LINE_AA)
+            paint(img, msk.astype(np.float32) / 255.0, col)
+    paint(img, rrect(608, 34, 646, 60, 4), (0.13, 0.13, 0.14))
+    for px in (618, 627, 636):
+        paint(img, rrect(px - 1.6, 42, px + 1.6, 52, 1), (0.01, 0.01, 0.01))
+    for vx in range(352, 404, 9):                                                       # the vent
+        paint(img, rrect(vx, 30, vx + 4, 66, 2), (0.03, 0.03, 0.035))
+    # the sticker: UNITED ROAD in white on red
+    paint(img, rrect(98, 26, 318, 68, 6), (0.96, 0.95, 0.93))
+    paint(img, rrect(102, 30, 314, 64, 5), (0.80, 0.07, 0.10))
+    txt = Image.new("L", (CW, CH), 0)
+    dr = ImageDraw.Draw(txt)
+    f = ImageFont.truetype(BEBAS, int(30 * c))
+    bx = dr.textbbox((0, 0), "UNITED ROAD", font=f)
+    tx = int((208 + m) * c - (bx[2] - bx[0]) / 2 - bx[0])
+    ty = int((47 + m) * c - (bx[3] - bx[1]) / 2 - bx[1])
+    dr.text((tx, ty), "UNITED ROAD", fill=255, font=f)
+    paint(img, np.asarray(txt, np.float32) / 255.0, (0.98, 0.97, 0.95))
+    img = cv2.resize(img, (CW // 4, CH // 4), interpolation=cv2.INTER_AREA)
+    img[..., :3] *= img[..., 3:4]
+    return img, jacks
+
+
+def cable(dst, pts, width):
+    """a cable through screen points (a smooth curve), dark with the house outline"""
+    pts = np.float32(pts)
+    H, W = dst.shape[:2]
+    x0, y0 = int(pts[:, 0].min() - 3 * width), int(pts[:, 1].min() - 3 * width)
+    x1, y1 = int(pts[:, 0].max() + 3 * width), int(pts[:, 1].max() + 3 * width)
+    x0, y0, x1, y1 = max(0, x0), max(0, y0), min(W, x1), min(H, y1)
+    if x1 <= x0 or y1 <= y0:
+        return
+    S = 4
+    im = np.zeros(((y1 - y0) * S, (x1 - x0) * S, 4), np.float32)
+    p = np.int32((pts - (x0, y0)) * S)
+    cv2.polylines(im, [p], False, (*INK, 1.0), int(width * S + 2.5 * RS * S), cv2.LINE_AA)
+    cv2.polylines(im, [p], False, (0.07, 0.07, 0.08, 1.0), max(1, int(width * S)), cv2.LINE_AA)
+    im = cv2.resize(im, (x1 - x0, y1 - y0), interpolation=cv2.INTER_AREA)
+    reg = dst[y0:y1, x0:x1]
+    dst[y0:y1, x0:x1] = im + reg * (1 - im[..., 3:4])
+
+
+def bezier(p0, p1, p2, n=24):
+    u = np.linspace(0, 1, n)[:, None]
+    p0, p1, p2 = (np.float32(v) for v in (p0, p1, p2))
+    return (1 - u) ** 2 * p0 + 2 * (1 - u) * u * p1 + u * u * p2
+
+
+def play_keys(lay, Ms, Ms2, key, t, playing):
+    """a keyboard on its stand in front of the player, seen from the audience: its back panel hides his hands (on the
+    keys behind it) and the forearms dip as he plays (the right hand on the beat, the left on the off-beat). The
+    keyboard stands on the stage: it is placed from where the hands rest (Ms, no dancing), so the player dances
+    behind it"""
     S = SONG()
     hs = hands_of(key)
     if "R" not in hs or "L" not in hs:
         return lay
-    kscr = math.sqrt(abs(np.linalg.det(Ms2[:, :2])))
-    hR = apply(Ms2, hs["R"][0], hs["R"][1])
-    hL = apply(Ms2, hs["L"][0], hs["L"][1])
+    kscr = math.sqrt(abs(np.linalg.det(Ms[:, :2])))
     r = hs["R"][2] * kscr
-    pos = S.beat_index(t) + S.phase(t)
+    hR0, hL0 = apply(Ms, *hs["R"][:2]), apply(Ms, *hs["L"][:2])
+    hR, hL = apply(Ms2, *hs["R"][:2]), apply(Ms2, *hs["L"][:2])
+    fx, fy = feet_of(key)
+    floor = apply(Ms, fx, fy)[1]
+    H_screen = (fy - top_of(key)) * kscr
+    out_R = -1.0 if hR0[0] < hL0[0] else 1.0                # the outside of the right arm, on screen
+    i, ph = S.beat_index(t), S.phase(t)
+    lift = 0.35 * r
+    for (hx, hy), off, sg in ((hR, 0.0, out_R), (hL, 0.5, -out_R)):
+        p = (ph - off) % 1.0
+        press = 0.22 * r * (math.exp(-p / 0.16) - 0.3 * math.exp(-(1 - p) / 0.07)) * playing
+        move_hand(lay, hx, hy, r, 0.35 * r * sg * -1, press - lift, sg)          # in, over the keys; press
     out = lay.copy()
-    for (hx, hy), ph, sg in ((hR, 0.0, -1.0), (hL, 0.5, 1.0)):
-        press = 0.16 * r * max(0.0, math.cos(2 * math.pi * (2 * pos + ph))) ** 2 * playing
-        reach = -0.35 * r * sg                                # hands reach in a little, over the keys
-        move_hand(lay, hx, hy, r, reach, press - 0.15 * r, sg)
-    img = prop_image(spec["img"])
-    width = abs(hL[0] - hR[0]) * 1.9
-    scale = width / (spec["x1"] - spec["x0"])
-    cxm = (hR[0] + hL[0]) / 2
-    keys_y = (hR[1] + hL[1]) / 2 + 0.55 * r
-    A = np.array([[scale, 0, cxm - scale * (spec["x0"] + spec["x1"]) / 2], [0, scale, keys_y - scale * spec["keys_y"]]])
-    place_prop(out, spec["img"], A)
-    hand_cover(lay, out, hR[0] - 0.35 * r * -1, hR[1] - 0.15 * r, r, up=1.8)
-    hand_cover(lay, out, hL[0] - 0.35 * r, hL[1] - 0.15 * r, r, up=1.8)
+    img, jacks = keys_back()
+    W, Hp0, m = 716, 86, 4
+    span = abs(hL0[0] - hR0[0])
+    sc = 1.9 * span / W                                      # screen px per prop px
+    cxm = (hR0[0] + hL0[0]) / 2
+    hy = (hR0[1] + hL0[1]) / 2 - lift
+    top = hy - 1.2 * r
+    Hp = max(Hp0 * sc, hy + 1.25 * r - top)
+    ky = Hp / Hp0
+    # the stand under it: the prop's X-stand, from the panel's underside to the stage
+    st_img = prop_image(INSTRUMENTS["keys"]["img"])[136:]
+    s0 = top + Hp - 4 * sc
+    s1 = floor + 0.012 * H_screen
+    As = np.array([[sc, 0, cxm - 358 * sc], [0, (s1 - s0) / st_img.shape[0], s0]])
+    E.warp_into(out, st_img, As.astype(np.float32))
+    # two cables from the jacks, down to the stage and off to the side
+    for jx, jy in (jacks[1], jacks[3]):
+        J = (cxm + (jx - W / 2) * sc, top + jy * ky)
+        far = J[0] + (0.28 if jx > W / 2 else 0.18) * W * sc
+        pts = np.vstack([bezier(J, (J[0] + 0.02 * W * sc, (J[1] + s1) / 2), (J[0] + 0.07 * W * sc, s1 + 2 * sc)),
+                         bezier((J[0] + 0.07 * W * sc, s1 + 2 * sc), (J[0] + 0.12 * W * sc, s1 + 5 * sc), (far, s1 + 4 * sc))])
+        cable(out, pts, max(1.5, 3.2 * sc))
+    Ap = np.array([[sc / 2, 0, cxm - (m + W / 2) * sc], [0, ky / 2, top - m * ky]])
+    E.warp_into(out, img, Ap.astype(np.float32))
     return out
 
 
@@ -403,10 +532,11 @@ def mic_stand(dst, Ms2, key, foot_screen, opt):
 
 
 def drumsticks(dst, t, M, spec, H_screen):
-    """two sticks played from the song's hits (plate px positions through M), each in a fist (spec["fist"]: a
-    drawing of the drummer's fist) whose forearm drops behind the drums: the left stick keeps the eighth notes on
-    the hi-hat and takes the snare on strong backbeats, the right stick the toms; both go to the cymbals on the
-    crashes"""
+    """two sticks played as the song's drummer plays (plate px positions through M), each in a fist (spec["fist"]:
+    a drawing of the drummer's fist) whose forearm drops behind the drums. A rock beat: the right hand crosses over
+    to the hi-hat on the eighth notes, the left cracks the snare on 2 and 4 (where the song's snare is); fills (a
+    strong snare off the beat, late in a bar) go round the toms, and both hands go to the cymbals on the crashes
+    that open a bar"""
     S = SONG()
     L = spec.get("len", 0.33) * H_screen
     dr = {k: apply(M, *v) for k, v in spec["drums"].items()}
@@ -415,17 +545,41 @@ def drumsticks(dst, t, M, spec, H_screen):
     plan = {"L": [], "R": []}
     lo, hi = t - 1.0, t + 1.0
     b = S.B
+
+    def near(kind, te, win=0.05):
+        h = S.H[kind]
+        j = int(np.searchsorted(h, te))
+        best = 0.0
+        for q in (j - 1, j):
+            if 0 <= q < len(h) and abs(h[q] - te) < win:
+                best = max(best, float(S.HS[kind][q]))
+        return best
+
+    playing = lambda te: S.energy(te, 2.0) > 0.18           # noqa: E731  the drums are in
     for i in range(max(0, int(np.searchsorted(b, lo)) - 1), min(len(b), int(np.searchsorted(b, hi)) + 1)):
+        if not playing(b[i]):
+            continue
         for half in (0.0, 0.5):
-            plan["L"].append((b[i] + half * per, "hat"))
-            plan["R"].append((b[i] + half * per + 0.25 * per, "ride"))       # the right hand keeps time too
-    for kind, who, tgt, th in (("snare", "L", "snare", 0.45), ("snare", "R", "tom", 0.75), ("crash", "R", "crash_l", 0.7),
-                               ("crash", "L", "crash_r", 0.7), ("kick", "R", "tom", 0.95)):
-        h, hs = S.H[kind], S.HS[kind]
-        j0, j1 = int(np.searchsorted(h, lo)), int(np.searchsorted(h, hi))
-        for j in range(j0, j1):
-            if hs[j] >= th:
-                plan[who].append((float(h[j]), tgt))
+            plan["R"].append((b[i] + half * per, "hat"))
+        bp = int(round(S.bar_phase(b[i] + 0.02))) % 4
+        if bp in (1, 3) and near("snare", b[i]) > 0.25:      # the backbeat
+            plan["L"].append((float(b[i]), "snare"))
+    h, hs = S.H["snare"], S.HS["snare"]
+    for j in range(int(np.searchsorted(h, lo)), int(np.searchsorted(h, hi))):
+        te = float(h[j])
+        if hs[j] < 0.6 or S.bar_phase(te) < 3.0 or not playing(te):
+            continue
+        k = int(np.argmin(np.abs(b - te)))
+        if abs(b[k] - te) < 0.06:                            # on a beat: that is the backbeat, not a fill
+            continue
+        side = "L" if (j % 2) else "R"
+        plan[side].append((te, "snare" if side == "L" else "tom"))
+    h, hs = S.H["crash"], S.HS["crash"]
+    for j in range(int(np.searchsorted(h, lo)), int(np.searchsorted(h, hi))):
+        te = float(h[j])
+        if hs[j] >= 0.7 and S.bar_phase(te + 0.03) < 0.15:  # a crash opening a bar
+            plan["R"].append((te, "crash_l"))
+            plan["L"].append((te, "crash_r"))
     fist = spec.get("fist")
     for side in ("L", "R"):
         ev = sorted(plan[side])
@@ -521,6 +675,19 @@ def stick(dst, p0, p1, width):
 
 
 # ---------------------------------------------------------------- the performers
+@functools.lru_cache(maxsize=None)
+def turn_look(key):
+    """a three-quarter head looks along its turn with its pupils centred: this is the pupils' offset (drawing x) that
+    turns its eyes back to the lens, from how much narrower the far eye is (film.yaml look0 overrides it)"""
+    d, info = CAST.get(key)
+    eyes = d.spec.get("eyes") or []
+    if len(eyes) != 2:
+        return 0.0
+    l, r = sorted(eyes, key=lambda e: e[0])
+    asym = (l[2] - r[2]) / max(1e-6, l[2] + r[2])            # > 0: the face turned to the drawing's right
+    return float(np.clip(-2.0 * asym, -0.7, 0.7)) if abs(asym) > 0.06 else 0.0
+
+
 def draw_actor(shared, a, t, s, M, sc, pos):
     R = _R()
     key, who = a["draw"], a["who"]
@@ -555,9 +722,19 @@ def draw_actor(shared, a, t, s, M, sc, pos):
     st = R.PERF.state(who, t, R.world_resolver(s, who, pos), s["t"]) if d.has_face else {}
     if st:
         st = dict(st)
-        st["nod"] = st["nod"] + g["nod"]
+        # the face warp drops the head by a share of its height: past ~9 % the face squashes into the collar, so a
+        # headbang's depth is carried by the body (groove sy) and the nod is held to that
+        st["nod"] = float(np.clip(st["nod"] + g["nod"], -6.0, 9.0))
         st["tilt"] = st["tilt"] + g["tilt"]
+        if a.get("look_at") is not None:                 # eyes on a point (layout px): the crowd on the band
+            ex, ey = a["eye"] if a.get("eye") is not None else (a["feet"][0], a["feet"][1] - a["h"])
+            tx, ty = a["look_at"]
+            wob = 0.04 * math.sin(t * 0.83 + (hash(who) % 17))
+            st["lookx"] = float(np.clip((tx - ex) / 2400.0, -0.4, 0.4)) + wob
+            st["looky"] = float(np.clip((ty - ey) / 2600.0, -0.24, 0.2))
         fst = R.face_state(st, info, mirror)
+        if "look0" not in CAST.spec(key.split(":")[0])["drawings"][key.split(":")[1]]:
+            fst["lookx"] = float(np.clip(fst["lookx"] + turn_look(key), -1.2, 1.2))
     else:
         fst = {}
     clip = None
@@ -573,7 +750,7 @@ def draw_actor(shared, a, t, s, M, sc, pos):
         if inst in ("guitar", "bass"):
             lay = play_strings(lay, inst, Ms2, key, t, mirror, H_screen, playing)
         elif inst == "keys":
-            lay = play_keys(lay, Ms2, key, t, playing)
+            lay = play_keys(lay, Ms, Ms2, key, t, playing)
         if a.get("blur"):
             lay = cv2.GaussianBlur(lay, (0, 0), a["blur"] * RS)
         shared[:] = lay + shared * (1 - lay[..., 3:4])
@@ -699,6 +876,76 @@ def draw_fg_fans(img, opt, t, energy):
     return img * (1 - lay[..., 3:4]) + lay[..., :3]
 
 
+def draw_stage_edge(img, opt, t, energy):
+    """a crowd shot is taken from the stage: its floor across the bottom of the frame (out of focus, red with the
+    lights), its front edge catching the light, a wedge monitor in one corner and a mic stand at the side, all close
+    to the lens. opt: y (the edge, share of the frame), monitor (-1 / 1: which corner, 0: none), mic (x share of the
+    frame, or None), blur"""
+    S = SONG()
+    kick = S.hit("kick", t, 0.12)
+    lay = np.zeros((OH, OW, 4), np.float32)
+    ey = opt.get("y", 0.9) * OH
+    Y = np.arange(OH, dtype=np.float32)[:, None]
+    u = np.clip((Y - ey) / max(1.0, OH - ey), 0, 1)
+    floor = (Y >= ey).astype(np.float32)
+    shade = (1 - 0.65 * u)
+    lay[..., 0] = floor * 0.26 * shade
+    lay[..., 1] = floor * 0.040 * shade
+    lay[..., 2] = floor * 0.036 * shade
+    lay[..., 3] = floor
+    lip = np.exp(-((Y - ey) / (0.006 * OH)) ** 2) * (Y > ey - 0.004 * OH)
+    lay[..., 0] += lip[:, 0:1] * (0.55 + 0.35 * kick)
+    lay[..., 1] += lip[:, 0:1] * 0.12
+    lay[..., 2] += lip[:, 0:1] * 0.08
+    lay[..., 3] = np.maximum(lay[..., 3], np.clip(lip[:, 0:1] * 1.5, 0, 1))
+    side = opt.get("monitor", 1)
+    if side:                                                 # a wedge monitor on the stage floor
+        w, h = 0.25 * OW, 0.20 * OH
+        x0 = OW - w * 0.85 if side > 0 else -0.15 * w
+        base = OH + 0.02 * OH
+        poly = np.float32([(x0, base), (x0 + w, base), (x0 + w * 0.94, ey - 0.55 * h), (x0 + w * 0.10, ey - 0.42 * h)])
+        cv2.fillPoly(lay, [np.int32(poly)], (0.025, 0.022, 0.026, 1.0), cv2.LINE_AA)
+        g = np.float32([(x0 + w * 0.16, ey - 0.30 * h), (x0 + w * 0.86, ey - 0.40 * h), (x0 + w * 0.90, base - 0.06 * h),
+                        (x0 + w * 0.12, base - 0.06 * h)])
+        cv2.fillPoly(lay, [np.int32(g)], (0.055, 0.05, 0.058, 1.0), cv2.LINE_AA)
+        cv2.line(lay, tuple(np.int32(poly[3])), tuple(np.int32(poly[2])), (0.60 + 0.3 * kick, 0.12, 0.09, 1.0),
+                 max(2, int(0.006 * OH)), cv2.LINE_AA)
+    mx = opt.get("mic")
+    if mx is not None:                                       # the singer's mic stand, beside the lens
+        spec = INSTRUMENTS["mic"]
+        im = prop_image(spec["img"])
+        scale = 1.6 * OH / im.shape[0]
+        gx = mx * OW
+        A = np.array([[scale, 0, gx - scale * spec["base"][0]], [0, scale, OH * 1.18 - scale * spec["base"][1]]])
+        E.warp_into(lay, im, A.astype(np.float32))
+    if opt.get("blur", 9.0) > 0:
+        lay = cv2.GaussianBlur(lay, (0, 0), opt.get("blur", 9.0) * RS)
+    return img * (1 - lay[..., 3:4]) + lay[..., :3]
+
+
+def sweep_layer(t, opt, energy):
+    """moving lights from the stage sweeping over the crowd and the room: soft coloured spots crossing the frame,
+    one pass every two bars, flaring on the kick -> RGB to add (screen size)"""
+    S = SONG()
+    i = int(np.searchsorted(S.D, t, side="right")) - 1
+    pos = max(0, i) + S.bar_phase(t) / 4.0
+    kick = S.hit("kick", t, 0.14)
+    cols = opt.get("colors", [(1.0, 0.18, 0.12), (1.0, 0.85, 0.65), (1.0, 0.45, 0.12)])
+    n = opt.get("n", 3)
+    sm_w, sm_h = OW // 8, OH // 8
+    Y, X = np.mgrid[0:sm_h, 0:sm_w].astype(np.float32)
+    out = np.zeros((sm_h, sm_w, 3), np.float32)
+    for k in range(n):
+        ph = k / n + opt.get("phase", 0.0)
+        cx = sm_w * (0.5 + 0.55 * math.sin(2 * math.pi * (pos / 2.0 + ph)))
+        cy = sm_h * (0.38 + 0.20 * math.sin(2 * math.pi * (pos / 4.0 + 0.37 * k + ph)))
+        rx, ry = 0.13 * sm_w, 0.22 * sm_h
+        d2 = ((X - cx) / rx) ** 2 + ((Y - cy) / ry) ** 2
+        out += np.exp(-d2 ** 1.4)[..., None] * np.float32(cols[k % len(cols)])
+    out = cv2.resize(out, (OW, OH), interpolation=cv2.INTER_LINEAR)
+    return out * opt.get("amount", 0.22) * (0.45 + 0.55 * energy) * (0.7 + 0.6 * kick)
+
+
 def draw_fans(img, key, P, cx, cy, z, t, amt):
     S = SONG()
     lv = fans_layer(key)
@@ -738,6 +985,8 @@ def render(s, t):
     sc = P.scale(z)
     cx, cy = P.clamp(cx - dx / sc, cy - dy / sc, z)
     sharp = P.render(cx, cy, z)
+    if s.get("grade", "stage") == "stage":
+        sharp = plate_tone(sharp, s.get("plate_tone", 0.72))
     img = cv2.GaussianBlur(sharp, (0, 0), s["blur"] * RS) if s.get("blur", 0) > 0 else sharp.copy()
     M = P.M(cx, cy, z)
     energy = s.get("energy", S.energy(t))
@@ -752,6 +1001,10 @@ def render(s, t):
         img = img + lm * k * np.float32([1.0, 0.82, 0.70])
     if dark > 0:
         img = img * (1 - 0.82 * dark)
+    sweep = sweep_layer(t, s["sweep"], energy) if s.get("sweep") else None
+    if sweep is not None:
+        img = img + sweep
+    room = img                                           # what the haze glows with: the room's lights, not the band
     pos = {}
     for kind, val in s["layers"]:
         if kind == "actors":
@@ -778,6 +1031,8 @@ def render(s, t):
             img = draw_fans(img, val, P, cx, cy, z, t, s.get("fans_jump", 1.0) * energy)
         elif kind == "fg_fans":
             img = draw_fg_fans(img, val, t, s.get("fans_jump", 1.0) * (0.4 + 0.6 * energy))
+        elif kind == "stage_edge":
+            img = draw_stage_edge(img, val, t, energy)
         elif kind == "props":
             img = getattr(R.X, val)(img, s, t, M, sc)
         elif kind == "sticks":                           # the drummer's sticks and fists, in front of the kit
@@ -796,7 +1051,10 @@ def render(s, t):
                 lay[..., :3] *= 1 - 0.85 * dark
                 lay = E.rim(lay, 0.0, 1.0, 0.9 * dark, (1.0, 0.35, 0.3), 5 * RS)
             elif s.get("rim", 0.0) > 0:                      # the truss behind them: a warm backlight
-                lay = E.rim(lay, 0.0, 1.0, s["rim"] * (0.55 + 0.45 * kick), (1.0, 0.86, 0.70), 5 * RS)
+                lay = E.rim(lay, 0.0, 1.0, s["rim"] * (0.55 + 0.45 * kick), s.get("rim_color", (1.0, 0.86, 0.70)),
+                            5 * RS)
+            if sweep is not None:                             # the moving lights pass over them too
+                lay[..., :3] += sweep * lay[..., 3:4] * 0.45
             img = img * (1 - lay[..., 3:4]) + lay[..., :3]
     for fn in ([s["props"]] if isinstance(s.get("props"), str) else s.get("props", [])):   # overlays on top
         img = getattr(R.X, fn)(img, s, t, M, sc)
@@ -811,11 +1069,14 @@ def render(s, t):
         img = img * (1 - k * (1 - m[..., None])) + m[..., None] * k * 0.06 * np.float32([1.0, 0.9, 0.8])
     D = R.D
     lamps = s.get("lamps", getattr(D, "LAMPS", {}).get(s["plate"]))
+    bl = None
     if lamps and s.get("beams", 1.0) > 0:
-        img = img + beams(t, M, sc, lamps, s.get("beams", 1.0) * (0.35 + 0.65 * energy))
-    # haze: the air glows with the light
+        bl = beams(t, M, sc, lamps, s.get("beams", 1.0) * (0.35 + 0.65 * energy))
+        img = img + bl
+    # haze: the air glows with the lamps and the beams
     if s.get("haze", 0.0) > 0:
-        img = img + cv2.GaussianBlur(np.clip(img - 0.55, 0, 1), (0, 0), 30 * RS) * s["haze"]
+        src = room + bl if bl is not None else room
+        img = img + cv2.GaussianBlur(np.clip(src - 0.55, 0, 1), (0, 0), 30 * RS) * s["haze"]
     if crash > 0.02 and s.get("flash", 1.0) > 0:
         f = s.get("flash", 1.0) * 0.30 * crash * energy
         img = img + (1 - img) * f * np.float32([1.0, 0.95, 0.88])
@@ -849,15 +1110,31 @@ def pos_of(at, s, M, pos):
     return apply(M, *at)
 
 
+def plate_tone(img, k):
+    """the stage behind the band taken down: its mid-tones darker (k), its lamps and their glow kept, so the band
+    stands out against it"""
+    if k >= 1.0:
+        return img
+    lum = img.max(2, keepdims=True)
+    return img * (k + (1 - k) * np.clip((lum - 0.70) / 0.25, 0, 1))
+
+
+@functools.lru_cache(maxsize=2)
+def vignette(h, w, amt):
+    Y, X = np.ogrid[0:h, 0:w]
+    r2 = ((X - w / 2) / (w / 2)) ** 2 * 0.6 + ((Y - h / 2) / (h / 2)) ** 2 * 0.4
+    return (1 - amt * np.clip(r2, 0, 1.5) ** 1.3).astype(np.float32)[..., None]
+
+
 def grade_stage(img, kind):
-    if kind == "stage":                                      # gig: contrast, saturated reds, bloom on the lights
-        bloom = cv2.GaussianBlur(np.clip(img - 0.62, 0, 1), (0, 0), 14 * RS)
-        l = img.mean(2, keepdims=True)
-        img = l + (img - l) * 1.10
-        img = (img - 0.5) * 1.08 + 0.5
-        img = img * np.float32([1.03, 0.98, 0.95]) + bloom * np.float32([0.9, 0.55, 0.45])
+    if kind == "stage":                                      # gig: contrast, bloom on the lights only, a vignette
+        bloom = cv2.GaussianBlur(np.clip(img - 0.82, 0, 1), (0, 0), 14 * RS)
+        img = (img - 0.5) * 1.10 + 0.5
+        img = img + bloom * np.float32([0.8, 0.5, 0.4])
+        img = img * vignette(img.shape[0], img.shape[1], 0.22)
     elif kind == "crowd":                                    # the room: warm, a little softer
-        bloom = cv2.GaussianBlur(np.clip(img - 0.65, 0, 1), (0, 0), 18 * RS)
-        img = (img - 0.5) * 1.04 + 0.5
-        img = img * np.float32([1.04, 0.99, 0.94]) + bloom * 0.6
+        bloom = cv2.GaussianBlur(np.clip(img - 0.70, 0, 1), (0, 0), 18 * RS)
+        img = (img - 0.5) * 1.06 + 0.5
+        img = img * np.float32([1.03, 0.99, 0.95]) + bloom * 0.5
+        img = img * vignette(img.shape[0], img.shape[1], 0.25)
     return img
