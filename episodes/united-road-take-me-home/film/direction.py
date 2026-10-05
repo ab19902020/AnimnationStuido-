@@ -66,8 +66,9 @@ BAND_F = {
     "bruno": dict(who="bruno", draw="bruno-fernandes:front", feet=(760, 558), h=362, mic=dict(side=-1, drop=0.5)),
     "cunha": dict(who="cunha", draw="matheus-cunha:front", feet=(968, 552), h=358, inst="bass"),
     "mainoo": dict(who="mainoo", draw="kobbie-mainoo:front", feet=(1212, 548), h=348, inst="keys"),
+    "yoro": dict(who="yoro", draw="leny-yoro:squad", feet=(432, 550), h=352, inst="harmonica"),
 }
-UPSTAGE, FRONT = ("maguire", "shaw", "deligt"), ("sesko", "bruno", "cunha", "mainoo")
+UPSTAGE, FRONT = ("maguire", "shaw", "deligt"), ("yoro", "sesko", "bruno", "cunha", "mainoo")
 
 
 def band(*names, **over):
@@ -157,12 +158,19 @@ def two(a, b, t0, t1, size="ms", push=1.05, roll=0.0, **kw):
                  rim=kw.pop("rim", 0.45), **kw)
 
 
+def dance_floor(t0, y, n, scale):
+    """the dance floor between the lens and the stage: a row of fans in silhouette, fists pumping, scarves up"""
+    return ("fg_fans", dict(y=y, n=n, seed=int(t0 * 7) % 97, blur=5.0, arms=0.65, scale=scale, rim=0.75))
+
+
 def wide(t0, t1, c0=(836, 470, 1.0), c1=(836, 452, 1.08), fans=True, **kw):
-    return stage(t0, "F", [(t0, c0), (t1, c1)], layers(fans=fans), rim=kw.pop("rim", 0.35), **kw)
+    lay = layers(fans=fans) + ([dance_floor(t0, 0.83, 15, 0.85)] if kw.pop("floor", True) else [])
+    return stage(t0, "F", [(t0, c0), (t1, c1)], lay, rim=kw.pop("rim", 0.35), **kw)
 
 
 def stage_wide(t0, t1, c0=(836, 372, 1.75), c1=(836, 365, 1.85), **kw):
-    return stage(t0, "F", [(t0, c0), (t1, c1)], layers(), rim=kw.pop("rim", 0.4), **kw)
+    lay = layers() + ([dance_floor(t0, 0.86, 13, 0.95)] if kw.pop("floor", True) else [])
+    return stage(t0, "F", [(t0, c0), (t1, c1)], lay, rim=kw.pop("rim", 0.4), **kw)
 
 
 # ---------------------------------------------------------------- the crowd, from the stage
@@ -177,7 +185,8 @@ SWEEP = dict(n=3, amount=0.22)
 def person(who, x, ed, eye_y=430, **kw):
     """someone in the crowd, placed by their eyes (layout px) and eye distance: heads match whatever the drawing's
     proportions. They watch the band"""
-    d = dict(who=who, draw=DR[who], eye=(x, eye_y), ed=ed, screen=True, look_at=STAGE_EYES)
+    d = dict(who=who, draw=DR[who], eye=(x, eye_y), ed=ed, screen=True,
+             look_at=None if who in ("ratcliffe", "berrada") else STAGE_EYES)
     d.update(kw)
     return d
 
@@ -187,6 +196,8 @@ def crowd(t0, t1, people, bg=0, push=1.04, blur=7.0, edge=True, **kw):
     the stage's own floor and edge in the foreground"""
     c0 = CROWD_BG[bg % len(CROWD_BG)]
     c1 = pushed(c0, push)
+    if len(people) > 2 and not any(p.get("cloud") for p in people):
+        people = far(people, seed=int(t0 * 3))                 # a packed pub: always more faces at the back
     lay = [("actors", people)]
     if edge:
         lay.append(("stage_edge", dict(y=kw.pop("edge_y", 0.9), monitor=kw.pop("monitor", 1 if bg % 2 else -1),
@@ -218,6 +229,27 @@ def trio(a, b, c):
 def solo(a, x=960, back=()):
     out = [person(w, bx, 80, eye_y=360, blur=2.8) for w, bx in back]
     return out + [person(a, x, 146, eye_y=440)]
+
+
+FAR = ("amad", "mount", "dalot", "zirkzee", "mbeumo", "ugarte", "martinez", "dorgu", "mazraoui", "lammens",
+       "tielemans", "micah", "carragher", "shearer", "lineker", "evra", "holland", "carrick", "rio", "gary")
+
+
+def far(people, n=7, seed=0):
+    """the back of a packed pub: a row of small faces, out of focus, behind everyone in a crowd shot"""
+    used = {p["who"] for p in people}
+    pool = [w for w in FAR if w not in used]
+    pool = pool[seed % len(pool):] + pool[:seed % len(pool)]
+    xs = np.linspace(110, 1810, n) + (seed % 3 - 1) * 40
+    return [person(w, float(x), 40, eye_y=262, blur=4.2) for w, x in zip(pool, xs)] + people
+
+
+def misery(who, t0, t1, back, bg=0):
+    """the joke: the place going mad, and in the middle of it one face like a wet weekend, rained on"""
+    xs = (300, 700, 1220, 1620, 960)
+    ppl = [person(w, x, 70, eye_y=350, blur=2.4) for w, x in zip(back, xs)]
+    ppl.append(person(who, 960, 120, eye_y=520, cloud=True, dance=1.0))
+    return crowd(t0, t1, far(ppl, seed=int(t0)), bg=bg, lights=0.9, push=1.06)
 
 
 GANG = ("roy", "rooney", "rio", "carrick")          # at the front of the crowd all night
@@ -284,15 +316,15 @@ def add(*shots):
 
 # INTRO, bars 0-16: the room in the dark; the lights on bar 2; the band introduced one by one
 add(wide(0.0, b(2), (836, 470, 1.0), (836, 455, 1.12), dark=lights_up, lights=0.4, beams=0.0, flash=0.0,
-         props="title_over"),
+         props="title_over", floor=False),
     stage_wide(b(2), b(3), (836, 380, 1.6), (836, 372, 1.7), **CALM),
     crowd(b(3), b(4), gang(), bg=0),
     on("maguire", b(4), b(6), "mcu", push=1.08, **VERSE),
     on("cunha", b(6), b(8), "ms", push=1.06, dx=0.05, **VERSE),
     on("sesko", b(8), b(10), "ms", push=1.06, dx=-0.05, **VERSE),
     on("mainoo", b(10), b(12), "ms", push=1.06, **VERSE),
-    on("shaw", b(12), b(13), "mcu", push=1.05, **VERSE),
-    on("deligt", b(13), b(14), "mcu", push=1.05, **VERSE),
+    crowd(b(12), b(13), packed(("rio", "evra"), ("micah", "carrick", "carragher"), ("lineker", "amad", "mount", "dalot")), bg=2),
+    wide(b(13), b(14), (836, 440, 1.2), (836, 425, 1.3), **VERSE),
     on("bruno", b(14), b(16), "mcu", push=1.10, **VERSE))
 
 # VERSE 1, bars 16-27: Bruno sings; every two bars a cut
@@ -311,8 +343,8 @@ add(wide(b(27), b(28), (836, 430, 1.25), (836, 420, 1.32), **CHORUS),
     crowd(b(29), b(30), gang(back=("gary", "micah", "evra")), bg=3, lights=0.7),
     on("maguire", b(30), b(31), "mcu", push=1.08, **CHORUS),
     on("bruno", b(31), b(32), "cu", push=1.05, **CHORUS),
-    stage_wide(b(32), b(33), (836, 372, 1.7), (836, 365, 1.8), **CHORUS),
-    crowd(b(33), b(34), solo("gary", back=(("evra", 500), ("rooney", 1420))), bg=0, lights=0.7),
+    on("shaw", b(32), b(33), "mcu", push=1.05, roll=-2.0, **CHORUS),
+    on("deligt", b(33), b(34), "mcu", push=1.05, roll=2.0, **CHORUS),
     two("sesko", "bruno", b(34), b(35), size="ms", roll=2.5, **CHORUS),
     wide(b(35), b(36), (836, 440, 1.2), (836, 470, 1.0), **CHORUS))
 
@@ -330,7 +362,7 @@ add(on("bruno", b(36), b(38), "mcu", push=1.06, dx=-0.06, **VERSE),
 # CHORUS 2, bars 47-57: bigger; Roy's first reluctant nod
 add(wide(b(47), b(48), (836, 430, 1.25), (836, 420, 1.32), **CHORUS),
     on("bruno", b(48), b(49), "mcu", push=1.05, roll=3.0, **CHORUS),
-    crowd(b(49), b(50), packed(("amad", "dalot"), ("mount", "yoro", "dorgu"), ("mazraoui", "martinez", "mbeumo", "ugarte")), bg=3, lights=0.7),
+    crowd(b(49), b(50), packed(("amad", "dalot"), ("mount", "zirkzee", "dorgu"), ("mazraoui", "martinez", "mbeumo", "ugarte")), bg=3, lights=0.7),
     on("sesko", b(50), b(51), "mcu", push=1.06, roll=-2.5, **CHORUS),
     on("cunha", b(51), b(52), "mcu", push=1.06, **CHORUS),
     crowd(b(52), b(53), solo("roy", back=(("gary", 520), ("evra", 1420))), bg=0, lights=0.7),
@@ -338,23 +370,23 @@ add(wide(b(47), b(48), (836, 430, 1.25), (836, 420, 1.32), **CHORUS),
     on("bruno", b(54), b(55), "cu", push=1.05, **CHORUS),
     on("shaw", b(55), b(55, 0.5), "mcu", push=1.04, roll=-2.0, **CHORUS),
     on("deligt", b(55, 0.5), b(56), "mcu", push=1.04, roll=2.0, **CHORUS),
-    wide(b(56), b(57), (836, 420, 1.3), (836, 470, 1.0), **CHORUS))
+    on("yoro", b(56), b(57), "ms", push=1.08, **dict(CHORUS, spot=dict(at="yoro", r=110, dark=0.5, fin=0.6))))
 
-# THE SOLO, bars 57-64: Šeško in a follow spot; the crowd goes
-SOLO = dict(CHORUS, spot=dict(at="sesko", r=105, dark=0.6), flash=1.2)
-add(stage_wide(b(57), b(58), (720, 372, 1.6), (690, 376, 1.75), **SOLO),
-    on("sesko", b(58), b(59), "ms", push=1.08, roll=-4.0, **SOLO),
-    on("sesko", b(59), b(60), "mcu", push=1.06, roll=4.0, **SOLO),
+# THE HARMONICA, bars 56-64: Yoro in a follow spot; the crowd goes
+SOLO = dict(CHORUS, spot=dict(at="yoro", r=105, dark=0.6), flash=1.2)
+add(stage_wide(b(57), b(58), (640, 372, 1.6), (610, 376, 1.75), **SOLO),
+    on("yoro", b(58), b(59), "mcu", push=1.08, roll=-4.0, **SOLO),
+    two("yoro", "sesko", b(59), b(60), size="ms", roll=3.0, **SOLO),
     reverse(b(60), b(61), ("evra", "rio", "roy", "rooney", "carrick"), ("gary", "shearer", "micah", "carragher", "lineker", "holland"), ("ratcliffe", "berrada", "amad", "mount", "zirkzee", "mbeumo", "dalot"), lights=0.9),
-    on("sesko", b(61), b(62), "cu", push=1.06, **SOLO),
+    on("yoro", b(61), b(62), "mcu", push=1.08, dy=0.03, **SOLO),
     on("bruno", b(62), b(63), "ms", push=1.04, **CHORUS),
-    on("sesko", b(63), b(64), "ms", push=1.12, roll=-5.0, **SOLO))
+    on("yoro", b(63), b(64), "ms", push=1.12, roll=-5.0, **SOLO))
 
 # BRIDGE, bars 64-72: the room goes dark; Bruno alone in a spot; the crowd swaying
 BRIDGE = dict(CALM, spot=dict(at="bruno", r=110, dark=0.62), beams=0.35, haze=0.35)
 add(stage_wide(b(64), b(66), (836, 380, 1.6), (780, 330, 2.6), **BRIDGE),
     on("bruno", b(66), b(68), "mcu", push=1.10, **BRIDGE),
-    crowd(b(68), b(69), packed(("carrick", "ratcliffe"), ("tielemans", "holland", "berrada"), ("lammens", "yoro", "mount", "amad")), bg=2, lights=0.3),
+    crowd(b(68), b(69), packed(("carrick", "ratcliffe"), ("tielemans", "holland", "berrada"), ("lammens", "dalot", "mount", "amad")), bg=2, lights=0.3),
     on("bruno", b(69), b(70), "cu", push=1.05, **BRIDGE),
     crowd(b(70), b(71), gang(lead=("rio", "carrick"), back=("gary", "lineker", "shearer")), bg=3, lights=0.3),
     on("bruno", b(71), b(72), "cu", push=1.08, **BRIDGE))
@@ -367,7 +399,7 @@ add(on("maguire", b(72), b(73), "mcu", push=1.10, **VERSE),
 # CHORUS 3, bars 75-83: the explosion
 add(stage_wide(b(75), b(76), (836, 372, 1.7), (836, 362, 1.9), **ANTHEM),
     on("bruno", b(76), b(77), "mcu", push=1.05, roll=-3.0, **ANTHEM),
-    crowd(b(77), b(78), packed(("zirkzee", "mbeumo"), ("ugarte", "martinez", "lammens"), ("dorgu", "yoro", "dalot", "mazraoui")), bg=0, lights=0.8),
+    crowd(b(77), b(78), packed(("zirkzee", "mbeumo"), ("ugarte", "martinez", "lammens"), ("dorgu", "amad", "dalot", "mazraoui")), bg=0, lights=0.8),
     on("sesko", b(78), b(79), "ms", push=1.06, roll=3.0, **ANTHEM),
     crowd(b(79), b(80), gang(back=("gary", "carragher", "evra")), bg=1, lights=0.8),
     on("cunha", b(80), b(81), "ms", push=1.06, **ANTHEM),
@@ -376,7 +408,7 @@ add(stage_wide(b(75), b(76), (836, 372, 1.7), (836, 362, 1.9), **ANTHEM),
 
 # OUTRO, bars 83-97: the anthem; the crowd one face after another
 add(stage_wide(b(83), b(84), (836, 372, 1.7), (836, 365, 1.85), **ANTHEM),
-    crowd(b(84), b(85), packed(("martinez", "yoro"), ("dorgu", "zirkzee", "mazraoui"), ("ugarte", "dalot", "amad", "mount")), bg=2, lights=0.8),
+    misery("ratcliffe", b(84), b(85), back=("gary", "rooney", "evra", "rio", "micah"), bg=2),
     on("bruno", b(85), b(86), "mcu", push=1.05, roll=2.5, **ANTHEM),
     reverse(b(86), b(87), ("rio", "carrick", "roy", "rooney", "gary"), ("evra", "micah", "shearer", "lineker", "carragher", "holland"), ("berrada", "ratcliffe", "lammens", "tielemans", "mbeumo", "martinez", "yoro"), lights=0.8),
     on("mainoo", b(87), b(88), "ms", push=1.06, **ANTHEM),
@@ -388,7 +420,7 @@ add(stage_wide(b(83), b(84), (836, 372, 1.7), (836, 365, 1.85), **ANTHEM),
     wide(b(92), b(93), (836, 440, 1.2), (836, 425, 1.3), **ANTHEM),
     crowd(b(93), b(94), solo("roy", back=(("gary", 520), ("rio", 1400))), bg=2, lights=0.8),
     on("sesko", b(94), b(95), "mcu", push=1.06, roll=-3.0, **ANTHEM),
-    crowd(b(95), b(96), packed(("carrick", "holland"), ("ratcliffe", "berrada", "tielemans"), ("lammens", "mbeumo", "ugarte", "dorgu")), bg=3, lights=0.8),
+    misery("berrada", b(95), b(96), back=("carrick", "shearer", "lineker", "carragher", "amad"), bg=3),
     on("maguire", b(96), b(97), "mcu", push=1.08, **ANTHEM))
 
 # FINALE, bars 97-108: To Old Trafford... Glory, glory Man United: Roy goes
@@ -429,8 +461,11 @@ CAPTIONS = [
     (b(6, 0.12), b(8) - 0.15, "name", "MATHEUS CUNHA", "Bass."),
     (b(8, 0.12), b(10) - 0.15, "name", "BENJAMIN ŠEŠKO", "Lead guitar."),
     (b(10, 0.12), b(12) - 0.15, "name", "KOBBIE MAINOO", "Keys."),
-    (b(12, 0.08), b(13) - 0.1, "name", "LUKE SHAW", "Backing vocals."),
-    (b(13, 0.08), b(14) - 0.1, "name", "MATTHIJS DE LIGT", "Backing vocals."),
+    (b(32, 0.08), b(33) - 0.1, "name", "LUKE SHAW", "Backing vocals."),
+    (b(33, 0.08), b(34) - 0.1, "name", "MATTHIJS DE LIGT", "Backing vocals."),
+    (b(56, 0.15), b(57) - 0.1, "name", "LENY YORO", "Harmonica."),
+    (b(84, 0.1), b(85) - 0.1, "name", "JIM RATCLIFFE", "Co-owner. Not singing."),
+    (b(95, 0.1), b(96) - 0.1, "name", "OMAR BERRADA", "Chief executive. Checking ticket prices."),
     (b(14, 0.12), b(16) - 0.15, "name", "BRUNO FERNANDES", "Lead vocals. Captain."),
     (b(108, 0.6), b(110) - 0.15, "name", "ERIC CANTONA", "On his own."),
 ]

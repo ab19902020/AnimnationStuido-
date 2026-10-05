@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Downloads the speech models the first time they are needed, into models/ (git-ignored).
 # GitHub releases only: HuggingFace is unreachable from cloud sessions.
-#   tools/fetch_models.sh whisper|rhubarb|diarize|tts|separate|all [...]
+#   tools/fetch_models.sh whisper|rhubarb|diarize|tts|separate|tagging|all [...]
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p models
@@ -43,10 +43,16 @@ separate() {   # Spleeter 2-stem (fp16, ~40 MB): a song split into voice and ban
   get "$SHERPA/source-separation-models/sherpa-onnx-spleeter-2stems-fp16.tar.bz2" | tar xj -C models
 }
 
+tagging() {   # CED audio tagging (AudioSet's 527 sounds, ~100 MB): where an instrument plays in a song
+  [ -f models/sherpa-onnx-ced-base-audio-tagging-2024-04-19/model.int8.onnx ] && return
+  echo "fetching CED audio tagging..." >&2
+  get "$SHERPA/audio-tagging-models/sherpa-onnx-ced-base-audio-tagging-2024-04-19.tar.bz2" | tar xj -C models
+}
+
 for target in "${@:-all}"; do
   case "$target" in
-    whisper) whisper ;; rhubarb) rhubarb ;; diarize) diarize ;; tts) tts ;; separate) separate ;;
-    all) whisper; rhubarb; diarize; tts; separate ;;
-    *) echo "usage: $0 whisper|rhubarb|diarize|tts|separate|all ..." >&2; exit 2 ;;
+    whisper) whisper ;; rhubarb) rhubarb ;; diarize) diarize ;; tts) tts ;; separate) separate ;; tagging) tagging ;;
+    all) whisper; rhubarb; diarize; tts; separate; tagging ;;
+    *) echo "usage: $0 whisper|rhubarb|diarize|tts|separate|tagging|all ..." >&2; exit 2 ;;
   esac
 done

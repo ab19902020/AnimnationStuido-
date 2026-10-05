@@ -6,6 +6,7 @@
     python3 -m studio.film SLUG sound                 the mix: build/episode_audio.wav
     python3 -m studio.film SLUG still T [T ...]       single frames: build/stills/
     python3 -m studio.film SLUG render [--jobs N]     the film: episodes/<slug>/<slug>.mp4 (with the mix); N = cores
+                      [--chunks K]      in K pieces, N at a time, the most crowded first (default 6 per job)
                       [--range A B]     only seconds A to B, to look at: build/preview.mp4
     python3 -m studio.film SLUG check                 re-hear every line in the finished mix (Whisper)
     python3 -m studio.film SLUG sheet                 a contact sheet of every shot: build/contact.jpg
@@ -49,6 +50,28 @@ def prepare():
         art.build(cid, names)
     for k in D.PLATES:
         render.plate(k)
+
+
+def fit(path, limit_mb=95.0):
+    """a finished film is committed, and the repository takes files under 100 MB: if the encode came out bigger
+    (lights, haze and moving crowds cost bits), the full-quality master is kept as build/master.mp4 and the film is
+    re-encoded in two passes to fit"""
+    size = path.stat().st_size / 1e6
+    if size <= limit_mb:
+        return
+    master = ep.path("master.mp4")
+    path.replace(master)
+    dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0",
+                                str(master)], capture_output=True, text=True, check=True).stdout)
+    kbps = int(limit_mb * 8000 * 0.97 / dur) - 192                  # the video's share, the audio at 192k
+    log = str(ep.path("fit"))
+    common = ["-c:v", "libx264", "-preset", "medium", "-b:v", f"{kbps}k", "-passlogfile", log]
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(master)] + common + ["-pass", "1", "-an", "-f", "mp4",
+                                                                                         os.devnull], check=True)
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(master)] + common
+                   + ["-pass", "2", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart",
+                      str(path)], check=True)
+    print(f"{path}: {size:.0f} MB encode refitted to {path.stat().st_size / 1e6:.0f} MB (master: {master})")
 
 
 def contact_sheet(slug, d):
@@ -213,6 +236,8 @@ def main():
                        + a_in + ["-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "20",
                                  "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "256k", "-shortest", "-movflags",
                                  "+faststart", str(out)], check=True)
+        if not preview:
+            fit(out)
         print(out)
     elif cmd == "check":
         from studio.film import audio

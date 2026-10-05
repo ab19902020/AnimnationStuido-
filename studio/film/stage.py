@@ -14,6 +14,8 @@ A stage shot (studio.film.shots.stage) is a camera in a plate, as a world shot i
                              seen as the audience sees it, from behind: its back panel stands on the stage in front
                              of the player's hands (on the keys behind it), the forearms dipping as he plays
         mic                  a mic stand at the mouth (True, or {"side": -1 / 1, "drop": eye distances below})
+                             ("harmonica": in a neck rack, up at the lips while he plays, under the chin between)
+        cloud                a little rain cloud over their head (the miserable)
         dance                scale of the groove (1 by default; 0: stands still)
         blur                 out of focus (px at 1920): the players the lens is not on
         eye, ed              (screen actors) placed by the point between the eyes and the eye distance (layout px)
@@ -43,7 +45,9 @@ out; bloom on the lights only; a vignette) or the "crowd" grade.
 
 Dancing (perf.py's GROOVE = Groove({who: [(t0, t1, move, amount)]})): bounce (a knee dip on every beat), sway
 (side to side over two beats), headbang, jump (every beat) / hop (every other beat), rock (a guitarist's lean on
-the bar with a bounce), nod, pump (an up-beat stretch), shuffle (a side step), lean (degrees, held). Each performer
+the bar with a bounce), nod, pump (an up-beat stretch), shuffle (a side step), lean (degrees, held), awkward (a
+stiff nod on the off-beat: someone who cannot dance). perf.PLAYS = {who: [(t0, t1)]}: when a player plays (the
+rest of the time his instrument rests). Each performer
 is a few milliseconds off the grid, as people are. The singers' mouths: sing(PERF, ...) writes the lead vocal's
 mouth track into a performer's lip sync for the spans they sing."""
 import functools
@@ -143,6 +147,10 @@ class Groove:
                 out["sy"] -= 0.012 * w * beat
             elif move == "lean":
                 out["rot"] += w
+            elif move == "awkward":                         # out of time: a stiff nod on the off-beat
+                q = (p + 0.5) % 1.0
+                out["nod"] += 5.0 * w * max(0.0, math.cos(2 * math.pi * q)) ** 2
+                out["rot"] += 0.8 * w * math.sin(math.pi * pos / 3)
         return out
 
 
@@ -508,6 +516,134 @@ def play_keys(lay, Ms, Ms2, key, t, playing):
     return out
 
 
+def _canvas(dst, x0, y0, x1, y1, S=4):
+    H, W = dst.shape[:2]
+    x0, y0, x1, y1 = max(0, int(x0)), max(0, int(y0)), min(W, int(x1)), min(H, int(y1))
+    if x1 <= x0 or y1 <= y0:
+        return None
+    return x0, y0, x1, y1, np.zeros(((y1 - y0) * S, (x1 - x0) * S, 4), np.float32)
+
+
+def _commit(dst, box, im):
+    x0, y0, x1, y1 = box
+    im = cv2.resize(im, (x1 - x0, y1 - y0), interpolation=cv2.INTER_AREA)
+    reg = dst[y0:y1, x0:x1]
+    dst[y0:y1, x0:x1] = im + reg * (1 - im[..., 3:4])
+
+
+def harmonica(dst, Ms2, key, t, on):
+    """a harmonica in a neck rack, so a whole drawing plays it with its hands down: chrome covers, a red comb with
+    its holes, the wire up from the collar. on (0..1): up at the lips (playing; the mouth is behind it) or resting
+    under the chin; while he plays his head works along it, two beats across and back"""
+    d, info = CAST.get(key)
+    mo = d.spec.get("mouth")
+    if not mo:
+        return
+    kscr = math.sqrt(abs(np.linalg.det(Ms2[:, :2])))
+    xl, yl, xr, yr, xc, yc = mo
+    ed = info["ed"] * kscr
+    W = max(2.7 * abs(xr - xl) * kscr, 1.5 * ed)
+    Hh = 0.32 * W
+    mx, my = apply(Ms2, xc, yc)
+    S_ = SONG()
+    pos = S_.beat_index(t) + S_.phase(t)
+    cx = mx + on * 0.16 * W * math.sin(math.pi * pos / 2)
+    cy = my + 0.30 * Hh + (1 - on) * 0.75 * ed
+    nk = d.spec.get("neck") or (xc, yc + 0.8 * info["ed"])
+    nx, ny = apply(Ms2, nk[0], nk[1])
+    ny += 0.30 * ed
+    m = 0.4 * W
+    box = _canvas(dst, min(cx - W / 2, nx - 1.2 * W) - m, cy - Hh - m, max(cx + W / 2, nx + 1.2 * W) + m,
+                  ny + 0.3 * ed + m)
+    if box is None:
+        return
+    x0, y0, x1, y1, im = box
+    S = 4
+
+    def P(x, y):
+        return int((x - x0) * S), int((y - y0) * S)
+    ink = (*INK, 1.0)
+    lw = max(1, int(0.045 * ed * S))
+    # the rack: a wire from each end of the harmonica down to the collar
+    for sg in (-1, 1):                                   # each wire bows out and down to the collarbone
+        a = (cx + sg * 0.47 * W, cy + 0.15 * Hh)
+        b = (nx + sg * 0.95 * W, ny + 0.15 * ed)
+        c = (cx + sg * 0.95 * W, cy + 0.2 * (ny - cy))
+        pts = np.int32([P(*q) for q in bezier(a, c, b, 12)])
+        cv2.polylines(im, [pts], False, ink, lw + int(2.0 * RS * S), cv2.LINE_AA)
+        cv2.polylines(im, [pts], False, (0.62, 0.63, 0.67, 1.0), lw, cv2.LINE_AA)
+    # the harmonica: outline, the covers top and bottom, the comb between with its ten holes
+    X0, Y0, X1, Y1 = cx - W / 2, cy - Hh / 2, cx + W / 2, cy + Hh / 2
+    o = 0.07 * Hh
+
+    def rounded(a, b, c, d, r, col):
+        cv2.rectangle(im, P(a + r, b), P(c - r, d), col, -1, cv2.LINE_AA)
+        cv2.rectangle(im, P(a, b + r), P(c, d - r), col, -1, cv2.LINE_AA)
+        for qx, qy in ((a + r, b + r), (c - r, b + r), (a + r, d - r), (c - r, d - r)):
+            cv2.circle(im, P(qx, qy), max(1, int(r * S)), col, -1, cv2.LINE_AA)
+    r = 0.22 * Hh
+    rounded(X0 - o, Y0 - o, X1 + o, Y1 + o, r + o, ink)
+    # the comb runs the full length; the covers, top and bottom, stop short of its ends
+    rounded(X0, Y0 + 0.30 * Hh, X1, Y1 - 0.30 * Hh, 0.08 * Hh, (0.74, 0.07, 0.09, 1.0))
+    for k in range(10):
+        hx = X0 + 0.06 * W + (k + 0.5) * 0.88 * W / 10
+        cv2.rectangle(im, P(hx - 0.024 * W, Y0 + 0.38 * Hh), P(hx + 0.024 * W, Y1 - 0.38 * Hh), (0.04, 0.02, 0.02, 1.0),
+                      -1, cv2.LINE_AA)
+    for top in (True, False):
+        a, b = (Y0, Y0 + 0.32 * Hh) if top else (Y1 - 0.32 * Hh, Y1)
+        rounded(X0 + 0.03 * W - 0.5 * o, a - 0.5 * o, X1 - 0.03 * W + 0.5 * o, b + 0.5 * o, r, ink)
+        rounded(X0 + 0.03 * W, a, X1 - 0.03 * W, b, r * 0.8, (0.88, 0.89, 0.92, 1.0) if top else (0.66, 0.67, 0.71, 1.0))
+        cv2.line(im, P(X0 + 0.09 * W, a + 0.32 * (b - a)), P(X1 - 0.09 * W, a + 0.32 * (b - a)),
+                 (1.0, 1.0, 1.0, 1.0) if top else (0.82, 0.83, 0.86, 1.0), max(1, int(0.05 * Hh * S)), cv2.LINE_AA)
+        for sx in (X0 + 0.07 * W, X1 - 0.07 * W):            # the screws
+            cv2.circle(im, P(sx, (a + b) / 2), max(1, int(0.045 * Hh * S)), (0.35, 0.35, 0.38, 1.0), -1, cv2.LINE_AA)
+    _commit(dst, (x0, y0, x1, y1), im)
+
+
+def rain_cloud(dst, Ms2, key, t):
+    """a little grey cloud raining on someone's head (the miserable)"""
+    d, info = CAST.get(key)
+    kscr = math.sqrt(abs(np.linalg.det(Ms2[:, :2])))
+    ed = info["ed"] * kscr
+    hd = d.spec.get("head")
+    if hd:
+        hx, hy = apply(Ms2, (hd[0] + hd[2]) / 2, hd[1])
+    else:
+        hx, hy = apply(Ms2, *info["anchor"])
+        hy -= 2.0 * ed
+    cw = 2.3 * ed
+    cy = hy - 0.75 * ed + 0.06 * ed * math.sin(t * 1.3)
+    cx = hx + 0.1 * ed * math.sin(t * 0.7)
+    box = _canvas(dst, cx - cw, cy - 0.7 * cw, cx + cw, hy + 0.6 * ed)
+    if box is None:
+        return
+    x0, y0, x1, y1, im = box
+    S = 4
+
+    def P(x, y):
+        return int((x - x0) * S), int((y - y0) * S)
+    # rain first, under the cloud: streaks falling to the head
+    rng = np.random.default_rng(7)
+    for k in range(18):
+        rx = cx + (rng.random() - 0.5) * 1.4 * cw
+        ph = (t * 1.8 + rng.random()) % 1.0
+        ry = cy + 0.2 * cw + ph * (hy + 0.4 * ed - cy - 0.2 * cw)
+        cv2.line(im, P(rx, ry), P(rx - 0.05 * ed, ry + 0.38 * ed), (*INK, 1.0), max(2, int(0.16 * ed * S)), cv2.LINE_AA)
+        cv2.line(im, P(rx, ry), P(rx - 0.05 * ed, ry + 0.38 * ed), (0.55, 0.72, 1.0, 1.0), max(1, int(0.09 * ed * S)),
+                 cv2.LINE_AA)
+    puffs = [(-0.55, 0.05, 0.36), (-0.2, -0.18, 0.46), (0.22, -0.12, 0.42), (0.58, 0.06, 0.32), (0.0, 0.12, 0.40)]
+    for dx, dy, r in puffs:
+        cv2.circle(im, P(cx + dx * cw, cy + dy * cw), int((r * cw + 0.10 * ed) * S), (*INK, 1.0), -1, cv2.LINE_AA)
+    for dx, dy, r in puffs:
+        cv2.circle(im, P(cx + dx * cw, cy + dy * cw), int(r * cw * S), (0.50, 0.52, 0.56, 1.0), -1, cv2.LINE_AA)
+    cv2.ellipse(im, P(cx, cy + 0.22 * cw), (int(0.75 * cw * S), int(0.12 * cw * S)), 0, 0, 180, (0.38, 0.40, 0.44, 1.0),
+                -1, cv2.LINE_AA)
+    for dx, dy, r in puffs[1:3]:
+        cv2.circle(im, P(cx + dx * cw - 0.08 * cw, cy + dy * cw - 0.10 * cw), int(0.45 * r * cw * S),
+                   (0.66, 0.68, 0.72, 1.0), -1, cv2.LINE_AA)
+    _commit(dst, (x0, y0, x1, y1), im)
+
+
 def mic_stand(dst, Ms2, key, foot_screen, opt):
     """a mic stand in front of a singer, its grille at the mouth (a little to one side and below, so the mouth
     shows)"""
@@ -744,13 +880,20 @@ def draw_actor(shared, a, t, s, M, sc, pos):
     H_screen = Hd * k
     inst = a.get("inst")
     playing = a.get("playing", 1.0)
-    if inst or a.get("blur"):
+    plays = getattr(perf, "PLAYS", {}).get(who)             # spans when this player plays (perf.PLAYS)
+    if plays is not None:
+        playing = max([ramp(t, t0, t1, 0.2, 0.25) for t0, t1 in plays] or [0.0])
+    if inst or a.get("blur") or a.get("cloud"):
         lay = np.zeros((OH, OW, 4), np.float32)
         E.place(lay, d, fst, Ms2, clip=clip)
         if inst in ("guitar", "bass"):
             lay = play_strings(lay, inst, Ms2, key, t, mirror, H_screen, playing)
         elif inst == "keys":
             lay = play_keys(lay, Ms, Ms2, key, t, playing)
+        elif inst == "harmonica":
+            harmonica(lay, Ms2, key, t, playing)
+        if a.get("cloud"):
+            rain_cloud(lay, Ms2, key, t)
         if a.get("blur"):
             lay = cv2.GaussianBlur(lay, (0, 0), a["blur"] * RS)
         shared[:] = lay + shared * (1 - lay[..., 3:4])
