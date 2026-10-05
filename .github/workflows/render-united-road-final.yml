@@ -6,6 +6,11 @@ on:
       - ccr-703a2362-lbr343
     paths:
       - .github/workflows/render-united-road-final.yml
+  pull_request:
+    branches:
+      - ccr-703a2362-lbr343
+    paths:
+      - .render-united-road
 
 permissions:
   contents: read
