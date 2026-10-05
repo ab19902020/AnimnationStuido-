@@ -112,12 +112,17 @@ class Groove:
             beat = 0.5 + 0.5 * math.cos(2 * math.pi * p)    # 1 on the beat, 0 between
             hit = math.exp(-p * 7.0)                         # the instant of the beat
             if move == "bounce":
-                out["sy"] -= 0.026 * w * beat
-                out["sx"] += 0.010 * w * beat
-                out["nod"] += 4.5 * w * beat
+                out["sy"] -= 0.038 * w * beat
+                out["sx"] += 0.016 * w * beat
+                out["dx"] += 0.008 * w * math.sin(math.pi * pos + k)
+                out["jump"] += 0.006 * w * hit
+                out["rot"] += 0.8 * w * math.sin(math.pi * pos + k)
+                out["nod"] += 4.0 * w * beat
             elif move == "sway":
-                out["rot"] += 2.8 * w * math.sin(math.pi * pos + k)
-                out["tilt"] += 2.0 * w * math.sin(math.pi * pos + k + 0.6)
+                out["rot"] += 3.6 * w * math.sin(math.pi * pos + k)
+                out["tilt"] += 2.4 * w * math.sin(math.pi * pos + k + 0.6)
+                out["dx"] += 0.020 * w * math.sin(math.pi * pos + k)
+                out["sy"] -= 0.010 * w * beat
             elif move == "headbang":
                 d = max(0.0, math.cos(2 * math.pi * p)) ** 1.6
                 out["nod"] += 8.0 * w * d
@@ -132,10 +137,13 @@ class Groove:
                 out["sx"] += 0.02 * w * land
                 out["nod"] += 6.0 * w * land
             elif move == "rock":
-                out["sy"] -= 0.020 * w * beat
-                out["rot"] += 2.4 * w * math.sin(math.pi * pos / 2 + k)
-                out["nod"] += 7.0 * w * beat
-                out["tilt"] += 2.5 * w * math.sin(math.pi * pos / 2 + k + 1.0)
+                out["sy"] -= 0.034 * w * beat
+                out["sx"] += 0.012 * w * beat
+                out["rot"] += 3.4 * w * math.sin(math.pi * pos / 2 + k)
+                out["dx"] += 0.018 * w * math.sin(math.pi * pos + 0.7 * k)
+                out["jump"] += 0.010 * w * hit
+                out["nod"] += 5.5 * w * beat
+                out["tilt"] += 3.0 * w * math.sin(math.pi * pos / 2 + k + 1.0)
             elif move == "nod":
                 out["nod"] += 5.5 * w * beat
             elif move == "pump":
@@ -208,9 +216,9 @@ INSTRUMENTS = {
     # image (library/props), the strings' axis (tail -> nut), where the strumming hand sits, the strap button on
     # the upper horn, the instrument's length as a share of the player's height, the neck's rise (deg)
     "guitar": dict(img="music/electric-guitar", tail=(128, 640), nut=(125, 75), strum=(128, 552), horn=(205, 400),
-                   length=0.50, tilt=9.0, strum_amp=0.45),
+                   length=0.47, tilt=14.0, strum_amp=0.32, raise_body=0.10),
     "bass": dict(img="music/bass-guitar", tail=(128, 655), nut=(125, 128), strum=(126, 598), horn=(52, 415),
-                 length=0.60, tilt=9.0, strum_amp=0.30),
+                 length=0.55, tilt=11.0, strum_amp=0.25, raise_body=0.08),
     "keys": dict(img="music/keyboard-on-stand"),              # the stand only: the audience sees the back
     "mic": dict(img="music/microphone-stand", grille=(55, 32), base=(87, 543)),
 }
@@ -330,11 +338,12 @@ def play_strings(lay, inst, Ms2, key, t, mirror, H_screen, playing):
     pos = S.beat_index(t) + S.phase(t)
     strum = spec["strum_amp"] * r * math.sin(2 * math.pi * 2 * pos) * playing   # down through the strings on the beat
     slide = 0.25 * r * math.sin(2 * math.pi * pos / 8) * playing
+    raise_px = spec.get("raise_body", 0.0) * H_screen
     out_R = -sgn                                             # the outside of the strumming arm
-    move_hand(lay, hR[0], hR[1], r, 0.0, strum, out_R)
-    move_hand(lay, hL[0], hL[1], r, slide * sgn, -lift, sgn)
-    hR2 = (hR[0], hR[1] + strum)
-    hL2 = (hL[0] + slide * sgn, hL[1] - lift)
+    move_hand(lay, hR[0], hR[1], r, 0.0, strum - raise_px, out_R)
+    move_hand(lay, hL[0], hL[1], r, slide * sgn, -lift - raise_px, sgn)
+    hR2 = (hR[0], hR[1] + strum - raise_px)
+    hL2 = (hL[0] + slide * sgn, hL[1] - lift - raise_px)
     # the instrument: its strum point under the strumming hand, its strings along the line to the fretting hand
     tail, nut, st = np.array(spec["tail"], float), np.array(spec["nut"], float), np.array(spec["strum"], float)
     img = prop_image(spec["img"], mirror=False)
@@ -868,8 +877,11 @@ def draw_actor(shared, a, t, s, M, sc, pos):
             wob = 0.04 * math.sin(t * 0.83 + (hash(who) % 17))
             st["lookx"] = float(np.clip((tx - ex) / 2400.0, -0.4, 0.4)) + wob
             st["looky"] = float(np.clip((ty - ey) / 2600.0, -0.24, 0.2))
+        elif a.get("look_cam"):
+            st["lookx"] = 0.0
+            st["looky"] = -0.02
         fst = R.face_state(st, info, mirror)
-        if "look0" not in CAST.spec(key.split(":")[0])["drawings"][key.split(":")[1]]:
+        if not a.get("look_cam") and "look0" not in CAST.spec(key.split(":")[0])["drawings"][key.split(":")[1]]:
             fst["lookx"] = float(np.clip(fst["lookx"] + turn_look(key), -1.2, 1.2))
     else:
         fst = {}
@@ -1141,7 +1153,11 @@ def render(s, t):
         light_mask(s["plate"])
         lm = P.mask("_lights", cx, cy, z)[..., None]
         k = s.get("lights", 1.0) * (0.10 + 0.32 * kick * energy + 0.5 * crash * energy)
-        img = img + lm * k * np.float32([1.0, 0.82, 0.70])
+        wash = [(1.0, 0.34, 0.22), (0.28, 0.48, 1.0), (1.0, 0.24, 0.70),
+                (0.18, 0.95, 1.0), (1.0, 0.82, 0.54)]
+        bi = max(0, S.beat_index(t))
+        col = np.float32(wash[(bi // 4) % len(wash)])
+        img = img + lm * k * col
     if dark > 0:
         img = img * (1 - 0.82 * dark)
     sweep = sweep_layer(t, s["sweep"], energy) if s.get("sweep") else None
