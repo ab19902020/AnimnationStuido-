@@ -43,16 +43,24 @@ crashes, a strobe in STROBE spans, a camera punch on the kick ("punch") and a sh
 number of a camera key), the "stage" grade (the plate behind the band taken down, "plate_tone", so the band stands
 out; bloom on the lights only; a vignette) or the "crowd" grade.
 
-Dancing (perf.py's GROOVE = Groove({who: [(t0, t1, move, amount)]})): bounce (a knee dip on every beat), sway
-(side to side over two beats), headbang, jump (every beat) / hop (every other beat), rock (a guitarist's lean on
-the bar with a bounce), nod, pump (an up-beat stretch), shuffle (a side step), lean (degrees, held), awkward (a
-stiff nod on the off-beat: someone who cannot dance). perf.PLAYS = {who: [(t0, t1)]}: when a player plays (the
-rest of the time his instrument rests). Each performer
-is a few milliseconds off the grid, as people are. The singers' mouths: sing(PERF, ...) writes the lead vocal's
-mouth track into a performer's lip sync for the spans they sing."""
+Dancing (perf.py's GROOVE = Groove({who: [(t0, t1, move, amount)]}, style={who: {...}})): bounce (a knee dip on
+every beat), sway (side to side over two beats), headbang, jump (every beat), pogo (every beat, straight up and
+hanging there), hop (every other beat, landing on 1 and 3) / hop2 (on 2 and 4), rock (a guitarist's lean on the
+bar with a bounce), nod, bob (the head on the eighths), pump (an up-beat stretch), shuffle (a side step), skank (the
+knees on the off-beat, the shoulders rocking), strut (weight from foot to foot), twist (shoulders and face turning
+with the beat), wave (the terrace sway, over the bar, the whole room together), lean (degrees, held), awkward (a
+stiff nod on the off-beat: someone who cannot dance). No two jumps are the same height or lean the same way.
+style gives each performer their own feel: late (s behind the beat), lag (how far the head trails the body),
+breathe (the idle rise and fall that keeps anyone standing still alive), lean; without one each is a few ms off the
+grid. The head rides the body whole (rigid_head): the body squashes and stretches, the face never does.
+perf.GLANCE = {who: [(t0, t1, target)]}: a look away and back (stage.glance): at someone in the shot, "up", "cam"
+or ("dir", x, y, turn). perf.PLAYS = {who: [(t0, t1)]}: when a player plays (the rest of the time his instrument
+rests). The singers' mouths: sing(PERF, ...) writes the lead vocal's mouth track into a performer's lip sync for
+the spans they sing."""
 import functools
 import importlib
 import math
+import zlib
 
 import cv2
 import numpy as np
@@ -87,33 +95,54 @@ def ramp(t, a, b, fin=0.25, fout=0.25):
 
 
 # ---------------------------------------------------------------- dancing
-class Groove:
-    """spans of dance moves per performer: {who: [(t0, t1, move, amount)]}"""
+def _h(i, k):
+    """a repeatable random number in 0..1 for beat (or hop) i of performer k: no two jumps quite the same"""
+    x = math.sin(i * 12.9898 + k * 78.233) * 43758.5453
+    return x - math.floor(x)
 
-    def __init__(self, spans, song=None):
+
+class Groove:
+    """spans of dance moves per performer: {who: [(t0, t1, move, amount)]} (a negative amount takes a move down).
+    style: {who: dict(late, lag, breathe, lean, vary)}: how each one dances. late: seconds behind the beat (ahead
+    of it if < 0), each their own feel; lag: how far the head trails the body (s); breathe: the rise and fall and
+    the slow shift of weight that keeps anyone standing still alive (1 = normal); lean: degrees, how they stand;
+    vary: how much one beat's move differs from the next (0.25 = a quarter either way)"""
+
+    def __init__(self, spans, song=None, style=None):
         self.spans = spans
         self.song = song
-        self.k = {w: i for i, w in enumerate(sorted(spans))}
+        self.style = style or {}
+        self.k = {w: i for i, w in enumerate(sorted(set(spans) | set(self.style)))}
 
     def at(self, who, t):
         S = self.song or SONG()
-        out = dict(rot=0.0, sx=1.0, sy=1.0, jump=0.0, dx=0.0, nod=0.0, tilt=0.0)
-        if who not in self.spans:
+        out = dict(rot=0.0, sx=1.0, sy=1.0, jump=0.0, dx=0.0, nod=0.0, tilt=0.0, turn=0.0)
+        st = self.style.get(who, {})
+        if who not in self.spans and not st:
             return out
         k = self.k[who]
-        tt = t - 0.012 * ((k * 7) % 5 - 2)                  # a few ms off the grid, each their own way
+        late = st.get("late", 0.012 * ((k * 7) % 5 - 2))      # a few ms off the grid, each their own way
+        tt = t - late
         p = S.phase(tt)
         bi = S.beat_index(tt)
+        if p >= 1.0:                                         # past the last beat the beats run on
+            bi, p = bi + int(p), p - int(p)
         pos = bi + p                                         # beats since the start
-        for t0, t1, move, a in self.spans[who]:
+        vy = st.get("vary", 0.25)
+        # this beat's size: a little bigger or smaller than the last, eased across the beat so nothing pops
+        big = 1.0 + vy * (2 * (_h(bi, k) + (_h(bi + 1, k) - _h(bi, k)) * sm(p)) - 1)
+        busy = 0.0
+        for t0, t1, move, a in self.spans.get(who, ()):
             w = ramp(t, t0, t1, 0.3, 0.3) * a
-            if w <= 1e-3:
+            if abs(w) <= 1e-3:
                 continue
+            if move != "lean":
+                busy += w
             beat = 0.5 + 0.5 * math.cos(2 * math.pi * p)    # 1 on the beat, 0 between
             hit = math.exp(-p * 7.0)                         # the instant of the beat
             if move == "bounce":
-                out["sy"] -= 0.038 * w * beat
-                out["sx"] += 0.016 * w * beat
+                out["sy"] -= 0.038 * w * beat * big
+                out["sx"] += 0.016 * w * beat * big
                 out["dx"] += 0.008 * w * math.sin(math.pi * pos + k)
                 out["jump"] += 0.006 * w * hit
                 out["rot"] += 0.8 * w * math.sin(math.pi * pos + k)
@@ -129,13 +158,31 @@ class Groove:
                 out["sy"] -= 0.032 * w * d
                 out["rot"] += 1.2 * w * d * (1 if bi % 2 else -1)
                 out["tilt"] += 3.0 * w * math.sin(math.pi * pos)
-            elif move in ("jump", "hop"):
-                u = p if move == "jump" else ((bi % 2) + p) / 2
-                out["jump"] += 0.075 * w * math.sin(math.pi * u) ** 0.8
-                land = math.exp(-u * 10.0)
-                out["sy"] -= 0.05 * w * land
-                out["sx"] += 0.02 * w * land
-                out["nod"] += 6.0 * w * land
+            elif move in ("jump", "hop", "hop2", "pogo"):
+                if move in ("jump", "pogo"):                # every beat
+                    u, c, nb = p, bi, 1
+                else:                                        # every other beat: hop lands on 1 and 3, hop2 on 2 and 4
+                    o = bi + (move == "hop2")
+                    u, c, nb = ((o % 2) + p) / 2, o // 2, 2
+                dt = u * nb * S.period                       # seconds since they landed
+                h = 1.0 + vy * (2 * _h(c, k + 11) - 1)       # this jump's height
+                air = math.sin(math.pi * u)
+                land = math.exp(-dt / (0.042 if move == "pogo" else 0.05))      # the squash as the feet land
+                drop = dt / 0.07 * math.exp(1 - dt / 0.07)   # and the head carrying on down, a moment later
+                if move == "pogo":                           # straight up, hanging at the top, stretched on the way
+                    out["jump"] += 0.092 * w * h * air ** 0.55
+                    up = max(0.0, math.cos(math.pi * u)) * (1 - land)
+                    out["sy"] += 0.020 * w * up - 0.056 * w * land
+                    out["sx"] += 0.024 * w * land - 0.008 * w * up
+                    out["nod"] += 6.0 * w * drop - 1.6 * w * air
+                else:
+                    out["jump"] += 0.075 * w * h * air ** 0.8
+                    out["sy"] -= 0.05 * w * land
+                    out["sx"] += 0.02 * w * land
+                    out["nod"] += 5.5 * w * drop
+                # nobody goes up dead straight: each jump leans and tips the head its own way
+                out["rot"] += 1.7 * w * (2 * _h(c, k + 7) - 1) * air
+                out["tilt"] += 2.6 * w * (2 * _h(c, k + 3) - 1) * air
             elif move == "rock":
                 out["sy"] -= 0.034 * w * beat
                 out["sx"] += 0.012 * w * beat
@@ -146,6 +193,10 @@ class Groove:
                 out["tilt"] += 3.0 * w * math.sin(math.pi * pos / 2 + k + 1.0)
             elif move == "nod":
                 out["nod"] += 5.5 * w * beat
+            elif move == "bob":                              # the head on every eighth note: can't keep still
+                d = max(0.0, math.cos(4 * math.pi * p)) ** 2
+                out["nod"] += 3.4 * w * d
+                out["sy"] -= 0.010 * w * d
             elif move == "pump":
                 out["sy"] += 0.022 * w * hit
                 out["jump"] += 0.012 * w * hit
@@ -153,13 +204,55 @@ class Groove:
             elif move == "shuffle":
                 out["dx"] += 0.035 * w * math.sin(math.pi * pos + k)
                 out["sy"] -= 0.012 * w * beat
+            elif move == "skank":                            # the knees on the off-beat, the shoulders rocking
+                q = (p + 0.5) % 1.0
+                d = (0.5 + 0.5 * math.cos(2 * math.pi * q)) ** 2
+                sw = math.sin(math.pi * pos + k)
+                out["sy"] -= 0.032 * w * d * big
+                out["sx"] += 0.012 * w * d
+                out["nod"] += 4.5 * w * d
+                out["rot"] += 2.4 * w * sw
+                out["dx"] += 0.012 * w * sw
+                out["tilt"] -= 1.6 * w * sw
+            elif move == "strut":                            # weight from foot to foot, a dip on every beat
+                sw = math.sin(math.pi * pos + k)
+                out["dx"] += 0.022 * w * sw
+                out["rot"] -= 1.6 * w * sw
+                out["sy"] -= 0.026 * w * beat * big
+                out["tilt"] += 1.8 * w * sw
+                out["turn"] += 0.12 * w * sw
+            elif move == "twist":                            # the shoulders and the face turning with the beat
+                sw = math.sin(math.pi * pos + k)
+                out["turn"] += 0.30 * w * sw
+                out["rot"] += 1.4 * w * sw
+                out["sy"] -= 0.018 * w * beat
+            elif move == "wave":                             # the terrace sway: the whole room together, over the bar
+                sw = math.sin(math.pi * pos / 2)
+                out["rot"] += 4.2 * w * sw
+                out["dx"] += 0.028 * w * sw
+                out["tilt"] -= 2.0 * w * sw
+                out["sy"] -= 0.010 * w * beat
             elif move == "lean":
                 out["rot"] += w
             elif move == "awkward":                         # out of time: a stiff nod on the off-beat
                 q = (p + 0.5) % 1.0
                 out["nod"] += 5.0 * w * max(0.0, math.cos(2 * math.pi * q)) ** 2
                 out["rot"] += 0.8 * w * math.sin(math.pi * pos / 3)
+        # standing still is never frozen: breathing, and the weight shifting from foot to foot
+        br = st.get("breathe", 1.0) * max(0.0, 1.0 - 0.8 * min(1.0, busy))
+        if br > 1e-3:
+            out["sy"] += 0.006 * br * math.sin(2 * math.pi * t / (3.3 + 0.35 * (k % 4)) + k)
+            out["rot"] += 0.5 * br * math.sin(2 * math.pi * t / (6.5 + 0.9 * (k % 3)) + 2.0 * k)
+            out["tilt"] += 0.9 * br * math.sin(2 * math.pi * t / (5.1 + 0.7 * (k % 5)) + k)
+        out["rot"] += st.get("lean", 0.0)
+        out["sy"] = min(1.06, max(0.92, out["sy"]))          # however the moves stack, a body squashes only so far
+        out["sx"] = min(1.05, max(0.96, out["sx"]))
         return out
+
+    def head(self, who, t):
+        """the head's share of the dance (nod, tilt, turn): the body's, a moment later, as a head trails the body"""
+        g = self.at(who, t - self.style.get(who, {}).get("lag", 0.06))
+        return g["nod"], g["tilt"], g["turn"]
 
 
 def groove_matrix(g, foot, H):
@@ -172,6 +265,21 @@ def groove_matrix(g, foot, H):
     B[:, :2] = A
     B[:, 2] = np.array([fx, fy]) - A @ np.array([fx, fy]) + np.array([g["dx"] * H, -g["jump"] * H])
     return B
+
+
+def rigid_head(d, g, B, Ms, Hd):
+    """the head rides the dancing body without its squash and stretch: carried by the neck, turned with the body
+    (a face squashed on every beat looks like it is bubbling) -> E.place's head=(Mh, y0, y1) or None"""
+    sp = d.spec
+    if not (sp.get("neck") and sp.get("chin")) or abs(g["sy"] - 1) + abs(g["sx"] - 1) < 2e-3:
+        return None
+    nx, ny = sp["neck"]
+    chin = sp["chin"]
+    th = math.radians(g["rot"])
+    c, s = math.cos(th), math.sin(th)
+    bx, by = apply(B, nx, ny)
+    Bh = np.array([[c, -s, bx - (c * nx - s * ny)], [s, c, by - (s * nx + c * ny)]])
+    return compose(Ms, Bh), chin, max(ny, chin + 0.03 * Hd)
 
 
 def compose(Ms, B):
@@ -833,6 +941,94 @@ def turn_look(key):
     return float(np.clip(-2.0 * asym, -0.7, 0.7)) if abs(asym) > 0.06 else 0.0
 
 
+@functools.lru_cache(maxsize=None)
+def _sung_lines(who):
+    """which of the song's lyric lines this performer sings (any mouth shape inside the line)"""
+    vis = _R().PERF.VIS.get(who)
+    if vis is None:
+        return ()
+    return tuple(any(v != "REST" for v in vis[int(a * FPS):int(b * FPS)]) for a, b, _ in SONG().lines)
+
+
+@functools.lru_cache(maxsize=1)
+def _vocal_push():
+    """how hard the lead vocal is pushing, 0..1 per frame, over a quarter of a second"""
+    v = np.clip((np.asarray(SONG().vocal, np.float32) + 30.0) / 12.0, 0, 1)
+    return np.convolve(v, np.ones(8, np.float32) / 8, mode="same")
+
+
+def life(st, who, t, cam=False, opt=None):
+    """a face is never quite still: the eyes dart a little every second or so and come back, the head finds its
+    own angle for every line it sings, the brows lift as the voice pushes. cam: playing to the lens (darts smaller
+    and rarer). opt (perf.LIFE[who]): eyes, head, brows, multipliers (0 turns one off)"""
+    opt = opt or {}
+    k = zlib.crc32(who.encode()) % 9973
+    ke, kh, kb = opt.get("eyes", 1.0), opt.get("head", 1.0), opt.get("brows", 1.0)
+    if ke > 0:
+        L = 1.1 + 0.7 * _h(k, 3)                             # each their own rhythm
+        i = math.floor(t / L)
+
+        def when(j):
+            return (j + 0.15 + 0.7 * _h(j, k + 5)) * L
+
+        def aim(j):
+            if _h(j, k + 9) < (0.65 if cam else 0.35):       # back to where they were looking
+                return 0.0, 0.0
+            s = ke * (0.35 if cam else 1.0)
+            return s * 0.22 * (2 * _h(j, k + 1) - 1), s * 0.09 * (2 * _h(j, k + 2) - 1)
+
+        j = i if t >= when(i) else i - 1
+        (x0, y0), (x1, y1) = aim(j - 1), aim(j)
+        u = sm((t - when(j)) / 0.07)                         # a dart takes two frames
+        st["lookx"] += x0 + (x1 - x0) * u
+        st["looky"] += y0 + (y1 - y0) * u
+    sung = _sung_lines(who)
+    if not sung:
+        return
+    lines = SONG().lines
+    n = 0
+    while n + 1 < len(lines) and lines[n + 1][0] - 0.1 <= t:
+        n += 1
+    for m in (n - 1, n):                                     # (the last line's angle easing out under the new one)
+        if m < 0 or not sung[m]:
+            continue
+        a, b = lines[m][0], lines[m][1]
+        w = ramp(t, a - 0.1, b, 0.35, 0.5)
+        if w > 1e-3 and kh > 0:
+            st["tilt"] += kh * 4.0 * (2 * _h(m, k + 11) - 1) * w
+            st["turn"] += kh * 0.14 * (2 * _h(m, k + 12) - 1) * w
+        if kb > 0 and a <= t <= b + 0.2:
+            push = float(_vocal_push()[min(len(SONG().vocal) - 1, int(t * FPS))])
+            st["brow"] += kb * (0.15 + 0.3 * _h(k, 13)) * push * ramp(t, a, b, 0.2, 0.2)
+
+
+def glance(st, who, t, pos, spans):
+    """looks away from where they were looking and back: spans [(t0, t1, target)], target a performer in the shot
+    (turning to them; skipped if they are not in it), "up" (the sky, the flags), "cam" (into the lens), or
+    ("dir", lookx, looky, turn). The eyes get there in a few frames, the head follows"""
+    for t0, t1, tg in spans:
+        we = ramp(t, t0, t1, 0.12, 0.16)
+        if we <= 1e-3:
+            continue
+        if tg == "up":
+            gx, gy, gt = 0.0, -0.7, 0.0
+        elif tg == "cam":
+            gx, gy, gt = 0.0, -0.02, 0.0
+        elif isinstance(tg, tuple):
+            gx, gy, gt = tg[1:]
+        elif tg in pos and who in pos and abs(pos[tg] - pos[who]) > 1:
+            sg = 1.0 if pos[tg] > pos[who] else -1.0
+            gx, gy, gt = 0.8 * sg, 0.06, 0.3 * sg
+        else:
+            continue
+        wh = ramp(t, t0, t1, 0.28, 0.3)
+        st["lookx"] += (gx - st["lookx"]) * we
+        st["looky"] += (gy - st["looky"]) * we
+        st["turn"] += gt * wh
+        if tg == "up":
+            st["nod"] -= 3.0 * wh                        # the chin up
+
+
 def draw_actor(shared, a, t, s, M, sc, pos):
     R = _R()
     key, who = a["draw"], a["who"]
@@ -859,32 +1055,43 @@ def draw_actor(shared, a, t, s, M, sc, pos):
     perf = importlib.import_module("film.perf")
     gv = getattr(perf, "GROOVE", None)
     g = gv.at(who, t) if gv is not None else dict(rot=0.0, sx=1.0, sy=1.0, jump=0.0, dx=0.0, nod=0.0, tilt=0.0)
+    if hasattr(gv, "head"):                              # the head trails the body
+        g["nod"], g["tilt"], g["turn"] = gv.head(who, t)
     amt = a.get("dance", 1.0)
     if amt != 1.0:
         g = dict(rot=g["rot"] * amt, sx=1 + (g["sx"] - 1) * amt, sy=1 + (g["sy"] - 1) * amt, jump=g["jump"] * amt,
-                 dx=g["dx"] * amt, nod=g["nod"] * amt, tilt=g["tilt"] * amt)
-    Ms2 = compose(Ms, groove_matrix(g, (fx, fy), Hd))
+                 dx=g["dx"] * amt, nod=g["nod"] * amt, tilt=g["tilt"] * amt, turn=g.get("turn", 0.0) * amt)
     st = R.PERF.state(who, t, R.world_resolver(s, who, pos), s["t"]) if d.has_face else {}
     if st:
         st = dict(st)
-        # the face warp drops the head by a share of its height: past ~9 % the face squashes into the collar, so a
-        # headbang's depth is carried by the body (groove sy) and the nod is held to that
-        st["nod"] = float(np.clip(st["nod"] + g["nod"], -6.0, 9.0))
+        # the face warp drops the face by a share of its height into the chin and the neck below it: past ~4 % that
+        # visibly squashes them (a big face seems to bubble on every beat), so the rest of a nod's depth goes into
+        # the body, which carries the head down whole (rigid_head)
+        nod = st["nod"] + g["nod"]
+        st["nod"] = float(np.clip(nod, -4.0, 4.0))
+        if nod > 4.0:
+            g = dict(g, sy=max(0.9, g["sy"] - 0.005 * (nod - 4.0)))
         st["tilt"] = st["tilt"] + g["tilt"]
+        st["turn"] = st["turn"] + g.get("turn", 0.0)
         if a.get("look_at") is not None:                 # eyes on a point (layout px): the crowd on the band
             ex, ey = a["eye"] if a.get("eye") is not None else (a["feet"][0], a["feet"][1] - a["h"])
             tx, ty = a["look_at"]
-            wob = 0.04 * math.sin(t * 0.83 + (hash(who) % 17))
+            wob = 0.04 * math.sin(t * 0.83 + (zlib.crc32(who.encode()) % 17))
             st["lookx"] = float(np.clip((tx - ex) / 2400.0, -0.4, 0.4)) + wob
             st["looky"] = float(np.clip((ty - ey) / 2600.0, -0.24, 0.2))
         elif a.get("look_cam"):
             st["lookx"] = 0.0
             st["looky"] = -0.02
+        life(st, who, t, bool(a.get("look_cam")), getattr(perf, "LIFE", {}).get(who))
+        glance(st, who, t, pos, getattr(perf, "GLANCE", {}).get(who, ()))
         fst = R.face_state(st, info, mirror)
         if not a.get("look_cam") and "look0" not in CAST.spec(key.split(":")[0])["drawings"][key.split(":")[1]]:
             fst["lookx"] = float(np.clip(fst["lookx"] + turn_look(key), -1.2, 1.2))
     else:
         fst = {}
+    B = groove_matrix(g, (fx, fy), Hd)
+    Ms2 = compose(Ms, B)
+    head = rigid_head(d, g, B, Ms, Hd)
     clip = None
     if a.get("clip") is not None:
         cy_scr = a["clip"] * RS if a.get("screen") else apply(M, 0.0, a["clip"])[1]
@@ -897,7 +1104,7 @@ def draw_actor(shared, a, t, s, M, sc, pos):
         playing = max([ramp(t, t0, t1, 0.2, 0.25) for t0, t1 in plays] or [0.0])
     if inst or a.get("blur") or a.get("cloud"):
         lay = np.zeros((OH, OW, 4), np.float32)
-        E.place(lay, d, fst, Ms2, clip=clip)
+        E.place(lay, d, fst, Ms2, clip=clip, head=head)
         if inst in ("guitar", "bass"):
             lay = play_strings(lay, inst, Ms2, key, t, mirror, H_screen, playing)
         elif inst == "keys":
@@ -910,7 +1117,7 @@ def draw_actor(shared, a, t, s, M, sc, pos):
             lay = cv2.GaussianBlur(lay, (0, 0), a["blur"] * RS)
         shared[:] = lay + shared * (1 - lay[..., 3:4])
     else:
-        E.place(shared, d, fst, Ms2, clip=clip)
+        E.place(shared, d, fst, Ms2, clip=clip, head=head)
     if a.get("mic"):
         mic_stand(shared, Ms2, key, (Fx, Fy), a["mic"])
 
@@ -993,12 +1200,28 @@ def draw_fg_fans(img, opt, t, energy):
     rs = rng.uniform(0.072, 0.094, n) * OH * opt.get("scale", 1.0)
     arms = rng.random(n) < opt.get("arms", 0.45)
     side = rng.choice([-1.0, 1.0], n)
+    jit = rng.random(n)
+    rise = rng.uniform(-0.2, 0.25, n)
+    kind = rng.integers(0, 4, n)                         # each their own: a jump every beat, a hop every other, a
+    off = rng.uniform(-0.14, 0.14, n)                    # bounce, a sway; and a little ahead or behind the beat
+    bi0 = S.beat_index(t)
     fists = []
     for i in range(n):
         x, r = xs[i], rs[i]
-        p = (p0 + 0.5 * (i % 2) + 0.07 * rng.random()) % 1.0
-        jump = energy * 0.034 * OH * math.sin(math.pi * p) ** 1.2
-        cy = top + r - jump + rng.uniform(-0.2, 0.25) * r
+        q = p0 + 0.5 * (i % 2) + 0.07 * jit[i] + off[i]
+        bi, p = bi0 + math.floor(q), q % 1.0
+        hh = 0.8 + 0.4 * _h(bi, i + 31)                  # no two jumps the same height
+        if kind[i] == 1:                                 # a hop every other beat
+            u = ((bi % 2) + p) / 2
+            jump = energy * 0.040 * OH * hh * math.sin(math.pi * u) ** 1.1
+        elif kind[i] == 2:                               # knees on the beat
+            jump = -energy * 0.012 * OH * (0.5 + 0.5 * math.cos(2 * math.pi * p))
+        elif kind[i] == 3:                               # swaying, bobbing
+            jump = energy * 0.010 * OH * math.sin(math.pi * p)
+            x = x + energy * 0.25 * r * math.sin(math.pi * (bi + p) + i)
+        else:
+            jump = energy * 0.034 * OH * hh * math.sin(math.pi * p) ** 1.2
+        cy = top + r - jump + rise[i] * r
         cv2.ellipse(lay, (int(x), int(cy)), (int(0.86 * r), int(r)), 0, 0, 360, col, -1, cv2.LINE_AA)
         cv2.ellipse(lay, (int(x), int(cy + 1.95 * r)), (int(1.55 * r), int(1.15 * r)), 0, 0, 360, col, -1, cv2.LINE_AA)
         cv2.rectangle(lay, (int(x - 1.5 * r), int(cy + 1.95 * r)), (int(x + 1.5 * r), OH), col, -1)
@@ -1106,19 +1329,30 @@ def draw_fans(img, key, P, cx, cy, z, t, amt):
     lv = fans_layer(key)
     s = P.scale(z)
     L = next((l for l in (1, 2, 4) if l >= s * 0.95), 4)
-    out = img
     W1 = P.W1
-    for half, ph in ((0, 0.0), (1, 0.5)):                    # two halves of the crowd, jumping a half beat apart
-        p = (S.phase(t) + ph) % 1.0
-        jump = amt * 0.035 * OH * math.sin(math.pi * p) ** 1.2
-        A = np.float32([[s / L, 0, OW / 2 - s * cx], [0, s / L, OH / 2 - s * cy - jump]])
-        lay = cv2.warpAffine(lv[L], A, (OW, OH), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-        xs = (np.arange(OW, dtype=np.float32) - (OW / 2 - s * cx)) / s       # plate x of each column
-        m = np.clip((xs - W1 * 0.5) / (W1 * 0.08) + 0.5, 0, 1)
-        m = m if half else 1 - m
-        lay = lay * m[None, :, None]
-        out = lay[..., :3] + out * (1 - lay[..., 3:4])
-    return out
+    A = np.float32([[s / L, 0, OW / 2 - s * cx], [0, s / L, OH / 2 - s * cy]])
+    lay = cv2.warpAffine(lv[L], A, (OW, OH), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    # everyone jumping in their own time: a jump of its own every head's width across the crowd (alternate ones a
+    # half beat apart, each a little ahead of or behind the beat, no two the same height), blended smoothly between
+    xs = (np.arange(OW, dtype=np.float32) - (OW / 2 - s * cx)) / s           # plate x of each column
+    n = 11
+    cxs = np.linspace(0, W1, n)
+    num = np.zeros(OW, np.float32)
+    den = np.zeros(OW, np.float32)
+    for j in range(n):
+        q = S.beat_index(t) + S.phase(t) + 0.5 * (j % 2) + 0.12 * (2 * _h(j, 5) - 1)
+        bi, p = math.floor(q), q % 1.0
+        hop = (j % 3 == 2)                                   # some only every other beat
+        u = ((bi % 2) + p) / 2 if hop else p
+        up = (0.8 + 0.4 * _h(bi // (2 if hop else 1), j + 17)) * math.sin(math.pi * u) ** 1.2
+        g = np.exp(-((xs - cxs[j]) / (0.5 * W1 / (n - 1))) ** 2)
+        num += g * up
+        den += g
+    jump = amt * 0.035 * OH * num / np.maximum(den, 1e-6)
+    my = np.arange(OH, dtype=np.float32)[:, None] + jump[None, :]
+    mx = np.broadcast_to(np.arange(OW, dtype=np.float32)[None, :], (OH, OW))
+    lay = cv2.remap(lay, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+    return lay[..., :3] + img * (1 - lay[..., 3:4])
 
 
 # ---------------------------------------------------------------- the shot
@@ -1164,6 +1398,10 @@ def render(s, t):
     if sweep is not None:
         img = img + sweep
     room = img                                           # what the haze glows with: the room's lights, not the band
+    D_ = R.D
+    if s["plate"] == "PUB" and getattr(D_, "FLAGS", None) and s.get("flags", True):
+        from studio.film import fx                       # flags raised at the back of the room, behind everyone
+        img = fx.flags(img, t, D_.FLAGS, S.beat_index(t) + S.phase(t))
     pos = {}
     for kind, val in s["layers"]:
         if kind == "actors":
@@ -1192,6 +1430,18 @@ def render(s, t):
             img = draw_fg_fans(img, val, t, s.get("fans_jump", 1.0) * (0.4 + 0.6 * energy))
         elif kind == "stage_edge":
             img = draw_stage_edge(img, val, t, energy)
+        elif kind == "pyro":                             # spark fountains on the stage's front edge
+            from studio.film import fx
+            bursts = getattr(D_, "PYRO", [])
+            big = [b for b in bursts if b[2] >= 1.2]
+            img = fx.sparks_plate(img, t, M, sc, bursts, getattr(D_, "FOUNTAINS", []), getattr(D_, "PYRO_H", 280),
+                                  dark=dark)
+            if big and getattr(D_, "FOUNTAINS_BIG", None):          # in front of the band: lower, gentler
+                img = fx.sparks_plate(img, t, M, sc, big, D_.FOUNTAINS_BIG, 0.7 * getattr(D_, "PYRO_H", 280), dark=dark,
+                                      glow_k=0.6, rate=110.0)
+        elif kind == "pyro_near":                        # the same fountains seen from the stage: beside the lens
+            from studio.film import fx
+            img = fx.sparks_screen(img, t, getattr(D_, "PYRO", []))
         elif kind == "props":
             img = getattr(R.X, val)(img, s, t, M, sc)
         elif kind == "sticks":                           # the drummer's sticks and fists, in front of the kit
@@ -1246,6 +1496,10 @@ def render(s, t):
                 img = img + (1 - img) * 0.35
             else:
                 img = img * 0.82
+    cf = getattr(D_, "CONFETTI", None)
+    if cf and s.get("confetti", True):
+        from studio.film import fx
+        img = fx.confetti(img, t, *cf)
     img = grade_stage(img, s.get("grade", "stage"))
     if abs(roll) > 0.01:
         Mr = cv2.getRotationMatrix2D((OW / 2, OH / 2), roll, 1.0 + abs(math.radians(roll)) * 0.9)

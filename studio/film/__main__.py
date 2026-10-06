@@ -67,7 +67,7 @@ def fit(path, limit_mb=95.0):
                                 str(master)], capture_output=True, text=True, check=True).stdout)
     kbps = int(limit_mb * 8000 * 0.97 / dur) - 192                  # the video's share, the audio at 192k
     log = str(ep.path("fit"))
-    common = ["-c:v", "libx264", "-preset", "medium", "-b:v", f"{kbps}k", "-passlogfile", log]
+    common = ["-c:v", "libx264", "-preset", "slow", "-tune", "animation", "-b:v", f"{kbps}k", "-passlogfile", log]
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(master)] + common + ["-pass", "1", "-an", "-f", "mp4",
                                                                                          os.devnull], check=True)
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(master)] + common

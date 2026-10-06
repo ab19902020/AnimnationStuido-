@@ -103,7 +103,7 @@ def layers(fans=False, focus=None, fg_blur=8.0, bg_blur=5.0, hide=(), **over):
     lay = [("actors", band(*up, **over))]
     if "maguire" not in hide:
         lay.append(("sticks", dict(DRUMS, blur=over.get("maguire", {}).get("blur", 0.0))))
-    lay += [("occl", "kit"), ("actors", band(*fr, **over)), ("occl", "monitors")]
+    lay += [("occl", "kit"), ("actors", band(*fr, **over)), ("occl", "monitors"), ("pyro", None)]
     if fans:
         lay.append(("fans", "FC"))
     return lay
@@ -210,6 +210,7 @@ def crowd(t0, t1, people, bg=0, push=1.04, blur=7.0, edge=True, **kw):
     if edge:
         lay.append(("stage_edge", dict(y=kw.pop("edge_y", 0.9), monitor=kw.pop("monitor", 1 if bg % 2 else -1),
                                        mic=kw.pop("mic", None), blur=9.0)))
+    lay.append(("pyro_near", None))
     lights = kw.pop("lights", 0.5)                    # how hard the stage's moving lights work the room
     return stage(t0, "PUB", [(t0, c0), (t1, c1)], lay, blur=blur, grade="crowd", lights=0.0, beams=0.0,
                  sweep=kw.pop("sweep", dict(SWEEP, amount=0.16 + 0.30 * lights)), drift=kw.pop("drift", 0.9),
@@ -297,7 +298,7 @@ def reverse(t0, t1, front, middle, back, push=1.05, **kw):
     c0 = (836, 360, 1.35)
     return stage(t0, "PUB", [(t0, c0), (t1, pushed(c0, push))],
                  [("actors", whole(front, middle, back)),
-                  ("stage_edge", dict(y=0.79, monitor=kw.pop("monitor", -1), mic=None, blur=8.0))],
+                  ("stage_edge", dict(y=0.79, monitor=kw.pop("monitor", -1), mic=None, blur=8.0)), ("pyro_near", None)],
                  blur=kw.pop("blur", 5.0), grade="crowd", lights=0.0, beams=0.0,
                  sweep=kw.pop("sweep", dict(SWEEP, n=4, amount=0.16 + 0.30 * kw.pop("lights", 0.8))),
                  drift=kw.pop("drift", 0.7), rim=kw.pop("rim", 0.35), rim_color=(1.0, 0.72, 0.45), **kw)
@@ -459,6 +460,20 @@ add(wide(b(111), b(113), (836, 430, 1.25), (836, 470, 1.0), **ANTHEM),
     wide(b(115), SONG_END, (836, 470, 1.0), (836, 470, 1.04), **ANTHEM),
     card(SONG_END, "title"))
 
+# ---------------------------------------------------------------- the show
+# spark fountains on the stage's front edge (plate px), outside the monitors; on the three biggest hits two more
+# go up either side of Bruno. They burst with the lights coming up, every chorus, the anthem, the Glory Glory and
+# the last chord
+FOUNTAINS = [(340, 575), (1335, 575)]
+FOUNTAINS_BIG = [(652, 578), (868, 578)]
+PYRO_H = 300
+PYRO = [(b(1), 2.2, 1.25), (b(27), 2.4, 1.0), (b(47), 2.4, 1.0), (b(75), 3.0, 1.25), (b(83), 2.4, 1.0),
+        (b(97), 2.4, 1.0), (b(105), 3.4, 1.3), (b(115), 3.6, 1.3)]
+# United flags up at the back of the room: for "we lift our flags to the sky", then the anthem to the end
+FLAGS = [(b(70, 0.3), b(72)), (b(83), b(116))]
+# confetti from the Glory Glory to the end
+CONFETTI = (b(105), SONG_END + 1.0)
+
 # a frame shows the instant it starts at: every cut half a frame early lands on the frame nearest its beat
 for _s in SH[1:]:
     _s["t"] -= 0.5 / 30
@@ -468,19 +483,19 @@ TITLE = (("UNITED ROAD", "BEBAS", 160, None, 14, 330, (255, 255, 255)),
          ("TAKE ME HOME", "BEBAS", 104, None, 14, 500, (255, 255, 255)))
 TAGLINE = (("MANCHESTER UNITED", "BEBAS", 54, None, 10, 760, (236, 236, 236)),)
 CAPTIONS = [
-    (b(4, 0.12), b(6) - 0.15, "name", "HARRY MAGUIRE", "Drums."),
-    (b(6, 0.12), b(8) - 0.15, "name", "MATHEUS CUNHA", "Bass."),
-    (b(8, 0.12), b(10) - 0.15, "name", "BENJAMIN ŠEŠKO", "Lead guitar."),
-    (b(10, 0.12), b(12) - 0.15, "name", "KOBBIE MAINOO", "Keys."),
-    (b(32, 0.08), b(33) - 0.1, "name", "LUKE SHAW", "Backing vocals."),
-    (b(33, 0.08), b(34) - 0.1, "name", "MATTHIJS DE LIGT", "Backing vocals."),
-    (b(56, 0.15), b(57) - 0.1, "name", "LENY YORO", "Harmonica."),
+    (b(3, 0.1), b(4) - 0.12, "name", "HARRY MAGUIRE", "Drums."),
+    (b(5, 0.1), b(6) - 0.12, "name", "MATHEUS CUNHA", "Bass."),
+    (b(6, 0.1), b(7) - 0.12, "name", "BENJAMIN ŠEŠKO", "Lead guitar."),
+    (b(7, 0.1), b(8) - 0.12, "name", "KOBBIE MAINOO", "Keys."),
+    (b(8, 0.1), b(9) - 0.12, "name", "LUKE SHAW", "Backing vocals."),
+    (b(9, 0.1), b(10) - 0.12, "name", "MATTHIJS DE LIGT", "Backing vocals."),
+    (b(13, 0.1), b(14) - 0.12, "name", "LENY YORO", "Harmonica."),
+    (b(14, 0.12), b(16) - 0.15, "name", "BRUNO FERNANDES", "Lead vocals. Captain."),
     (b(84, 0.1), b(85) - 0.1, "name", "JIM RATCLIFFE", "Co-owner. Not singing."),
     (b(95, 0.1), b(96) - 0.1, "name", "OMAR BERRADA", "Chief executive. Checking ticket prices."),
-    (b(14, 0.12), b(16) - 0.15, "name", "BRUNO FERNANDES", "Lead vocals. Captain."),
     (b(108, 0.6), b(110) - 0.15, "name", "ERIC CANTONA", "On his own."),
 ]
-WHIPS = []
+WHIPS = [b(27) - 0.5 / 30, b(47) - 0.5 / 30, b(75) - 0.5 / 30, b(97) - 0.5 / 30]   # whip pans into the choruses
 STROBE = [(b(1, 0.72), b(2)), (b(35, 0.72), b(36)), (b(55, 0.72), b(56)), (b(56, 0.72), b(57)),
           (b(63, 0.35), b(64)), (b(82, 0.72), b(83)), (b(107, 0.55), b(108)),
           (b(115, 0.30), b(115, 0.90))]

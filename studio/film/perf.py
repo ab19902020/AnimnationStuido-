@@ -19,6 +19,7 @@ An episode's perf.py builds one Performance with its data:
   EXPR   {who: [(t0, t1, brow, smile, ease-in)]}  reactions outside their own lines
   NODS   {who: [(t, count, amplitude %)]};  TURN {who: [(t0, t1, turn, tilt deg)]}
   FORCED {who: [t]} blinks on cue;  NOBLINK {who: [(t0, t1)]} no blinks in holds (looks into the lens)
+  SHUT   {who: [(t0, t1)]} eyes closed (singing a long note with feeling)
   cuts   the shot list's cut times: automatic blinks keep clear of the first 0.4 s after a cut
   BODY   {who: [(t0, t1, lean, sink, ease-in)]}"""
 import math
@@ -62,7 +63,7 @@ def bump(u):
 class Performance:
     def __init__(self, TL, lines, who, spk, meta, line_wav, base=None, gaze=None, expr=None, nods=None, turn=None,
                  forced=None, noblink=None, body=None, smile_bias=None, tags=None, rest_target=None, seed=200,
-                 cuts=()):
+                 cuts=(), shut=None):
         self.TL, self.L, self.WHO, self.SPK = TL, lines, list(who), spk
         self.META = meta
         self.line_wav = line_wav
@@ -73,6 +74,7 @@ class Performance:
         self.TURN = {w: list((turn or {}).get(w, [])) for w in self.WHO}
         self.FORCED = {w: list((forced or {}).get(w, [])) for w in self.WHO}
         self.NOBLINK = {w: list((noblink or {}).get(w, [])) for w in self.WHO}
+        self.SHUT = {w: list((shut or {}).get(w, [])) for w in self.WHO}
         self.BODY = {w: list((body or {}).get(w, [])) for w in self.WHO}
         self.SMILE_BIAS = smile_bias or {}
         self.TAGS = {**TAGS, **(tags or {})}
@@ -139,6 +141,7 @@ class Performance:
         return out
 
     def blink(self, w, t):
+        shut = max([ramp(t, a, b, 0.1, 0.14) for a, b in self.SHUT[w]] or [0.0])
         f = t * FPS
         for b in self.BLINKS[w]:
             k = f - b * FPS
@@ -146,8 +149,8 @@ class Performance:
                 i = int(k)
                 u = k - i
                 nx = BLINK_SHAPE[i + 1] if i + 1 < len(BLINK_SHAPE) else 0.0
-                return BLINK_SHAPE[i] * (1 - u) + nx * u
-        return 0.0
+                return max(shut, BLINK_SHAPE[i] * (1 - u) + nx * u)
+        return shut
 
     # ------------------------------------------------------------ where each one looks
     def speaker_at(self, t, lag=0.2):
