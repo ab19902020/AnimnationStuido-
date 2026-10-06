@@ -45,7 +45,8 @@ class Face:
     """landmarks (part px): mouth=(xl, yl, xr, yr, xc, yc), chin=y, eyes=[(cx, cy, rx, ry)...], facing='front'|'left'|'right'
     (for a profile: xl..xr runs from the mouth corner to the lips' front)."""
 
-    def __init__(self, img, mouth=None, chin=None, eyes=(), facing="front", jaw=1.0, ink=None, lid=None, brow_gain=1.0):
+    def __init__(self, img, mouth=None, chin=None, eyes=(), facing="front", jaw=1.0, ink=None, lid=None, brow_gain=1.0,
+                 pupils=True):
         self.img = img.astype(np.float32) / 255 if img.dtype == np.uint8 else img.astype(np.float32)
         self.H, self.W = self.img.shape[:2]
         self.mouth, self.chin, self.eyes = mouth, chin, [tuple(e) for e in eyes]
@@ -86,7 +87,10 @@ class Face:
             else:
                 skin = np.float32([0.88, 0.62, 0.46])
             self.lids.append(np.float32(skin) * 0.97 if lid is None else np.float32(lid))
-        self.pupils = [self._find_pupil(e) for e in self.eyes]
+        # the drawn pupils are lifted out and re-placed for the gaze; pupils=False keeps them as drawn and moves them
+        # with a gentle warp instead (eye whites drawn with shading, where a flat paint-out shows as a grey ring)
+        self.pupils = [self._find_pupil(e) for e in self.eyes] if pupils else [None] * len(self.eyes)
+        self._fills = {}
 
     def _find_pupil(self, e):
         """the dark pupil inside an eye opening: its mask, sprite and centre, so gaze can move it cleanly"""
@@ -271,31 +275,79 @@ class Face:
         res = out.copy(); res[..., :3] = rgb
         return res
 
+    def _lid_fill(self, i):
+        """what a closed lid is made of: the face around eye i with the eye, its outline and any ink near it filled
+        in from the skin around them (inpainted, shading and all; the skin itself kept where it is skin), so a lid
+        never shows as a flat disc, nor takes its colour from a crease under the eye -> (RGB, x0, y0)"""
+        f = self._fills.get(i)
+        if f is not None:
+            return f
+        cx, cy, rx, ry = self.eyes[i]
+        x0, x1 = int(max(0, cx - 2.2 * rx)), int(min(self.W, cx + 2.2 * rx + 1))
+        y0, y1 = int(max(0, cy - 2.4 * ry)), int(min(self.H, cy + 2.6 * ry + 1))
+        sub = self.img[y0:y1, x0:x1]
+        rgb = np.ascontiguousarray(sub[..., :3])
+        yy, xx = np.mgrid[y0:y1, x0:x1].astype(np.float32)
+        d = np.sqrt(((xx - cx) / rx) ** 2 + ((yy - cy) / ry) ** 2)
+        skin = (rgb[..., 0] > rgb[..., 2] + 0.08) & (rgb.max(2) > 0.3) & (sub[..., 3] > 0.9)
+        unk = ((d < 1.3) | ~skin).astype(np.uint8)
+        unk = cv2.dilate(unk, np.ones((3, 3), np.uint8), iterations=max(1, int(round(rx * 0.05))))
+        s = 4 if rx > 24 else 2
+        h, w = rgb.shape[:2]
+        small = cv2.resize((np.clip(rgb, 0, 1) * 255).astype(np.uint8), (max(1, w // s), max(1, h // s)),
+                           interpolation=cv2.INTER_AREA)
+        msk = (cv2.resize(unk.astype(np.float32), (small.shape[1], small.shape[0]), interpolation=cv2.INTER_AREA)
+               > 0.02).astype(np.uint8)
+        if msk.all():
+            fill = np.broadcast_to(self.lids[i], rgb.shape).astype(np.float32)
+        else:
+            fill = cv2.inpaint(small, msk, 3, cv2.INPAINT_TELEA)
+            fill = cv2.resize(fill, (w, h), interpolation=cv2.INTER_CUBIC).astype(np.float32) / 255.0
+            fill = cv2.GaussianBlur(fill, (0, 0), max(1.0, rx * 0.06))
+            keep = cv2.GaussianBlur(1.0 - unk.astype(np.float32), (0, 0), max(0.8, rx * 0.03))[..., None]
+            fill = rgb * keep + fill * (1 - keep)
+        self._fills[i] = (fill, x0, y0)
+        return self._fills[i]
+
     def _blink(self, out, X, Y, amount):
-        """the lid comes down over the whole eye, outline included, in the cheek's colour; a firm lash line on
-        its edge (these cartoon eyes are big and outlined, so a partial lid would leave the outline showing)"""
+        """the lid comes down over the whole eye, outline included, made of the skin around it (_lid_fill); a firm
+        lash line on its edge (these cartoon eyes are big and outlined, so a partial lid would leave the outline
+        showing)"""
         res = out.copy()
-        for (cx, cy, rx, ry), skin in zip(self.eyes, self.lids):
+        for i, ((cx, cy, rx, ry), skin) in enumerate(zip(self.eyes, self.lids)):
             x0, y0 = X[0, 0], Y[0, 0]
-            yc, xc = int(cy + ry * 1.75 - y0), int(cx - x0)
             h, w = res.shape[:2]
-            cheek = res[max(0, yc - 2):min(h, yc + 3), max(0, xc - 3):min(w, xc + 4), :3].reshape(-1, 3)
-            lidc = np.median(cheek, 0) if len(cheek) else skin
-            top = cy - ry * 1.55
-            bot = top + ry * 3.1 * amount
-            m = (((X - cx) / (rx * 1.34)) ** 2 + ((Y - (top + bot) / 2) / max(0.5, (bot - top) / 2)) ** 2 <= 1)
+            lidc = np.empty((h, w, 3), np.float32)
+            lidc[:] = skin
+            fill, fx0, fy0 = self._lid_fill(i)
+            ox, oy = int(x0), int(y0)
+            ax0, ay0 = max(ox, fx0), max(oy, fy0)
+            ax1, ay1 = min(ox + w, fx0 + fill.shape[1]), min(oy + h, fy0 + fill.shape[0])
+            if ax1 > ax0 and ay1 > ay0:
+                lidc[ay0 - oy:ay1 - oy, ax0 - ox:ax1 - ox] = fill[ay0 - fy0:ay1 - fy0, ax0 - fx0:ax1 - fx0]
+            # the upper lid comes down over the whole eye, outline included; at the end the lower lid comes up to
+            # meet it, and the lash line is where they meet: a closed eye's curve a little below the eye's middle
+            E = ((X - cx) / (rx * 1.34)) ** 2 + ((Y - cy) / (ry * 1.55)) ** 2 <= 1
+            u = np.clip((X - cx) / (rx * 1.1), -1, 1)
+            sag = 0.32 * ry * (1 - u * u)                       # the lid's edge is lowest in the middle
+            edge = cy - 1.55 * ry + 1.73 * ry * amount           # ... and its corners come down to here
+            low = cy + 1.55 * ry - 1.65 * ry * float(smooth((amount - 0.5) / 0.4))   # (no white left between them)
+            m = E & ((Y < edge + sag) | (Y > low + sag))
             m = cv2.GaussianBlur(m.astype(np.float32), (0, 0), max(0.6, rx * 0.02))
             # the brow stays: dark ink above the eye's own outline is not lid (a low, heavy brow sits inside the
             # lid's reach and would vanish on every blink)
             brow = ((Y < cy - ry * 1.12) & (res[..., :3].max(2) < 0.30)).astype(np.float32)
             brow = cv2.GaussianBlur(brow, (0, 0), max(0.6, rx * 0.02))
             m = (m * (1 - brow))[..., None]
-            res[..., :3] = res[..., :3] * (1 - m) + lidc[None, None, :] * m
+            res[..., :3] = res[..., :3] * (1 - m) + lidc * m
             if amount > 0.35:
                 ln = np.zeros(X.shape, np.float32)
                 th = max(2, int(round(min(ry * 0.22, rx * 0.12) * min(1.0, (amount - 0.35) * 2.5))))
-                cv2.ellipse(ln, (int(round((cx - x0) * 4)), int(round((bot - ry * 0.55 - y0) * 4))),
-                            (int(rx * 1.02 * 4), int(ry * 0.5 * 4)), 0, 10, 170, 1, th, cv2.LINE_AA, 2)
+                xs = np.linspace(cx - 1.0 * rx, cx + 1.0 * rx, 24)
+                us = np.clip((xs - cx) / (rx * 1.1), -1, 1)
+                ys = edge + 0.32 * ry * (1 - us * us) - 0.04 * ry
+                pts = np.int32(np.round(np.stack([(xs - x0) * 4, (ys - y0) * 4], 1)))
+                cv2.polylines(ln, [pts], False, 1, th, cv2.LINE_AA, 2)
                 ln = cv2.GaussianBlur(ln, (0, 0), 0.6)[..., None]
                 res[..., :3] = res[..., :3] * (1 - ln) + self.ink * ln
         return res

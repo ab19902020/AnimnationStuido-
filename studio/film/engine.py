@@ -91,7 +91,7 @@ class Drawing:
     per sheet px}; the part image is RGBA at that scale."""
 
     def __init__(self, name, path, meta, mouth=None, chin=None, eyes=(), facing="front", neck=None, head=None,
-                 jaw=1.0, anchors=None, brow_gain=1.0, ink=None, lid=None):
+                 jaw=1.0, anchors=None, brow_gain=1.0, ink=None, lid=None, pupils=True):
         self.name = name
         self.ox, self.oy = meta["off"]
         self.S = meta.get("scale", 4)                    # part px per sheet px
@@ -101,7 +101,7 @@ class Drawing:
         for L in LEVELS[1:]:
             self.u8[L] = cv2.resize(full, None, fx=L, fy=L, interpolation=cv2.INTER_AREA)
         self.spec = dict(mouth=mouth, chin=chin, eyes=eyes, facing=facing, neck=neck, head=head, jaw=jaw,
-                         brow_gain=brow_gain, ink=ink, lid=lid)
+                         brow_gain=brow_gain, ink=ink, lid=lid, pupils=pupils)
         self.has_face = bool(mouth or eyes or head)
         self._base = {}
         self._face = {}
@@ -170,7 +170,7 @@ class Drawing:
             mo = (a[0], a[1], b[0], b[1], c[0], c[1])
         ey = [(R(e[0], e[1])[0], R(e[0], e[1])[1], e[2] * s, e[3] * s) for e in sp["eyes"]]
         f = Face(sub, mouth=mo, chin=R(0, sp["chin"])[1] if sp["chin"] else None, eyes=ey, facing=sp["facing"],
-                 jaw=sp["jaw"], brow_gain=sp["brow_gain"], ink=sp["ink"], lid=sp["lid"])
+                 jaw=sp["jaw"], brow_gain=sp["brow_gain"], ink=sp["ink"], lid=sp["lid"], pupils=sp.get("pupils", True))
         hb = None
         if sp["head"]:
             h0, h1 = R(sp["head"][0], sp["head"][1]), R(sp["head"][2], sp["head"][3])
@@ -309,18 +309,40 @@ def rim(layer_pm, dirx, diry, strength, color, width):
 
 
 # ---------------------------------------------------------------- placing a drawing
-def place(dst, d, st, Ms, clip=None, alpha=1.0):
+def _level_affine(d, M, L):
+    """sheet px -> screen px (2x3) as level-L drawing px -> screen px"""
+    A = np.zeros((2, 3), np.float64)
+    A[:, :2] = M[:, :2] / (d.S * L)
+    A[:, 2] = M[:, :2] @ np.float64([d.ox, d.oy]) + M[:, 2]
+    return A
+
+
+def _feather(h, w, b=2):
+    m = np.ones((h, w), np.float32)
+    r = np.linspace(0, 1, b + 2)[1:-1]
+    m[:b, :] *= r[:, None]
+    m[-b:, :] *= r[::-1][:, None]
+    m[:, :b] *= r[None, :]
+    m[:, -b:] *= r[::-1][None, :]
+    return m
+
+
+def place(dst, d, st, Ms, clip=None, alpha=1.0, head=None):
     """composite drawing d (face state st) into dst (premultiplied RGBA float, screen size) through Ms (2x3: sheet
-    px -> screen px). Drawn on its own local canvas first, so its face patch never erases anyone behind it."""
+    px -> screen px). Drawn on its own local canvas first, so its face patch never erases anyone behind it.
+    head=(Mh, y0, y1): above sheet y0 the drawing goes through Mh instead, blending into Ms by y1 (the neck), so a
+    body that squashes and stretches as it dances carries its head without squashing the face"""
     Ms = np.asarray(Ms, np.float64)
     sc = math.sqrt(abs(Ms[0, 0] * Ms[1, 1] - Ms[0, 1] * Ms[1, 0]))       # screen px per sheet px
     L = next((l for l in (0.125, 0.25, 0.5, 1.0) if sc / (d.S * l) <= 1.25), 1.0)
     base = d.base(L, clip)
-    A = np.zeros((2, 3), np.float64)
-    A[:, :2] = Ms[:, :2] / (d.S * L)
-    A[:, 2] = Ms[:, :2] @ np.float64([d.ox, d.oy]) + Ms[:, 2]
+    A = _level_affine(d, Ms, L)
     hh, ww = base.shape[:2]
-    c = cv2.transform(np.float32([[[0, 0], [ww, 0], [0, hh], [ww, hh]]]), A.astype(np.float32))[0]
+    corners = np.float32([[[0, 0], [ww, 0], [0, hh], [ww, hh]]])
+    c = cv2.transform(corners, A.astype(np.float32))[0]
+    if head is not None:
+        Ah = _level_affine(d, np.asarray(head[0], np.float64), L)
+        c = np.vstack([c, cv2.transform(corners, Ah.astype(np.float32))[0]])
     H, W = dst.shape[:2]
     bx0, by0 = int(max(0, np.floor(c[:, 0].min()) - 3)), int(max(0, np.floor(c[:, 1].min()) - 3))
     bx1, by1 = int(min(W, np.ceil(c[:, 0].max()) + 3)), int(min(H, np.ceil(c[:, 1].max()) + 3))
@@ -330,13 +352,46 @@ def place(dst, d, st, Ms, clip=None, alpha=1.0):
     A2 = A.copy()
     A2[0, 2] -= bx0
     A2[1, 2] -= by0
-    warp_into(loc, base, A2.astype(np.float32))
     p = d.patch(L, st, clip)
-    if p is not None:
-        x0, y0, pm = p
-        Ap = A2.copy()
-        Ap[:, 2] += A2[:, :2] @ np.float64([x0, y0])
-        warp_into(loc, pm, Ap.astype(np.float32), mode="replace")
+    if head is not None:
+        # the face patch goes into the drawing first; then one remap through the body's transform below the neck
+        # and the head's above it, blended between (what the body's inverse lands on decides which)
+        src = base
+        if p is not None:
+            x0, y0, pm = p
+            src = base.copy()
+            ph, pw = pm.shape[:2]
+            sx0, sy0 = max(0, x0), max(0, y0)
+            sx1, sy1 = min(ww, x0 + pw), min(hh, y0 + ph)
+            if sx1 > sx0 and sy1 > sy0:
+                m = _feather(ph, pw)[sy0 - y0:sy1 - y0, sx0 - x0:sx1 - x0, None]
+                src[sy0:sy1, sx0:sx1] = pm[sy0 - y0:sy1 - y0, sx0 - x0:sx1 - x0] * m + src[sy0:sy1, sx0:sx1] * (1 - m)
+        Ah2 = Ah.copy()
+        Ah2[0, 2] -= bx0
+        Ah2[1, 2] -= by0
+        Yo, Xo = np.mgrid[0:by1 - by0, 0:bx1 - bx0].astype(np.float32)
+        ib = cv2.invertAffineTransform(A2.astype(np.float32))
+        ih = cv2.invertAffineTransform(Ah2.astype(np.float32))
+        bxs = ib[0, 0] * Xo + ib[0, 1] * Yo + ib[0, 2]
+        bys = ib[1, 0] * Xo + ib[1, 1] * Yo + ib[1, 2]
+        hxs = ih[0, 0] * Xo + ih[0, 1] * Yo + ih[0, 2]
+        hys = ih[1, 0] * Xo + ih[1, 1] * Yo + ih[1, 2]
+        ly0 = (head[1] - d.oy) * d.S * L
+        ly1 = (head[2] - d.oy) * d.S * L
+        w = 1.0 - smooth((bys - ly0) / max(1.0, ly1 - ly0))
+        mx = bxs + w * (hxs - bxs)
+        my = bys + w * (hys - bys)
+        s_ = sc / (d.S * L)
+        if s_ < 0.5:                                     # (shrinking a lot: take the edge off first)
+            src = cv2.GaussianBlur(src, (0, 0), 0.45 / s_)
+        loc = cv2.remap(src, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+    else:
+        warp_into(loc, base, A2.astype(np.float32))
+        if p is not None:
+            x0, y0, pm = p
+            Ap = A2.copy()
+            Ap[:, 2] += A2[:, :2] @ np.float64([x0, y0])
+            warp_into(loc, pm, Ap.astype(np.float32), mode="replace")
     if alpha != 1.0:
         loc *= alpha
     reg = dst[by0:by1, bx0:bx1]
