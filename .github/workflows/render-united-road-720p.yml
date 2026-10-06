@@ -1,4 +1,5 @@
 name: Render United Road Final 720p
+# clean verified rerender: preserve instrument/drum fixes + latest show FX
 
 on:
   push:
