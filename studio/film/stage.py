@@ -941,6 +941,67 @@ def turn_look(key):
     return float(np.clip(-2.0 * asym, -0.7, 0.7)) if abs(asym) > 0.06 else 0.0
 
 
+@functools.lru_cache(maxsize=None)
+def _sung_lines(who):
+    """which of the song's lyric lines this performer sings (any mouth shape inside the line)"""
+    vis = _R().PERF.VIS.get(who)
+    if vis is None:
+        return ()
+    return tuple(any(v != "REST" for v in vis[int(a * FPS):int(b * FPS)]) for a, b, _ in SONG().lines)
+
+
+@functools.lru_cache(maxsize=1)
+def _vocal_push():
+    """how hard the lead vocal is pushing, 0..1 per frame, over a quarter of a second"""
+    v = np.clip((np.asarray(SONG().vocal, np.float32) + 30.0) / 12.0, 0, 1)
+    return np.convolve(v, np.ones(8, np.float32) / 8, mode="same")
+
+
+def life(st, who, t, cam=False, opt=None):
+    """a face is never quite still: the eyes dart a little every second or so and come back, the head finds its
+    own angle for every line it sings, the brows lift as the voice pushes. cam: playing to the lens (darts smaller
+    and rarer). opt (perf.LIFE[who]): eyes, head, brows, multipliers (0 turns one off)"""
+    opt = opt or {}
+    k = zlib.crc32(who.encode()) % 9973
+    ke, kh, kb = opt.get("eyes", 1.0), opt.get("head", 1.0), opt.get("brows", 1.0)
+    if ke > 0:
+        L = 1.1 + 0.7 * _h(k, 3)                             # each their own rhythm
+        i = math.floor(t / L)
+
+        def when(j):
+            return (j + 0.15 + 0.7 * _h(j, k + 5)) * L
+
+        def aim(j):
+            if _h(j, k + 9) < (0.65 if cam else 0.35):       # back to where they were looking
+                return 0.0, 0.0
+            s = ke * (0.35 if cam else 1.0)
+            return s * 0.22 * (2 * _h(j, k + 1) - 1), s * 0.09 * (2 * _h(j, k + 2) - 1)
+
+        j = i if t >= when(i) else i - 1
+        (x0, y0), (x1, y1) = aim(j - 1), aim(j)
+        u = sm((t - when(j)) / 0.07)                         # a dart takes two frames
+        st["lookx"] += x0 + (x1 - x0) * u
+        st["looky"] += y0 + (y1 - y0) * u
+    sung = _sung_lines(who)
+    if not sung:
+        return
+    lines = SONG().lines
+    n = 0
+    while n + 1 < len(lines) and lines[n + 1][0] - 0.1 <= t:
+        n += 1
+    for m in (n - 1, n):                                     # (the last line's angle easing out under the new one)
+        if m < 0 or not sung[m]:
+            continue
+        a, b = lines[m][0], lines[m][1]
+        w = ramp(t, a - 0.1, b, 0.35, 0.5)
+        if w > 1e-3 and kh > 0:
+            st["tilt"] += kh * 4.0 * (2 * _h(m, k + 11) - 1) * w
+            st["turn"] += kh * 0.14 * (2 * _h(m, k + 12) - 1) * w
+        if kb > 0 and a <= t <= b + 0.2:
+            push = float(_vocal_push()[min(len(SONG().vocal) - 1, int(t * FPS))])
+            st["brow"] += kb * (0.15 + 0.3 * _h(k, 13)) * push * ramp(t, a, b, 0.2, 0.2)
+
+
 def glance(st, who, t, pos, spans):
     """looks away from where they were looking and back: spans [(t0, t1, target)], target a performer in the shot
     (turning to them; skipped if they are not in it), "up" (the sky, the flags), "cam" (into the lens), or
@@ -1021,6 +1082,7 @@ def draw_actor(shared, a, t, s, M, sc, pos):
         elif a.get("look_cam"):
             st["lookx"] = 0.0
             st["looky"] = -0.02
+        life(st, who, t, bool(a.get("look_cam")), getattr(perf, "LIFE", {}).get(who))
         glance(st, who, t, pos, getattr(perf, "GLANCE", {}).get(who, ()))
         fst = R.face_state(st, info, mirror)
         if not a.get("look_cam") and "look0" not in CAST.spec(key.split(":")[0])["drawings"][key.split(":")[1]]:

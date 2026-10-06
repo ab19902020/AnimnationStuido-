@@ -258,6 +258,9 @@ GLANCE = {
 # the flags go up, and so do their eyes: "we lift our flags to the sky"
 for c in CROWD:
     GLANCE.setdefault(c, []).append((L(19) - 0.1, Le(19) + 0.1, "up"))
+# stage.life keeps every face going (eye darts, a head angle for each line sung, brows on the big notes); the
+# two who stare dead into the lens keep their stare, Maguire's heavy brow stays near rest
+LIFE = {"ratcliffe": dict(eyes=0), "berrada": dict(eyes=0), "maguire": dict(brows=0.4)}
 # eyes shut on the long notes, singing with everything: a few at a time, never everybody
 SHUT = {"gary": [(50.6, 51.6), (B(52, 0.62), B(52, 0.95)), (197.2, 198.35)],
         "rooney": [(B(88, 0.55), B(88, 0.95)), (197.5, 198.4)],
