@@ -1,4 +1,4 @@
-name: Render United Road Final 1080p
+name: Render United Road Combined 1080p
 
 on:
   push:
@@ -34,8 +34,6 @@ jobs:
       - name: Check Python sources
         run: |
           python -m py_compile             episodes/united-road-take-me-home/film/direction.py             episodes/united-road-take-me-home/film/perf.py             studio/film/stage.py             studio/film/song.py
-      - name: Fetch song-analysis models
-        run: tools/fetch_models.sh separate whisper
       - name: Analyse song and build final soundtrack
         run: |
           python -m studio.film united-road-take-me-home song
@@ -43,17 +41,20 @@ jobs:
       - name: Prepare all artwork and plates once
         env:
           EP_RES: 1920x1080
+          FILM_THREADS: '1'
+          FILM_CRF: '17'
+          OMP_NUM_THREADS: '1'
+          OPENBLAS_NUM_THREADS: '1'
         run: python -m studio.film united-road-take-me-home still 10
       - name: Upload render cache
         uses: actions/upload-artifact@v4
         with:
           name: united-road-render-cache
           if-no-files-found: error
-          retention-days: 2
+          retention-days: 14
           path: |
             build/
-            episodes/united-road-take-me-home/build/song.json
-            episodes/united-road-take-me-home/build/episode_audio.wav
+            episodes/united-road-take-me-home/build/
 
   render:
     needs: prepare
@@ -96,6 +97,10 @@ jobs:
       - name: Render this section
         env:
           EP_RES: 1920x1080
+          FILM_THREADS: '1'
+          FILM_CRF: '17'
+          OMP_NUM_THREADS: '1'
+          OPENBLAS_NUM_THREADS: '1'
           FILM_MEM_GB: '5.2'
         run: |
           python -m studio.film united-road-take-me-home render             --jobs 1 --chunks 4 --range ${{ matrix.start }} ${{ matrix.end }}
@@ -107,10 +112,12 @@ jobs:
         with:
           name: united-road-piece-${{ matrix.idx }}
           if-no-files-found: error
-          retention-days: 2
+          retention-days: 14
           path: pieces/piece-${{ matrix.idx }}.mp4
 
   finish:
+    permissions:
+      contents: write
     needs: render
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -136,13 +143,46 @@ jobs:
           find pieces -maxdepth 1 -name 'piece-*.mp4' -printf '%f\n' | sort | sed "s#^#file 'pieces/#; s#$#'#" > parts.txt
           cat parts.txt
           ffmpeg -y -loglevel error -f concat -safe 0 -i parts.txt -an -c:v copy video-only.mp4
-          ffmpeg -y -loglevel error -i video-only.mp4             -i episodes/united-road-take-me-home/build/episode_audio.wav             -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 256k -shortest -movflags +faststart             United_Road_Take_Me_Home_FINAL_1080p.mp4
-          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate             -show_entries format=duration,size -of default=noprint_wrappers=1             United_Road_Take_Me_Home_FINAL_1080p.mp4
+          ffmpeg -y -loglevel error -i video-only.mp4             -i episodes/united-road-take-me-home/build/episode_audio.wav             -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 256k -shortest -movflags +faststart             United_Road_Combined_1080p.mp4
+          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate             -show_entries format=duration,size -of default=noprint_wrappers=1             United_Road_Combined_1080p.mp4
+      - name: Validate full film and create repository copy
+        run: |
+          ffmpeg -v error -i United_Road_Combined_1080p.mp4 -f null -
+          python3 - <<'PYCODE'
+          import json, os, subprocess
+          from pathlib import Path
+          p = 'United_Road_Combined_1080p.mp4'
+          data = json.loads(subprocess.check_output(['ffprobe','-v','error','-count_frames','-show_streams','-show_format','-of','json',p]))
+          v = next(s for s in data['streams'] if s['codec_type'] == 'video')
+          assert (v['width'],v['height'],v['r_frame_rate'],int(v['nb_read_frames'])) == (1920,1080,'30/1',7038)
+          assert abs(float(data['format']['duration']) - 234.6) < 0.1
+          record = dict(source_commit=os.environ['GITHUB_SHA'], width=1920,height=1080,fps=30,frames=7038,duration=234.6,full_decode='passed')
+          Path('combined-render-validation.json').write_text(json.dumps(record,indent=2)+'\n')
+          PYCODE
+          ffmpeg -y -loglevel error -i United_Road_Combined_1080p.mp4 -c:v libx264 -preset slow -tune animation -b:v 2950k -pass 1 -an -f mp4 /dev/null
+          ffmpeg -y -loglevel error -i United_Road_Combined_1080p.mp4 -c:v libx264 -preset slow -tune animation -b:v 2950k -pass 2 -pix_fmt yuv420p -c:a aac -b:a 192k -movflags +faststart United_Road_Combined_1080p_Small.mp4
       - name: Upload final MP4
         uses: actions/upload-artifact@v4
         with:
-          name: united-road-final-1080p
+          name: united-road-combined-1080p
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
           compression-level: 0
-          path: United_Road_Take_Me_Home_FINAL_1080p.mp4
+          path: |
+            United_Road_Combined_1080p.mp4
+            United_Road_Combined_1080p_Small.mp4
+            combined-render-validation.json
+      - name: Publish finished copy to the repository
+        run: |
+          git fetch origin ccr-703a2362-lbr343
+          if [ "$(git rev-parse FETCH_HEAD)" != "$GITHUB_SHA" ]; then
+            echo "Branch advanced; finished files remain in the render artifact for a reviewed update."
+            exit 0
+          fi
+          cp United_Road_Combined_1080p_Small.mp4 episodes/united-road-take-me-home/united-road-take-me-home.mp4
+          cp combined-render-validation.json episodes/united-road-take-me-home/render-validation.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add episodes/united-road-take-me-home/united-road-take-me-home.mp4 episodes/united-road-take-me-home/render-validation.json
+          git commit -m "Deliver verified combined United Road 1080p render"
+          git push origin HEAD:ccr-703a2362-lbr343
