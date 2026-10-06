@@ -1,0 +1,146 @@
+name: Render United Road Final 720p
+
+on:
+  push:
+    branches:
+      - ccr-703a2362-lbr343
+    paths:
+      - .github/workflows/render-united-road-720p.yml
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libegl1 libsndfile1
+      - name: Python packages
+        run: python -m pip install -r requirements.txt
+      - name: Fetch song-analysis models
+        run: tools/fetch_models.sh separate whisper
+      - name: Analyse song and build soundtrack
+        run: |
+          python -m studio.film united-road-take-me-home song
+          python -m studio.film united-road-take-me-home sound
+      - name: Prepare artwork and plates
+        env:
+          EP_RES: 1280x720
+        run: python -m studio.film united-road-take-me-home still 10
+      - name: Upload render cache
+        uses: actions/upload-artifact@v4
+        with:
+          name: united-road-render-cache-720p
+          if-no-files-found: error
+          retention-days: 2
+          compression-level: 0
+          path: |
+            build/
+            episodes/united-road-take-me-home/build/song.json
+            episodes/united-road-take-me-home/build/episode_audio.wav
+
+  render:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        include:
+          - { idx: '00', start: '0', end: '20' }
+          - { idx: '01', start: '20', end: '40' }
+          - { idx: '02', start: '40', end: '60' }
+          - { idx: '03', start: '60', end: '80' }
+          - { idx: '04', start: '80', end: '100' }
+          - { idx: '05', start: '100', end: '120' }
+          - { idx: '06', start: '120', end: '140' }
+          - { idx: '07', start: '140', end: '160' }
+          - { idx: '08', start: '160', end: '180' }
+          - { idx: '09', start: '180', end: '200' }
+          - { idx: '10', start: '200', end: '220' }
+          - { idx: '11', start: '220', end: '234.60' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libegl1 libsndfile1
+      - name: Python packages
+        run: python -m pip install -r requirements.txt
+      - name: Restore prepared artwork, timing and mix
+        uses: actions/download-artifact@v4
+        with:
+          name: united-road-render-cache-720p
+          path: .
+      - name: Render section
+        env:
+          EP_RES: 1280x720
+          FILM_MEM_GB: '5.2'
+        run: |
+          python -m studio.film united-road-take-me-home render --jobs 1 --chunks 4 --range ${{ matrix.start }} ${{ matrix.end }}
+          mkdir -p pieces
+          cp episodes/united-road-take-me-home/build/preview.mp4 pieces/piece-${{ matrix.idx }}.mp4
+          ffprobe -v error -show_entries stream=width,height -show_entries format=duration -of default=noprint_wrappers=1 pieces/piece-${{ matrix.idx }}.mp4
+      - name: Upload section
+        uses: actions/upload-artifact@v4
+        with:
+          name: united-road-720p-piece-${{ matrix.idx }}
+          if-no-files-found: error
+          retention-days: 2
+          compression-level: 0
+          path: pieces/piece-${{ matrix.idx }}.mp4
+
+  finish:
+    needs: render
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Restore soundtrack
+        uses: actions/download-artifact@v4
+        with:
+          name: united-road-render-cache-720p
+          path: .
+      - name: Download all rendered sections
+        uses: actions/download-artifact@v4
+        with:
+          pattern: united-road-720p-piece-*
+          path: pieces
+          merge-multiple: true
+      - name: Join sections and mux soundtrack
+        run: |
+          : > parts.txt
+          for f in $(find pieces -maxdepth 1 -name 'piece-*.mp4' -printf '%f\n' | sort); do
+            printf "file 'pieces/%s'\n" "$f" >> parts.txt
+          done
+          cat parts.txt
+          test "$(wc -l < parts.txt)" -eq 12
+          ffmpeg -y -loglevel error -f concat -safe 0 -i parts.txt -an -c:v copy video-only.mp4
+          ffmpeg -y -loglevel error -i video-only.mp4 -i episodes/united-road-take-me-home/build/episode_audio.wav             -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 256k -shortest -movflags +faststart             United_Road_Take_Me_Home_FINAL_720p.mp4
+          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration,size             -of default=noprint_wrappers=1 United_Road_Take_Me_Home_FINAL_720p.mp4
+      - name: Upload final MP4
+        uses: actions/upload-artifact@v4
+        with:
+          name: united-road-final-720p-latest
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+          path: United_Road_Take_Me_Home_FINAL_720p.mp4
