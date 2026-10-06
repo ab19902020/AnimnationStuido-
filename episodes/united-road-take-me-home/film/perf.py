@@ -41,7 +41,9 @@ def sec(s):
 
 
 # ---------------------------------------------------------------- singing
-CHORUSES = [(L(6) - 0.2, Le(7)), (L(14) - 0.2, bar(57)), (L(22) - 0.2, Le(29)), (L(30) - 0.2, Le(34))]
+# Use the musical bar boundaries for every chorus. This prevents a lyric-line boundary from
+# leaving a visible singer resting in the middle of a chorus when the camera cuts to them.
+CHORUSES = [(bar(27), bar(36)), (bar(47), bar(57)), (bar(75), bar(83)), (bar(97), bar(108))]
 GLORY = [(L(32) - 0.2, Le(34))]
 LEAD = [(0.0, END)]                                     # Bruno: the lead vocal, every note of it
 ALL = [(L(0) - 0.2, Le(len(LINES) - 1) + 0.3)]          # every line of the song
@@ -114,17 +116,26 @@ DANCE["carrick"] = spans((sec(VERSE1), "nod", 0.6), (sec(CHORUS1), "bounce", 0.6
                          (sec(CHORUS2), "bounce", 0.7), (sec(CHORUS3), "bounce", 0.9), (sec(OUTRO), "jump", 0.8),
                          (sec(FINALE), "jump", 1.0))
 DANCE["cantona"] = spans((sec(CODA), "nod", 0.5))
+
+# The opening now feels like a band already in motion rather than people waiting to be introduced.
+for _w in ("bruno", "sesko", "cunha", "mainoo", "shaw", "deligt", "yoro"):
+    DANCE[_w] += spans((sec(INTRO), "bounce", 0.38), (sec(INTRO), "sway", 0.22))
+for _w in CROWD:
+    if _w not in MISERABLE:
+        DANCE[_w] += spans((sec(INTRO), "bounce", 0.30))
 GROOVE = Groove(DANCE)
 
 # ---------------------------------------------------------------- faces
-BASE = dict(bruno=(0.35, 0.45), sesko=(-0.1, 0.45), yoro=(0.3, 0.55), cunha=(0.25, 0.65), maguire=(-0.35, 0.2), mainoo=(0.3, 0.5),
+BASE = dict(bruno=(0.35, 0.45), sesko=(-0.1, 0.45), yoro=(0.3, 0.55), cunha=(0.25, 0.65), maguire=(0.02, 0.28), mainoo=(0.3, 0.5),
             shaw=(0.2, 0.4), deligt=(0.3, 0.4), gary=(0.6, 0.8), roy=(-0.75, -0.45), rio=(0.3, 0.7),
             rooney=(0.2, 0.6), evra=(0.4, 0.8), carrick=(0.0, 0.25), ratcliffe=(-0.85, -0.9), berrada=(-0.8, -0.85),
             cantona=(-0.3, 0.1))
 EXPR = {
     "roy": [(sec(CHORUS3)[0], sec(OUTRO)[1], -0.3, 0.1, 0.6),          # thawing
             (sec(FINALE)[0], END, 0.4, 0.8, 0.5)],                      # roaring
-    "maguire": [(sec(BREAK)[0], sec(BREAK)[1], 0.2, 0.6, 0.4)],
+    # Keep Maguire's brow neutral: the source drawing has a low, heavy brow and pushing it
+    # down reads as an eyebrow inside the eye at close range. Expression comes from smile/head motion instead.
+    "maguire": [(sec(BREAK)[0], sec(BREAK)[1], 0.0, 0.58, 0.35)],
     "bruno": [(sec(BRIDGE)[0], sec(BRIDGE)[1], 0.6, 0.2, 0.6)],         # the quiet bit: earnest
 }
 for c in CROWD:
@@ -133,7 +144,7 @@ for c in CROWD:
 # where they look: the band at the crowd (the lens in the front shots), Šeško at his guitar in the solo,
 # Maguire at his drums; the crowd up at the stage
 GAZE = {"sesko": [(bar(57), bar(61), ("dir", 0.15, 0.75, 0.05))],
-        "maguire": [(bar(2), END, ("dir", 0.0, 0.45, 0.0))],
+        "maguire": [(bar(2), END, ("dir", 0.0, 0.22, 0.0))],
         "cantona": [(0.0, END, ("dir", 0.6, -0.15, 0.25))],
         "yoro": [(bar(56), bar(64), ("dir", 0.0, 0.55, 0.0))],         # eyes down on his harmonica
         "ratcliffe": [(0.0, END, ("dir", 0.0, 0.05, 0.0))],           # a dead stare into the lens
@@ -146,17 +157,18 @@ for b in ("bruno", "cunha", "mainoo", "shaw", "deligt", "yoro"):
 PERF = Performance(TL, {}, WHO, {w: w for w in WHO}, {}, lambda lid: None, base=BASE, gaze=GAZE, expr=EXPR,
                    rest_target={w: "cam" for w in WHO}, cuts=[s["t"] for s in SHOTS])
 
-sing(PERF, "bruno", LEAD, gain=1.0)
+VOCAL_LAG = -2                                            # two frames early: mouth lands on the heard syllable
+sing(PERF, "bruno", LEAD, gain=1.0, lag=VOCAL_LAG)
 for bv in ("shaw", "deligt"):                            # the backing singers sing every line into their mics
-    sing(PERF, bv, ALL, gain=0.85)
-for pl in ("sesko", "cunha", "mainoo", "maguire"):      # the players sing the choruses along, off mic
-    sing(PERF, pl, CHORUSES, gain=0.55)
+    sing(PERF, bv, ALL, gain=0.85, lag=VOCAL_LAG)
+for pl in ("sesko", "cunha", "mainoo", "maguire"):      # the players sing every chorus along, off mic
+    sing(PERF, pl, CHORUSES, gain=0.62, lag=VOCAL_LAG)
 sing(PERF, "yoro", [(a, min(b, bar(56))) for a, b in CHORUSES if a < bar(56)] + [c for c in CHORUSES if c[0] >= bar(64)],
-     gain=0.6)
+     gain=0.66, lag=VOCAL_LAG)
 for c in CROWD:                                          # every United fan sings every word
     if c not in ("roy", "cantona") + MISERABLE:
-        sing(PERF, c, ALL, gain=0.7, lag=0)
-        sing(PERF, c, CHORUSES, gain=0.85, lag=0)
-sing(PERF, "gary", ALL, gain=0.85, lag=0)
-sing(PERF, "rooney", ALL, gain=0.85, lag=0)
-sing(PERF, "roy", [(bar(83), Le(len(LINES) - 1) + 0.3)], gain=0.9, lag=0)   # Roy, at last, from the outro
+        sing(PERF, c, ALL, gain=0.74, lag=VOCAL_LAG)
+        sing(PERF, c, CHORUSES, gain=0.92, lag=VOCAL_LAG)
+sing(PERF, "gary", ALL, gain=0.9, lag=VOCAL_LAG)
+sing(PERF, "rooney", ALL, gain=0.9, lag=VOCAL_LAG)
+sing(PERF, "roy", [(bar(83), Le(len(LINES) - 1) + 0.3)], gain=0.9, lag=VOCAL_LAG)   # Roy, at last, from the outro

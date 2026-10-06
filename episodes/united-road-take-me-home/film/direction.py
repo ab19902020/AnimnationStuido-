@@ -132,10 +132,11 @@ def pushed(cam, f):
 
 
 # lighting by section
-CALM = dict(lights=0.82, beams=0.78, flash=0.45, punch=0.10, haze=0.20)
-VERSE = dict(lights=1.00, beams=1.02, flash=0.72, punch=0.70, haze=0.28)
-CHORUS = dict(lights=1.28, beams=1.38, flash=1.35, punch=1.25, shake=0.32, haze=0.40)
-ANTHEM = dict(lights=1.48, beams=1.58, flash=1.55, punch=1.45, shake=0.52, haze=0.48, fans_jump=1.38)
+CALM = dict(lights=0.90, beams=0.88, flash=0.52, punch=0.18, haze=0.24)
+VERSE = dict(lights=1.10, beams=1.18, flash=0.86, punch=0.82, haze=0.32)
+CHORUS = dict(lights=1.40, beams=1.55, flash=1.50, punch=1.40, shake=0.38, haze=0.45)
+ANTHEM = dict(lights=1.62, beams=1.75, flash=1.72, punch=1.62, shake=0.58, haze=0.52, fans_jump=1.48)
+OPENING = dict(lights=1.22, beams=1.34, flash=1.05, punch=0.95, shake=0.20, haze=0.38)
 
 
 def on(who, t0, t1, size="mcu", push=1.06, dx=0.0, dy=0.0, roll=0.0, **kw):
@@ -309,8 +310,8 @@ def b(n, frac=0.0):
 
 
 def lights_up(t):
-    """the opening: the stage dark until the lights slam on at bar 2"""
-    return 0.85 * (1 - min(1.0, max(0.0, (t - b(1, 0.6)) / (b(2) - b(1, 0.6)))))
+    """the opening: only a brief blackout, then the rig slams on during bar 1"""
+    return 0.82 * (1 - min(1.0, max(0.0, (t - b(0, 0.55)) / (b(1) - b(0, 0.55)))))
 
 
 SH = []
@@ -320,18 +321,22 @@ def add(*shots):
     SH.extend(shots)
 
 
-# INTRO, bars 0-16: the room in the dark; the lights on bar 2; the band introduced one by one
-add(wide(0.0, b(2), (836, 470, 1.0), (836, 455, 1.12), dark=lights_up, lights=0.4, beams=0.0, flash=0.0,
-         props="title_over", floor=False),
-    stage_wide(b(2), b(3), (836, 380, 1.6), (836, 372, 1.7), **CALM),
-    crowd(b(3), b(4), gang(), bg=0),
-    on("maguire", b(4), b(6), "mcu", push=1.08, **VERSE),
-    on("cunha", b(6), b(8), "ms", push=1.06, dx=0.05, **VERSE),
-    on("sesko", b(8), b(10), "ms", push=1.06, dx=-0.05, **VERSE),
-    on("mainoo", b(10), b(12), "ms", push=1.06, **VERSE),
-    crowd(b(12), b(13), packed(("rio", "evra"), ("ugarte", "carrick", "zirkzee"), ("tielemans", "amad", "mount", "dalot")), bg=2),
-    wide(b(13), b(14), (836, 440, 1.2), (836, 425, 1.3), **VERSE),
-    on("bruno", b(14), b(16), "mcu", push=1.10, **VERSE))
+# INTRO, bars 0-16: hit quickly, keep everybody moving, and make the first sixteen bars feel like a live gig
+add(wide(0.0, b(1), (836, 470, 1.0), (836, 448, 1.16), dark=lights_up, props="title_over", floor=False, **OPENING),
+    stage_wide(b(1), b(2), (836, 390, 1.55), (836, 368, 1.82), **OPENING),
+    on("bruno", b(2), b(3), "mcu", push=1.08, roll=-2.0, **OPENING),
+    on("maguire", b(3), b(4), "mcu", push=1.10, **OPENING),
+    crowd(b(4), b(5), gang(), bg=0, lights=0.8, push=1.07),
+    on("cunha", b(5), b(6), "ms", push=1.08, dx=0.05, roll=2.0, **OPENING),
+    on("sesko", b(6), b(7), "ms", push=1.08, dx=-0.05, roll=-2.0, **OPENING),
+    on("mainoo", b(7), b(8), "ms", push=1.08, **OPENING),
+    on("shaw", b(8), b(9), "mcu", push=1.06, roll=-2.0, **OPENING),
+    on("deligt", b(9), b(10), "mcu", push=1.06, roll=2.0, **OPENING),
+    on("bruno", b(10), b(11), "cu", push=1.06, **OPENING),
+    crowd(b(11), b(12), packed(("rio", "evra"), ("ugarte", "carrick", "zirkzee"), ("tielemans", "amad", "mount", "dalot")), bg=2, lights=0.8, push=1.07),
+    wide(b(12), b(13), (836, 432, 1.24), (836, 418, 1.34), **OPENING),
+    on("yoro", b(13), b(14), "ms", push=1.08, **OPENING),
+    on("bruno", b(14), b(16), "mcu", push=1.12, **OPENING))
 
 # VERSE 1, bars 16-27: Bruno sings; every two bars a cut
 add(on("bruno", b(16), b(18), "ms", push=1.08, dx=0.04, **VERSE),
@@ -371,7 +376,7 @@ add(wide(b(47), b(48), (836, 430, 1.25), (836, 420, 1.32), **CHORUS),
     crowd(b(49), b(50), packed(("amad", "dalot"), ("mount", "zirkzee", "dorgu"), ("mazraoui", "martinez", "mbeumo", "ugarte")), bg=3, lights=0.7),
     on("sesko", b(50), b(51), "mcu", push=1.06, roll=-2.5, **CHORUS),
     on("cunha", b(51), b(52), "mcu", push=1.06, **CHORUS),
-    crowd(b(52), b(53), solo("roy", back=(("gary", 520), ("evra", 1420))), bg=0, lights=0.7),
+    crowd(b(52), b(53), packed(("gary", "rooney"), ("rio", "evra", "carrick"), ("amad", "mount", "dalot", "mbeumo")), bg=0, lights=0.9, push=1.06),
     on("maguire", b(53), b(54), "mcu", push=1.08, roll=2.0, **CHORUS),
     on("bruno", b(54), b(55), "cu", push=1.05, **CHORUS),
     on("shaw", b(55), b(55, 0.5), "mcu", push=1.04, roll=-2.0, **CHORUS),
@@ -476,8 +481,9 @@ CAPTIONS = [
     (b(108, 0.6), b(110) - 0.15, "name", "ERIC CANTONA", "On his own."),
 ]
 WHIPS = []
-STROBE = [(b(35, 0.72), b(36)), (b(56, 0.72), b(57)), (b(63, 0.35), b(64)),
-          (b(82, 0.72), b(83)), (b(107, 0.55), b(108)), (b(115, 0.30), b(115, 0.90))]
+STROBE = [(b(1, 0.72), b(2)), (b(35, 0.72), b(36)), (b(55, 0.72), b(56)), (b(56, 0.72), b(57)),
+          (b(63, 0.35), b(64)), (b(82, 0.72), b(83)), (b(107, 0.55), b(108)),
+          (b(115, 0.30), b(115, 0.90))]
 
 
 def shot_at(t):
