@@ -1,0 +1,75 @@
+name: Rescue United Road 720p final
+
+on:
+  push:
+    branches:
+      - ccr-703a2362-lbr343
+    paths:
+      - .github/workflows/rescue-united-road-720p.yml
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  rescue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libegl1 libsndfile1 unzip
+      - name: Python packages
+        run: python -m pip install -r requirements.txt
+      - name: Restore known-good render cache
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api repos/${{ github.repository }}/actions/artifacts/11357383123/zip > cache.zip
+          unzip -q cache.zip -d .
+          test -f episodes/united-road-take-me-home/build/episode_audio.wav
+          test -f episodes/united-road-take-me-home/build/song.json
+      - name: Render missing 130-140 section with latest merged code
+        env:
+          EP_RES: 1280x720
+          FILM_MEM_GB: '5.2'
+        run: |
+          python -m studio.film united-road-take-me-home render --jobs 1 --chunks 4 --range 130 140
+          mkdir -p pieces
+          cp episodes/united-road-take-me-home/build/preview.mp4 pieces/piece-13.mp4
+          ffprobe -v error -show_entries stream=width,height -show_entries format=duration -of default=noprint_wrappers=1 pieces/piece-13.mp4
+      - name: Download completed fast-render pieces
+        uses: actions/download-artifact@v4
+        with:
+          pattern: united-road-fast-piece-*
+          path: pieces
+          merge-multiple: true
+          run-id: 37472798582
+          github-token: ${{ github.token }}
+      - name: Verify and join all 24 pieces
+        run: |
+          ls -lh pieces
+          : > parts.txt
+          for i in $(seq -w 0 23); do
+            f="pieces/piece-${i}.mp4"
+            test -f "$f"
+            printf "file '%s'\n" "$f" >> parts.txt
+          done
+          cat parts.txt
+          ffmpeg -y -loglevel error -f concat -safe 0 -i parts.txt -an -c:v copy video-only.mp4
+          ffmpeg -y -loglevel error -i video-only.mp4 -i episodes/united-road-take-me-home/build/episode_audio.wav             -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 256k -shortest -movflags +faststart             United_Road_Take_Me_Home_FINAL_720p_LATEST.mp4
+          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration,size             -of default=noprint_wrappers=1 United_Road_Take_Me_Home_FINAL_720p_LATEST.mp4
+      - name: Upload final MP4
+        uses: actions/upload-artifact@v4
+        with:
+          name: united-road-final-720p-ready
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+          path: United_Road_Take_Me_Home_FINAL_720p_LATEST.mp4
