@@ -1,0 +1,28 @@
+name: Export United Road MP4
+
+on:
+  push:
+    branches:
+      - ccr-703a2362-lbr343
+    paths:
+      - .github/workflows/export-united-road.yml
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify MP4
+        run: |
+          ls -lh episodes/united-road-take-me-home/united-road-take-me-home.mp4
+          sha256sum episodes/united-road-take-me-home/united-road-take-me-home.mp4
+      - name: Upload MP4
+        uses: actions/upload-artifact@v4
+        with:
+          name: united-road-take-me-home-mp4
+          compression-level: 0
+          retention-days: 1
+          path: episodes/united-road-take-me-home/united-road-take-me-home.mp4
