@@ -289,6 +289,27 @@ def warp_into(dst, img_pm, A, alpha=1.0, mode="over"):
     return (bx0, by0, bx1, by1)
 
 
+def over_sparse(dst, layer_pm, blur=0.0):
+    """Blur and composite a premultiplied character layer within its support.
+
+    GaussianBlur's float kernel extends four sigmas. Keep extra zero padding
+    so the cropped operation has the same border behaviour as the full frame.
+    """
+    mask = layer_pm[..., 3] != 0
+    rows = np.flatnonzero(mask.any(axis=1))
+    if not len(rows):
+        return
+    cols = np.flatnonzero(mask.any(axis=0))
+    pad = int(math.ceil(4 * blur)) + 2 if blur > 0 else 0
+    y0, y1 = max(0, int(rows[0]) - pad), min(dst.shape[0], int(rows[-1]) + pad + 1)
+    x0, x1 = max(0, int(cols[0]) - pad), min(dst.shape[1], int(cols[-1]) + pad + 1)
+    lay = layer_pm[y0:y1, x0:x1]
+    if blur > 0:
+        lay = cv2.GaussianBlur(lay, (0, 0), blur)
+    reg = dst[y0:y1, x0:x1]
+    reg[:] = lay + reg * (1 - lay[..., 3:4])
+
+
 def rim(layer_pm, dirx, diry, strength, color, width):
     """edge light on the side the light comes from (premultiplied layer); computed at half resolution for big
     layers"""

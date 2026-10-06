@@ -32,4 +32,4 @@ EP_RES=1920x1080 FILM_THREADS=1 FILM_CRF=17 FILM_MEM_GB=7.5 OMP_NUM_THREADS=1 OP
 
 The full quality master is retained in `build/master.mp4` when the repository delivery is compressed below 100 MB. `build/` is a temporary cache and must not be committed. Use `--resume` only when source, resolution and chunk boundaries have not changed.
 
-The final delivery and validation record will be added after rendering completes.
+Source checks are recorded in `source-validation.json`: cast exclusions, final chorus coverage, soundtrack alignment and pixel-identical character-compositing optimization. The final delivery and file validation record will be added after rendering completes.

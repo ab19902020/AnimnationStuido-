@@ -4,6 +4,10 @@ A cartoon studio for football comedy. You upload character kits, backgrounds and
 script; Claude produces the episode (16:9, 1920 x 1080, 30 fps): the dialogue edit, the acting, the camera, the
 sound and the finish. Give Claude the script and say "produce it" (the `produce` skill).
 
+**Latest United Road production:** [combined performance edition](episodes/united-road-take-me-home/README.md).
+Continue from this edition, which combines the latest show and vocal timing with the approved connected guitar,
+bass and seated drum poses. Its production notes identify the source files and improvements to preserve.
+
 **Status.** Done: the character library and kit ingest, and the film engine (`studio/film`, the method All or
 Something was made with). A 60-second test of *The Appeals Department* is made with the actors' recordings:
 `episodes/the-appeals-department/the-appeals-department.mp4` (Scene 1 and the start of Scene 2). A music video,

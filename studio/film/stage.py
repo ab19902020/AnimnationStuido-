@@ -1127,9 +1127,7 @@ def draw_actor(shared, a, t, s, M, sc, pos):
             harmonica(lay, Ms2, key, t, playing)
         if a.get("cloud"):
             rain_cloud(lay, Ms2, key, t)
-        if a.get("blur"):
-            lay = cv2.GaussianBlur(lay, (0, 0), a["blur"] * RS)
-        shared[:] = lay + shared * (1 - lay[..., 3:4])
+        E.over_sparse(shared, lay, a.get("blur", 0.0) * RS)
     else:
         E.place(shared, d, fst, Ms2, clip=clip, head=head)
     if a.get("mic"):

@@ -1,0 +1,73 @@
+{
+  "final_build_missing_singer_frames": 0,
+  "cast_count": 29,
+  "excluded_present": [],
+  "tielemans_kept": true,
+  "shots": 109,
+  "duration": 234.6,
+  "audio_alignment_samples": [
+    {
+      "t": 40,
+      "zero_lag_correlation": 0.99967,
+      "offset_ms": 0.0
+    },
+    {
+      "t": 99,
+      "zero_lag_correlation": 0.99953,
+      "offset_ms": 0.0
+    },
+    {
+      "t": 160,
+      "zero_lag_correlation": 0.99977,
+      "offset_ms": 0.0
+    },
+    {
+      "t": 211,
+      "zero_lag_correlation": 0.99967,
+      "offset_ms": 0.0
+    }
+  ],
+  "compositing_comparison": [
+    {
+      "t": 12.8,
+      "frame": 384,
+      "original_seconds": 1.653,
+      "optimized_seconds": 1.42,
+      "max_pixel_delta": 0,
+      "changed_values": 0
+    },
+    {
+      "t": 99.0,
+      "frame": 2970,
+      "original_seconds": 2.106,
+      "optimized_seconds": 1.531,
+      "max_pixel_delta": 0,
+      "changed_values": 0
+    },
+    {
+      "t": 106.4,
+      "frame": 3192,
+      "original_seconds": 1.091,
+      "optimized_seconds": 1.068,
+      "max_pixel_delta": 0,
+      "changed_values": 0
+    },
+    {
+      "t": 170.0,
+      "frame": 5100,
+      "original_seconds": 1.779,
+      "optimized_seconds": 1.591,
+      "max_pixel_delta": 0,
+      "changed_values": 0
+    },
+    {
+      "t": 212.0,
+      "frame": 6360,
+      "original_seconds": 2.362,
+      "optimized_seconds": 2.019,
+      "max_pixel_delta": 0,
+      "changed_values": 0
+    }
+  ],
+  "status": "Source checks complete; final file validation follows full render."
+}

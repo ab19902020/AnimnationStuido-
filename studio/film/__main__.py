@@ -202,9 +202,9 @@ def main():
         nch = int(args[args.index("--chunks") + 1]) if "--chunks" in args else (6 * jobs if not preview else jobs)
         q = (n - f0 + nch - 1) // nch
         ranges = [(f0 + k * q, min(n, f0 + (k + 1) * q)) for k in range(nch) if f0 + k * q < n]
-        # one thread per job: the jobs share the cores instead of fighting over them
+        # One thread per job by default; allow an explicit OpenCV thread budget.
         env = dict(os.environ, FILM_EPISODE=slug, PYTHONPATH=f"{d}:{os.getcwd()}", OMP_NUM_THREADS="1",
-                   OPENBLAS_NUM_THREADS="1", MKL_NUM_THREADS="1", FILM_THREADS="1")
+                   OPENBLAS_NUM_THREADS="1", MKL_NUM_THREADS="1", FILM_THREADS=os.environ.get("FILM_THREADS", "1"))
         import time
         D = importlib.import_module("film.direction")
 
