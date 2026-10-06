@@ -67,6 +67,11 @@ move it.
   (`fg_fans`: the camera is behind the crowd there), and every crowd shot a far row of small faces behind its
   people. Instruments a whole drawing cannot hold with its hands down go on a rack: the harmonica in a neck rack
   (`inst="harmonica"`), up at the lips while he plays.
+- The show (`studio/film/fx.py`, timed in direction.py): `PYRO` [(t, length, strength)] spark fountains on the
+  stage's front edge (`FOUNTAINS`, plate px; strength 1.2 and over fires `FOUNTAINS_BIG` too) on the big hits (the
+  lights coming up, each chorus, the last chord), seen beside the lens in the crowd shots; `FLAGS` [(t0, t1)] flags
+  raised at the back of the room in the crowd shots; `CONFETTI` (t0, t1) for the finale; `WHIPS` whip pans into
+  the choruses. Name captions sit inside the shot they name: move them with the cuts.
 - `props.py`: plates cleaned for the band (the stand painted out), the room behind the crowd made night (dark
   windows, the room's own lamps glowing, the stage's red spill), the fans cut from a crowd plate, overlays.
 - `sound.py`: the song as supplied plus a crowd before and after it.
@@ -80,8 +85,10 @@ of one section with sound (`render --range A B`, then frame strips a quarter bea
 - every cut on a bar line (or a beat inside a bar), never in the middle of a beat, landing on the frame nearest
   it (direction.py moves every cut half a frame early); no jump cuts: consecutive shots of the same player change
   size clearly (1.4x or more) or angle;
-- the lead's mouth closed in the gaps between lines and on the M of every "home"; nobody mouths in a silence; plot
-  the mouth against the voice for a few lines: the mouth opens with the voice, not after it;
+- the lead's mouth closed in the gaps between lines and on the M of every "home"; nobody mouths in a silence (nor to
+  the band's bleed in the separated voice before the first line); sung vowels held open, consonants brief; measure
+  the mouth against the voice section by section (cross-correlate the mouth's opening with the voice's loudness):
+  the mouth leads by a frame or two everywhere, the same at the end of the song as at the start;
 - dancing on the beat (the dip of a bounce, the landing of a jump on the beat), everyone a few milliseconds apart,
   nobody frozen in a chorus; a headbang carried by the body, the face's nod held small (a big one squashes the face);
 - everything facing the right way: a right-handed guitarist's neck to his left (the viewer's right); the keyboard

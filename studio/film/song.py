@@ -76,12 +76,17 @@ def sing_track(v16, n):
     """the voice as mouth shapes per frame: [viseme, amp]"""
     import librosa
     sr = 16000
-    hop = sr // (FPS * 4)                                   # 4 analysis frames per video frame
+    hop = 128                                               # 125 analysis frames a second
     S = np.abs(librosa.stft(v16, n_fft=1024, hop_length=hop)) ** 2
     f = librosa.fft_frequencies(sr=sr, n_fft=1024)
+    # the analysis frames inside each video frame, found by time: a whole number of samples per video frame
+    # (sr // 120 = 133 for 133.3) fell half a second behind the voice by the end of the song
+    edges = np.round(np.arange(n + 1) * sr / FPS / hop).astype(int)
+
     def band(lo, hi):
         e = S[(f >= lo) & (f < hi)].sum(0)
-        return np.array([e[i * 4:(i + 1) * 4].mean() if i * 4 < len(e) else 0.0 for i in range(n)])
+        return np.array([e[edges[i]:max(edges[i] + 1, edges[i + 1])].mean() if edges[i] < len(e) else 0.0
+                         for i in range(n)])
     low, mid, high, sib = band(200, 800), band(800, 1800), band(1800, 3800), band(4500, 8000)
     tot = low + mid + high + 1e-12
     db = 10 * np.log10(tot + 1e-12)
@@ -112,12 +117,12 @@ def sing_track(v16, n):
     # syllables: every onset in the voice starts with a consonant, a quick half-close before the vowel opens, so a
     # sung line reads as words rather than one long note
     from scipy.signal import find_peaks
-    fine = 10 * np.log10(S[(f >= 200) & (f < 3800)].sum(0) + 1e-12)              # 120 per second
+    fine = 10 * np.log10(S[(f >= 200) & (f < 3800)].sum(0) + 1e-12)              # 125 per second
     fine = np.convolve(fine, np.ones(3) / 3, mode="same")
-    dips, _ = find_peaks(-fine, prominence=2.0, distance=int(0.16 * FPS * 4))
+    dips, _ = find_peaks(-fine, prominence=2.0, distance=int(0.16 * sr / hop))
     keep = np.zeros(n, bool)
     for j in dips:
-        i = int(round(j / 4))
+        i = int(round(j * hop * FPS / sr))
         if 1 <= i < n - 1 and voiced[i - 1] and voiced[i + 1]:
             vis[i] = "MBP" if vis[i - 1] in ("O", "U") and fine[j] < fine[max(0, j - 12):j].max() - 6 else "CDG"
             amp[i] = min(amp[i], 0.6)
@@ -372,78 +377,156 @@ def align_lyrics(v16, lines, cache):
 SING_LEAD = 2          # frames: the mouth leads the soundtrack very slightly, as an animator would
 
 
-def _word_visemes(word):
-    """A stable, coarse mouth sequence from the aligned lyric word.
+VOWEL_VIS = {"AI", "E", "I", "O", "U"}
 
-    Phones remain authoritative wherever the force aligner found them. This is only the fallback inside an aligned
-    word, replacing the old frame-by-frame spectral guessing that made singing mouths jump between shapes.
-    """
+
+def _word_units(word):
+    """a lyric word as mouth units read off its spelling: [(viseme, is_vowel)] (the fallback where the phone aligner
+    lost a sung word)"""
     w = "".join(ch for ch in word.lower() if ch.isalpha())
-    if len(w) > 2 and w.endswith("e") and not w.endswith(("ee", "oe")):
-        w = w[:-1]                                             # usually a silent final e
-    seq, i = [], 0
-    pairs = {"th": "L", "sh": "U", "ch": "U", "ph": "FV", "oo": "U", "ee": "E",
-             "ea": "E", "ou": "O", "ow": "O", "ai": "AI", "ay": "AI", "oi": "O"}
-    one = {
-        "m": "MBP", "b": "MBP", "p": "MBP", "f": "FV", "v": "FV", "l": "L", "r": "R",
-        "s": "CDG", "z": "CDG", "c": "CDG", "d": "CDG", "t": "CDG", "k": "CDG", "g": "CDG",
-        "n": "CDG", "j": "U", "q": "U", "w": "U", "y": "I", "o": "O", "u": "U",
-        "i": "I", "e": "E", "a": "AI",
-    }
+    if len(w) > 2 and w.endswith("e") and not w.endswith(("ee", "oe", "ie", "ye")) and any(c in "aeiouy" for c in w[:-1]):
+        w = w[:-1]                                             # a silent final e (home, take, believe)
+    vpairs = {"oo": "U", "ee": "I", "ea": "E", "ou": "O", "ow": "O", "ai": "AI", "ay": "AI", "oi": "O", "oy": "O",
+              "oa": "O", "ie": "I", "ue": "U", "au": "O", "aw": "O", "ei": "E", "ey": "E", "io": "O", "eo": "O"}
+    cpairs = {"th": "L", "sh": "U", "ch": "U", "ph": "FV", "ng": "CDG", "ck": "CDG", "wh": "U", "qu": "U", "gh": None}
+    cons = {"m": "MBP", "b": "MBP", "p": "MBP", "f": "FV", "v": "FV", "l": "L", "r": "R", "s": "CDG", "z": "CDG",
+            "c": "CDG", "d": "CDG", "t": "CDG", "k": "CDG", "g": "CDG", "n": "CDG", "x": "CDG", "j": "U", "w": "U",
+            "h": None}
+    vows = {"a": "AI", "e": "E", "i": "I", "o": "O", "u": "U"}
+    out, i = [], 0
     while i < len(w):
         q = w[i:i + 2]
-        if q in pairs:
-            v, i = pairs[q], i + 2
-        else:
-            v, i = one.get(w[i]), i + 1
-        if v and (not seq or seq[-1] != v):
-            seq.append(v)
-    if not seq:
-        return ["CDG"]
-    if len(seq) > 4:                                         # singing reads better with held shapes than rapid chatter
-        keep = np.linspace(0, len(seq) - 1, 4).round().astype(int)
-        seq = [seq[i] for i in keep]
-    return seq
+        if q in vpairs:
+            out.append((vpairs[q], True))
+            i += 2
+            continue
+        if q in cpairs:
+            if cpairs[q]:
+                out.append((cpairs[q], False))
+            i += 2
+            continue
+        ch = w[i]
+        if ch == "y":                                          # a glide before a vowel; a vowel after a consonant
+            if i + 1 < len(w) and w[i + 1] in "aeiou":
+                out.append(("I", False))
+            else:
+                out.append(("AI" if len(w) <= 4 and i == len(w) - 1 else "I", True))   # my, sky; glory
+        elif ch in vows:
+            out.append((vows[ch], True))
+        elif cons.get(ch):
+            out.append((cons[ch], False))
+        i += 1
+    merged = []
+    for v, isv in out:                                         # doubled letters (ff, ll) are one sound
+        if merged and merged[-1][0] == v and merged[-1][1] == isv:
+            continue
+        merged.append((v, isv))
+    return merged or [("E", True)]
+
+
+def _sung_events(units, a, b):
+    """a sung word's units spread over [a, b] (s): the consonants brief (a closure on M, B, P or F/V long enough
+    to read), the vowels holding the note -> [(start, end, viseme)]"""
+    dur = b - a
+    nv = sum(1 for _, isv in units if isv)
+    if nv == 0:
+        return [(a, b, units[0][0])]
+    c_len = min(0.075, 0.18 * dur)                              # about two frames
+    cons = [(k, v) for k, (v, isv) in enumerate(units) if not isv]
+    budget = 0.45 * dur                                         # the consonants never take more than this
+    if len(cons) * c_len > budget:                              # a short word: keep the closures and the onset
+        keep = {k for k, v in cons if v in ("MBP", "FV")} | ({cons[0][0]} if cons else set())
+        units = [u for k, u in enumerate(units) if u[1] or k in keep]
+        cons = [(k, v) for k, (v, isv) in enumerate(units) if not isv]
+        c_len = min(c_len, budget / max(1, len(cons)))
+    v_len = (dur - len(cons) * c_len) / nv
+    ev, t = [], a
+    for v, isv in units:
+        d = v_len if isv else c_len
+        ev.append((t, t + d, v))
+        t += d
+    return ev
+
+
+def _capped(evs, cap=0.09):
+    """aligned phones of a sung word, each consonant cut to at most `cap` s and the time given to the vowel next to it
+    (the following vowel for an onset, the one before for a coda or a closing M, B, P, F, V): the voice holds the
+    vowel where a speech aligner stretches the consonants over the note"""
+    vi = [k for k, e in enumerate(evs) if e[2] in VOWEL_VIS]
+    if not vi:
+        return list(evs)
+    dur = [e[1] - e[0] for e in evs]
+    for k, (_, _, v) in enumerate(evs):
+        if v in VOWEL_VIS or dur[k] <= cap:
+            continue
+        nxt = next((j for j in vi if j > k), None)
+        prv = next((j for j in reversed(vi) if j < k), None)
+        to = nxt if nxt is not None and (prv is None or v not in ("MBP", "FV")) else prv
+        dur[to] += dur[k] - cap
+        dur[k] = cap
+    out, t = [], evs[0][0]
+    for k, (_, _, v) in enumerate(evs):
+        out.append((t, t + dur[k], v))
+        t += dur[k]
+    return out
 
 
 def lead_track(d, n):
-    """Lead singer mouth, locked to aligned phones and aligned lyric words.
-
-    Exact force-aligned phones win. Where the phone aligner cannot follow a held sung word, the known word timing
-    supplies a small stable viseme sequence. Spectrum-derived shapes are used only in genuine gaps outside lyric
-    words, so long notes and repeated 'home' lines no longer flicker between unrelated mouths.
-    """
+    """the lead singer's mouth per frame -> [[viseme, amp]]: every lyric word sung with its vowel held and its
+    consonants brief (the aligned phones where the aligner followed the voice, the word's spelling spread over its
+    timing where it did not), the shapes read off the voice in the gaps between words (ad libs, oh-ohs), and the
+    jaw from the voice's loudness"""
     from studio.film import face
     sing = d["sing"]
-    ev = face.viseme_events([dict(p=p, s=a, e=b) for p, a, b in d.get("phones", [])])
-    tr = face.track(ev, n)
-    phone_covered = np.zeros(n, bool)
-    for p, a, b in d.get("phones", []):
-        phone_covered[max(0, int(a * FPS)):min(n, int(b * FPS) + 1)] = True
-
-    word_vis = [None] * n
+    phones = [dict(p=p, s=a, e=b) for p, a, b in d.get("phones", [])]
+    ps = np.array([x["s"] for x in phones]) if phones else np.zeros(0)
+    ev = []
+    inword = np.zeros(n, bool)
     for a, b, word, _line in d.get("words", []):
-        f0 = max(0, int(round(a * FPS)))
-        f1 = min(n, max(f0 + 1, int(round(b * FPS))))
-        seq = _word_visemes(word)
-        span = max(1, f1 - f0)
-        for f in range(f0, f1):
-            q = (f - f0) / span
-            word_vis[f] = seq[min(len(seq) - 1, int(q * len(seq)))]
-
+        if b - a < 1.0 / FPS:
+            continue
+        inword[max(0, int(a * FPS)):min(n, int(np.ceil(b * FPS)))] = True
+        j0, j1 = int(np.searchsorted(ps, a - 0.02)), int(np.searchsorted(ps, b - 0.01))
+        own = [x for x in phones[j0:j1] if x["e"] <= b + 0.03 and x["p"] != "SIL"]
+        wev = face.viseme_events(own) if own else []
+        if wev and any(v in VOWEL_VIS for _, _, v in wev) and own[0]["s"] - a < 0.25 and b - own[-1]["e"] < 0.25:
+            wev = _capped(wev)
+            wev[0] = (a, wev[0][1], wev[0][2])                   # the word's own edges
+            wev[-1] = (wev[-1][0], b, wev[-1][2])
+        else:
+            wev = _sung_events(_word_units(word), a, b)
+        ev.extend(wev)
+    tr = face.track(ev, n)
+    # between the words the mouth follows the voice only where someone is really singing (an oh, an ad lib): loud,
+    # held for a few frames, inside the sung part of the song. The separated voice carries quiet bleed from the band
+    # (the intro's guitars), and a singer mouthing to that before his first line looks out of sync
+    voc = np.array(d.get("vocal") or [-90.0] * n, np.float32)
+    ref = np.median(voc[inword]) if inword.any() else -24.0
+    loud = voc[:n] > ref - 9.0 if len(voc) >= n else np.zeros(n, bool)
+    held = np.convolve(loud.astype(np.float32), np.ones(5), mode="same") >= 4
+    first = min((a for a, *_ in d.get("words", [])), default=0.0)
+    last = max((b for _, b, *_ in d.get("words", [])), default=n / FPS)
     out = []
     for f in range(n):
         spec_v, amp = sing[min(f + SING_LEAD, len(sing) - 1)]
-        if phone_covered[f] and tr[f] != "REST":
-            v = tr[f]
-        elif word_vis[f] is not None:
-            v = word_vis[f]
-        else:
-            v = spec_v
+        v = tr[f]
+        if v == "REST" and not inword[f]:
+            sung = held[f] and first - 0.5 <= f / FPS <= last + 1.0
+            v = spec_v if sung else "REST"                      # between the words: what the voice is doing
         out.append([v, amp])
-
-    # One-frame changes are almost always visual chatter, not a readable sung consonant.
+    # one-frame changes are chatter, not a sung consonant
     for i in range(1, n - 1):
         if out[i][0] not in ("MBP", "FV") and out[i - 1][0] == out[i + 1][0] != out[i][0]:
             out[i][0] = out[i - 1][0]
+    # singing opens wider than talking: a held ee or oo is sung on a fuller mouth (I as E, U as O) after its first
+    # two frames, so a chorus reads as sung from the back of the room
+    k = 0
+    while k < n:
+        v, j = out[k][0], k
+        while j + 1 < n and out[j + 1][0] == v:
+            j += 1
+        if v in ("I", "U") and j - k + 1 >= 6:
+            for q in range(k + 2, j + 1):
+                out[q][0] = "E" if v == "I" else "O"
+        k = j + 1
     return out

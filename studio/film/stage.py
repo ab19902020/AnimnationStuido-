@@ -1164,6 +1164,10 @@ def render(s, t):
     if sweep is not None:
         img = img + sweep
     room = img                                           # what the haze glows with: the room's lights, not the band
+    D_ = R.D
+    if s["plate"] == "PUB" and getattr(D_, "FLAGS", None) and s.get("flags", True):
+        from studio.film import fx                       # flags raised at the back of the room, behind everyone
+        img = fx.flags(img, t, D_.FLAGS, S.beat_index(t) + S.phase(t))
     pos = {}
     for kind, val in s["layers"]:
         if kind == "actors":
@@ -1192,6 +1196,18 @@ def render(s, t):
             img = draw_fg_fans(img, val, t, s.get("fans_jump", 1.0) * (0.4 + 0.6 * energy))
         elif kind == "stage_edge":
             img = draw_stage_edge(img, val, t, energy)
+        elif kind == "pyro":                             # spark fountains on the stage's front edge
+            from studio.film import fx
+            bursts = getattr(D_, "PYRO", [])
+            big = [b for b in bursts if b[2] >= 1.2]
+            img = fx.sparks_plate(img, t, M, sc, bursts, getattr(D_, "FOUNTAINS", []), getattr(D_, "PYRO_H", 280),
+                                  dark=dark)
+            if big and getattr(D_, "FOUNTAINS_BIG", None):          # in front of the band: lower, gentler
+                img = fx.sparks_plate(img, t, M, sc, big, D_.FOUNTAINS_BIG, 0.7 * getattr(D_, "PYRO_H", 280), dark=dark,
+                                      glow_k=0.6, rate=110.0)
+        elif kind == "pyro_near":                        # the same fountains seen from the stage: beside the lens
+            from studio.film import fx
+            img = fx.sparks_screen(img, t, getattr(D_, "PYRO", []))
         elif kind == "props":
             img = getattr(R.X, val)(img, s, t, M, sc)
         elif kind == "sticks":                           # the drummer's sticks and fists, in front of the kit
@@ -1246,6 +1262,10 @@ def render(s, t):
                 img = img + (1 - img) * 0.35
             else:
                 img = img * 0.82
+    cf = getattr(D_, "CONFETTI", None)
+    if cf and s.get("confetti", True):
+        from studio.film import fx
+        img = fx.confetti(img, t, *cf)
     img = grade_stage(img, s.get("grade", "stage"))
     if abs(roll) > 0.01:
         Mr = cv2.getRotationMatrix2D((OW / 2, OH / 2), roll, 1.0 + abs(math.radians(roll)) * 0.9)

@@ -157,18 +157,20 @@ for b in ("bruno", "cunha", "mainoo", "shaw", "deligt", "yoro"):
 PERF = Performance(TL, {}, WHO, {w: w for w in WHO}, {}, lambda lid: None, base=BASE, gaze=GAZE, expr=EXPR,
                    rest_target={w: "cam" for w in WHO}, cuts=[s["t"] for s in SHOTS])
 
-VOCAL_LAG = -2                                            # two frames early: mouth lands on the heard syllable
-sing(PERF, "bruno", LEAD, gain=1.0, lag=VOCAL_LAG)
+VOCAL_LAG = 0                                             # the mouth track already leads the voice by a frame or two (song.py)
+sing(PERF, "bruno", LEAD, gain=1.1, lag=VOCAL_LAG)
 for bv in ("shaw", "deligt"):                            # the backing singers sing every line into their mics
-    sing(PERF, bv, ALL, gain=0.85, lag=VOCAL_LAG)
-for pl in ("sesko", "cunha", "mainoo", "maguire"):      # the players sing every chorus along, off mic
-    sing(PERF, pl, CHORUSES, gain=0.62, lag=VOCAL_LAG)
+    sing(PERF, bv, ALL, gain=0.95, lag=VOCAL_LAG)
+for pl in ("sesko", "cunha", "mainoo", "maguire"):      # the players belt every chorus along, off mic
+    sing(PERF, pl, CHORUSES, gain=0.88, lag=VOCAL_LAG)
 sing(PERF, "yoro", [(a, min(b, bar(56))) for a, b in CHORUSES if a < bar(56)] + [c for c in CHORUSES if c[0] >= bar(64)],
-     gain=0.66, lag=VOCAL_LAG)
-for c in CROWD:                                          # every United fan sings every word
+     gain=0.9, lag=VOCAL_LAG)
+for c in CROWD:                                          # every United fan sings every word, and roars the choruses
     if c not in ("roy", "cantona") + MISERABLE:
-        sing(PERF, c, ALL, gain=0.74, lag=VOCAL_LAG)
-        sing(PERF, c, CHORUSES, gain=0.92, lag=VOCAL_LAG)
-sing(PERF, "gary", ALL, gain=0.9, lag=VOCAL_LAG)
-sing(PERF, "rooney", ALL, gain=0.9, lag=VOCAL_LAG)
-sing(PERF, "roy", [(bar(83), Le(len(LINES) - 1) + 0.3)], gain=0.9, lag=VOCAL_LAG)   # Roy, at last, from the outro
+        sing(PERF, c, ALL, gain=0.85, lag=VOCAL_LAG)
+        sing(PERF, c, CHORUSES, gain=1.1, lag=VOCAL_LAG)
+sing(PERF, "gary", ALL, gain=1.0, lag=VOCAL_LAG)
+sing(PERF, "rooney", ALL, gain=1.0, lag=VOCAL_LAG)
+for c in ("gary", "rooney"):
+    sing(PERF, c, CHORUSES, gain=1.15, lag=VOCAL_LAG)
+sing(PERF, "roy", [(bar(83), Le(len(LINES) - 1) + 0.3)], gain=1.0, lag=VOCAL_LAG)   # Roy, at last, from the outro

@@ -284,7 +284,12 @@ class Face:
             top = cy - ry * 1.55
             bot = top + ry * 3.1 * amount
             m = (((X - cx) / (rx * 1.34)) ** 2 + ((Y - (top + bot) / 2) / max(0.5, (bot - top) / 2)) ** 2 <= 1)
-            m = cv2.GaussianBlur(m.astype(np.float32), (0, 0), max(0.6, rx * 0.02))[..., None]
+            m = cv2.GaussianBlur(m.astype(np.float32), (0, 0), max(0.6, rx * 0.02))
+            # the brow stays: dark ink above the eye's own outline is not lid (a low, heavy brow sits inside the
+            # lid's reach and would vanish on every blink)
+            brow = ((Y < cy - ry * 1.12) & (res[..., :3].max(2) < 0.30)).astype(np.float32)
+            brow = cv2.GaussianBlur(brow, (0, 0), max(0.6, rx * 0.02))
+            m = (m * (1 - brow))[..., None]
             res[..., :3] = res[..., :3] * (1 - m) + lidc[None, None, :] * m
             if amount > 0.35:
                 ln = np.zeros(X.shape, np.float32)
