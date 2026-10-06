@@ -34,6 +34,7 @@ import sys
 import cv2
 import numpy as np
 import yaml
+from PIL import Image
 from scipy import ndimage
 
 from studio.ingest import kit
@@ -276,13 +277,17 @@ def second_pass(rgba):
 
 def make(cid, name, d):
     """cut, upscale and finish one drawing -> (RGBA part, meta)"""
-    if "kit" in d:
+    if "image" in d:
+        part = np.asarray(Image.open(CHARACTERS / cid / d["image"]).convert("RGBA")).copy()
+        off, K = (0, 0), 1
+    elif "kit" in d:
         crop, off = cut_kit(cid, d["kit"])
         part = upscale_rgba(crop)
+        K = 4
     else:
         part, off = cut_sheet(cid, d["sheet"], d["box"], [tuple(h) for h in d.get("holes", [])],
                               d.get("auto_holes", True))
-    K = 4
+        K = 4
     if d.get("close_mouth"):
         part = close_mouth(part, K, off, *d["close_mouth"])
     if d.get("extend"):

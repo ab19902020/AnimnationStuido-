@@ -243,6 +243,7 @@ class Song:
         self.H = {k: np.array([x[0] for x in v]) if v else np.zeros(0) for k, v in self.hits.items()}
         self.HS = {k: np.array([x[1] for x in v]) if v else np.zeros(0) for k, v in self.hits.items()}
         self.period = float(np.median(np.diff(self.B)))
+        self.energy_range = np.percentile(self.loud, [10, 99])
 
     def phase(self, t):
         """position inside the current beat, 0 on the beat .. 1 just before the next"""
@@ -278,7 +279,7 @@ class Song:
 
     def energy(self, t, width=1.0):
         """the mix's loudness around t, 0 (quiet) .. 1 (the loudest part of the song)"""
-        lo, hi = np.percentile(self.loud, 10), np.percentile(self.loud, 99)
+        lo, hi = self.energy_range
         f0, f1 = self.frame(t - width / 2), self.frame(t + width / 2)
         v = float(np.mean(self.loud[f0:f1 + 1]))
         return float(np.clip((v - lo) / max(1e-3, hi - lo), 0, 1))

@@ -13,7 +13,7 @@ Folder = id = the full name in kebab-case. Episodes refer to a character by id.
 | Alan Shearer | [`alan-shearer`](characters/alan-shearer/) | pundit | casual | 4/4 sheets checked | 1 | 0 |
 | Amad Diallo | [`amad-diallo`](characters/amad-diallo/) | player | home | no kit yet | 0 | 0 |
 | Andrey Santos | [`andrey-santos`](characters/andrey-santos/) | player | home, casual, suit | no kit yet | 1 | 0 |
-| Benjamin Šeško | [`benjamin-sesko`](characters/benjamin-sesko/) | player | home | no kit yet | 1 | 0 |
+| Benjamin Šeško | [`benjamin-sesko`](characters/benjamin-sesko/) | player | home | no kit yet | 2 | 0 |
 | Bruno Fernandes | [`bruno-fernandes`](characters/bruno-fernandes/) | player | home | 4/4 sheets checked | 2 | 0 |
 | Bryan Mbeumo | [`bryan-mbeumo`](characters/bryan-mbeumo/) | player | home | no kit yet | 0 | 0 |
 | Carlos Baleba | [`carlos-baleba`](characters/carlos-baleba/) | player | home, casual, suit | no kit yet | 1 | 0 |
@@ -23,7 +23,7 @@ Folder = id = the full name in kebab-case. Episodes refer to a character by id.
 | Erling Haaland | [`erling-haaland`](characters/erling-haaland/) | player | home | 4/4 sheets checked | 3 | 0 |
 | Gary Lineker | [`gary-lineker`](characters/gary-lineker/) | presenter | suit | 4/4 sheets checked | 1 | 0 |
 | Gary Neville (stand-in, off-style) | [`gary-neville`](characters/gary-neville/) | pundit | casual | 4/4 sheets checked | 0 | 0 |
-| Harry Maguire | [`harry-maguire`](characters/harry-maguire/) | player | home | no kit yet | 1 | 0 |
+| Harry Maguire | [`harry-maguire`](characters/harry-maguire/) | player | home | no kit yet | 2 | 0 |
 | Jamie Carragher (stand-in, off-style) | [`jamie-carragher`](characters/jamie-carragher/) | pundit | casual | 4/4 sheets checked | 0 | 0 |
 | Jim Ratcliffe | [`jim-ratcliffe`](characters/jim-ratcliffe/) | owner | casual | 4/4 sheets checked | 2 | 0 |
 | Joshua Zirkzee | [`joshua-zirkzee`](characters/joshua-zirkzee/) | player | home | no kit yet | 0 | 0 |
@@ -33,7 +33,7 @@ Folder = id = the full name in kebab-case. Episodes refer to a character by id.
 | Luke Shaw | [`luke-shaw`](characters/luke-shaw/) | player | home | no kit yet | 1 | 0 |
 | Manuel Ugarte | [`manuel-ugarte`](characters/manuel-ugarte/) | player | home | no kit yet | 0 | 0 |
 | Mason Mount | [`mason-mount`](characters/mason-mount/) | player | home | no kit yet | 0 | 0 |
-| Matheus Cunha | [`matheus-cunha`](characters/matheus-cunha/) | player | home | 4/4 sheets checked | 2 | 0 |
+| Matheus Cunha | [`matheus-cunha`](characters/matheus-cunha/) | player | home | 4/4 sheets checked | 3 | 0 |
 | Matthijs de Ligt | [`matthijs-de-ligt`](characters/matthijs-de-ligt/) | player | home | no kit yet | 0 | 0 |
 | Micah Richards | [`micah-richards`](characters/micah-richards/) | pundit | suit | 4/4 sheets checked | 1 | 0 |
 | Michael Carrick | [`michael-carrick`](characters/michael-carrick/) | manager | casual | 4/4 sheets checked | 3 | 0 |

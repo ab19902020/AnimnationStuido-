@@ -1,5 +1,73 @@
-# Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
-# given face landmarks. Check build/film/benjamin-sesko_check.jpg after any change.
 drawings:
-  front: {sheet: reference/model-sheet.png, box: [5, 100, 288, 832], faces: F, holes: [[150, 665], [150, 725]]}   # the hero drawing
-  arms-folded: {sheet: ../../reference/squad/manchester-united-squad.png, box: [388, 593, 562, 946], faces: F}     # the squad sheet
+  front:
+    sheet: reference/model-sheet.png
+    box:
+    - 5
+    - 100
+    - 288
+    - 832
+    faces: F
+    holes:
+    - - 150
+      - 665
+    - - 150
+      - 725
+  arms-folded:
+    sheet: ../../reference/squad/manchester-united-squad.png
+    box:
+    - 388
+    - 593
+    - 562
+    - 946
+    faces: F
+  guitar:
+    image: reference/concert-guitar.png
+    faces: F
+    head:
+    - 285
+    - 10
+    - 572
+    - 340
+    hands:
+      R:
+      - 390
+      - 704
+      - 45
+      L:
+      - 838
+      - 570
+      - 44
+    feet:
+    - 560
+    - 1348
+    native_inst: guitar
+    look0:
+    - 0
+    - 0
+    jaw: 0.82
+    marks:
+      head:
+      - 285
+      - 10
+      - 572
+      - 340
+      eyes:
+      - - 397.5
+        - 194
+        - 26.5
+        - 23
+      - - 485
+        - 188
+        - 19
+        - 23
+      mouth:
+      - 403
+      - 257
+      - 476
+      - 254
+      - 440
+      - 264
+      chin: 329
+      neck:
+      - 437
+      - 368

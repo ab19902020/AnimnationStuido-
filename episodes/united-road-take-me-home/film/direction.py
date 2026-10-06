@@ -65,12 +65,12 @@ DRUMS = dict(grips={"R": (846, 388), "L": (916, 386)}, len=0.31, h=322, fist=Non
              drums={"hat": (995, 372), "snare": (935, 402), "tom": (778, 394), "crash_l": (765, 338),
                     "crash_r": (968, 326)})
 BAND_F = {
-    "maguire": dict(who="maguire", draw="harry-maguire:front", feet=(880, 516), h=322, clip=414),
+    "maguire": dict(who="maguire", draw="harry-maguire:drumming", feet=(880, 516), h=322, inst="drums"),
     "shaw": dict(who="shaw", draw="luke-shaw:front", feet=(655, 508), h=312, mic=dict(side=1, drop=0.45)),
     "deligt": dict(who="deligt", draw="matthijs-de-ligt:squad", feet=(1086, 508), h=320, mic=dict(side=1, drop=0.45)),
-    "sesko": dict(who="sesko", draw="benjamin-sesko:front", feet=(545, 552), h=368, inst="guitar"),
+    "sesko": dict(who="sesko", draw="benjamin-sesko:guitar", feet=(545, 552), h=368, inst="guitar"),
     "bruno": dict(who="bruno", draw="bruno-fernandes:front", feet=(760, 558), h=362, mic=dict(side=-1, drop=0.5)),
-    "cunha": dict(who="cunha", draw="matheus-cunha:front", feet=(968, 552), h=358, inst="bass"),
+    "cunha": dict(who="cunha", draw="matheus-cunha:bass", feet=(968, 552), h=358, inst="bass"),
     "mainoo": dict(who="mainoo", draw="kobbie-mainoo:front", feet=(1212, 548), h=348, inst="keys"),
     "yoro": dict(who="yoro", draw="leny-yoro:squad", feet=(432, 550), h=352, inst="harmonica"),
 }
@@ -101,8 +101,7 @@ def layers(fans=False, focus=None, fg_blur=8.0, bg_blur=5.0, hide=(), **over):
     up = [n for n in UPSTAGE if n not in hide]
     fr = [n for n in FRONT if n not in hide]
     lay = [("actors", band(*up, **over))]
-    if "maguire" not in hide:
-        lay.append(("sticks", dict(DRUMS, blur=over.get("maguire", {}).get("blur", 0.0))))
+    # Connected sticks are drawn with Maguire's own hands, before kit occlusion.
     lay += [("occl", "kit"), ("actors", band(*fr, **over)), ("occl", "monitors"), ("pyro", None)]
     if fans:
         lay.append(("fans", "FC"))
@@ -121,8 +120,13 @@ SIZES = {"cu": (0.17, 0.36), "mcu": (0.27, 0.62), "ms": (0.45, 0.98), "full": (0
 def frame(who, size, dx=0.0, dy=0.0):
     a = BAND_F[who]
     k, span = SIZES[size]
+    if size == "mcu" and who in ("sesko", "cunha"):
+        k, span = .44, 1.04  # keep fretting and picking hands inside the frame
     if who == "maguire":                                  # the drummer: room for the kit and the sticks
-        dy += 0.09
+        if size in ("mcu", "ms"):
+            k, span = .42, 1.00
+        else:
+            dy += 0.09
     cy = head_top(who) + k * a["h"] + dy * a["h"]
     return (a["feet"][0] + dx * a["h"], cy, 940.0 / (span * a["h"]))
 
@@ -146,7 +150,7 @@ def on(who, t0, t1, size="mcu", push=1.06, dx=0.0, dy=0.0, roll=0.0, **kw):
     if roll:
         c0, c1 = c0 + (roll,), c1 + (roll * 0.7,)
     # the lens on an upstage player (the drummer, the backing singers) is a stage camera, behind the front line
-    hide = kw.pop("hide", FRONT if who in UPSTAGE else ())
+    hide = kw.pop("hide", FRONT if who in UPSTAGE else (("sesko",) if who == "yoro" else ()))
     tight = size in ("cu", "mcu")
     lay = layers(fans=kw.pop("fans", False), focus=who, hide=hide,
                  bg_blur=5.0 if tight else 3.0, fg_blur=8.0 if tight else 5.0)

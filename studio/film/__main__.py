@@ -163,6 +163,10 @@ def main():
             voices.build(ep.BUILD, L.lines(), L.MAXGAP, L.GAPS, L.TEMPO, getattr(L, "EXTRA", None))
     elif cmd == "song":                        # a music video: the beat grid, hits and singing mouths
         from studio.film import song
+        if (d / "song-timing.json").exists():
+            ep.path("song.json").write_bytes((d / "song-timing.json").read_bytes())
+            print("Using the checked-in merged performance timing")
+            return
         src = next(p for p in (d / "song.wav", d / "song.mp3", d / "song.flac") if p.exists())
         song.analyse(src, ep.BUILD)
     elif cmd == "timeline":
@@ -264,7 +268,7 @@ def main():
         audio = ep.path("episode_audio.wav")
         a_in = ["-ss", f"{f0 / FPS:.3f}", "-i", str(audio)] if preview else ["-i", str(audio)]
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(ep.path("parts.txt"))]
-                       + a_in + ["-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "20",
+                       + a_in + ["-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", os.environ.get("FILM_CRF", "20"),
                                  "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "256k", "-shortest", "-movflags",
                                  "+faststart", str(out)], check=True)
         if not preview:

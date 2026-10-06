@@ -14,6 +14,8 @@ import os
 import zlib
 
 import cv2
+if os.environ.get("FILM_THREADS"):
+    cv2.setNumThreads(int(os.environ["FILM_THREADS"]))
 import numpy as np
 from PIL import Image
 
@@ -207,7 +209,7 @@ class Drawing:
         pm = img.copy()
         pm[..., :3] *= pm[..., 3:4]
         out = (x0, y0, pm)
-        if len(self._patch) > 6:
+        if len(self._patch) > 0:
             self._patch.pop(next(iter(self._patch)))      # memory: big 8x faces
         self._patch[key] = out
         return out
@@ -237,8 +239,8 @@ def head_motion(img, fa, tilt, nod, turn):
         fy = chin - 0.45 * (chin - y0)
         r2 = ((X - fx) / (0.55 * hw)) ** 2 + ((Y - fy) / (0.6 * max(1.0, chin - y0))) ** 2
         wf = np.clip(1 - r2, 0, 1) ** 1.3
-        mx = mx - turn * 0.075 * hw * (0.35 + 0.65 * wf) * wy
-    return cv2.remap(img, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        mx = (mx - turn * 0.075 * hw * (0.35 + 0.65 * wf) * wy).astype(np.float32)
+    return cv2.remap(img, mx.astype(np.float32), my.astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
 
 
 # ---------------------------------------------------------------- compositing helpers

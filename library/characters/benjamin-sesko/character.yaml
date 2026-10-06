@@ -1,15 +1,18 @@
-name: Benjamin Šeško
-short: Šeško
+name: "Benjamin \u0160e\u0161ko"
+short: "\u0160e\u0161ko"
 role: player
 style: house
 height_cm: 195
-note: Model sheet only (reference/model-sheet.png, from the All or Something repo); no kit sheets yet. Filmed from the
-  sheet's drawings (film.yaml).
+note: Model sheet only (reference/model-sheet.png, from the All or Something repo);
+  no kit sheets yet. Filmed from the sheet's drawings (film.yaml).
 likeness: 'Tall forward: light skin, short dark hair, sleeve tattoos.'
 outfits:
   home:
     description: Manchester United home kit, number 30.
     sheets: []
 reference:
-  model-sheet.png: 'Model sheet (from All or Something): hero drawing, turnaround, six mouth shapes, eight expressions,
-    eye positions, six speaking poses, walk and run cycles'
+  model-sheet.png: 'Model sheet (from All or Something): hero drawing, turnaround,
+    six mouth shapes, eight expressions, eye positions, six speaking poses, walk and
+    run cycles'
+  concert-guitar.png: Recovered approved whole-character concert pose; connected playing
+    hands.

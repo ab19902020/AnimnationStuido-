@@ -3,19 +3,23 @@ short: Cunha
 role: player
 style: house
 height_cm: 184
-likeness: Preserve Cunha's warm medium-brown skin, short dark tight curls, strong eyebrows, full neat beard and
-  friendly expressive face. Convert to the same large cartoon eyes and compact proportions as the first reference.
+likeness: Preserve Cunha's warm medium-brown skin, short dark tight curls, strong
+  eyebrows, full neat beard and friendly expressive face. Convert to the same large
+  cartoon eyes and compact proportions as the first reference.
 outfits:
   home:
-    description: Red short-sleeve football shirt with black-and-white V-neck and white sleeve trim; white shorts;
-      black socks with a red top stripe; bright red football boots. No sponsors or tiny branding.
+    description: Red short-sleeve football shirt with black-and-white V-neck and white
+      sleeve trim; white shorts; black socks with a red top stripe; bright red football
+      boots. No sponsors or tiny branding.
     sheets:
     - front
     - three_quarter
     - side
     - hands
 reference:
-  outfits.png: 'Full-body line-up of the three outfits: cream hoodie and grey joggers, black and red training kit,
-    home kit'
-  outfits-dark.jpg: 'Second full-body line-up of the three outfits on black: cream hoodie and grey joggers, black and red training top
-      with shorts, home kit'
+  outfits.png: 'Full-body line-up of the three outfits: cream hoodie and grey joggers,
+    black and red training kit, home kit'
+  outfits-dark.jpg: 'Second full-body line-up of the three outfits on black: cream
+    hoodie and grey joggers, black and red training top with shorts, home kit'
+  concert-bass.png: Recovered approved whole-character concert pose; connected playing
+    hands.

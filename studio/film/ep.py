@@ -22,3 +22,8 @@ def use(slug):
 
 def path(*p):
     return Path(BUILD).joinpath(*p)
+
+
+def song_path():
+    checked = DIR / "song-timing.json"
+    return checked if checked.exists() else path("song.json")

@@ -5,7 +5,7 @@ import json
 
 from studio.film import ep
 
-S = json.loads(ep.path("song.json").read_text())
+S = json.loads(ep.song_path().read_text())
 DOWN = S["downbeats"]
 
 

@@ -1,5 +1,67 @@
-# Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
-# given face landmarks. Check build/film/harry-maguire_check.jpg after any change.
 drawings:
-  front: {sheet: reference/model-sheet.png, box: [5, 100, 288, 832], faces: F, drawn_pupils: true}   # the hero drawing; his shaded eye whites keep their drawn pupils
-  fist: {sheet: reference/model-sheet.png, box: [100, 1118, 160, 1186], plain: true, auto_holes: false}   # a drummer's grip
+  front:
+    sheet: reference/model-sheet.png
+    box:
+    - 5
+    - 100
+    - 288
+    - 832
+    faces: F
+    drawn_pupils: true
+  fist:
+    sheet: reference/model-sheet.png
+    box:
+    - 100
+    - 1118
+    - 160
+    - 1186
+    plain: true
+    auto_holes: false
+  drumming:
+    image: reference/concert-drumming.png
+    faces: F
+    head: &id001
+    - 351
+    - 20
+    - 735
+    - 449
+    hands:
+      R:
+      - 408
+      - 714
+      - 42
+      L:
+      - 715
+      - 714
+      - 42
+    feet:
+    - 571
+    - 1340
+    native_inst: drumming
+    look0:
+    - 0
+    - 0
+    jaw: 0.82
+    marks:
+      head: *id001
+      eyes:
+      - - 506
+        - 259
+        - 30
+        - 27
+      - - 605
+        - 255
+        - 29
+        - 29
+      mouth:
+      - 514
+      - 359
+      - 603
+      - 359
+      - 558
+      - 346
+      chin: 441
+      neck:
+      - 551
+      - 490
+    brow_gain: 0.0

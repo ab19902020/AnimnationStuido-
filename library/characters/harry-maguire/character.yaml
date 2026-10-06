@@ -3,14 +3,19 @@ short: Maguire
 role: player
 style: house
 height_cm: 194
-note: Model sheet only (reference/model-sheet.png, from the All or Something repo); no kit sheets yet. Filmed from the
-  sheet's drawings (film.yaml).
-likeness: 'Tall, broad defender: short dark brown hair swept up at the front, heavy brows, strong square jaw, light skin.'
+note: Model sheet only (reference/model-sheet.png, from the All or Something repo);
+  no kit sheets yet. Filmed from the sheet's drawings (film.yaml).
+likeness: 'Tall, broad defender: short dark brown hair swept up at the front, heavy
+  brows, strong square jaw, light skin.'
 outfits:
   home:
-    description: 'Manchester United home kit: red shirt with white trim and black collar, white shorts with red stripe
-      and number 5, black socks with red bands, white boots.'
+    description: 'Manchester United home kit: red shirt with white trim and black
+      collar, white shorts with red stripe and number 5, black socks with red bands,
+      white boots.'
     sheets: []
 reference:
-  model-sheet.png: 'Model sheet (from All or Something): hero drawing, full-body turnaround, head views, six expressions,
-    ten mouth shapes, hand poses, gesture poses (pointing, celebrate, talking, shrug), walk and run cycles'
+  model-sheet.png: 'Model sheet (from All or Something): hero drawing, full-body turnaround,
+    head views, six expressions, ten mouth shapes, hand poses, gesture poses (pointing,
+    celebrate, talking, shrug), walk and run cycles'
+  concert-drumming.png: Recovered approved whole-character concert pose; connected
+    playing hands.

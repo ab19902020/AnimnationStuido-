@@ -83,7 +83,7 @@ def _pub():
     yy = np.linspace(0, 1, H, dtype=np.float32)[:, None, None]
     # no sun on the floor at night: the floor's patches of light flattened into the boards around them
     fl = np.clip((yy - 0.55) / 0.05, 0, 1)
-    soft = cv2.GaussianBlur(big, (0, 0), 60)
+    soft = cv2.resize(cv2.GaussianBlur(s1, (0, 0), 15), (W, H), interpolation=cv2.INTER_LINEAR)
     big = big * (1 - fl) + (soft + 0.35 * (big - soft)) * fl
     # dim and warm, a little brighter low down where the stage light reaches
     room = big * (0.30 + 0.16 * yy) * np.float32([1.0, 0.80, 0.72])

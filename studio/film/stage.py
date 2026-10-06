@@ -82,7 +82,7 @@ def _R():
 def SONG():
     from studio.film import ep
     from studio.film.song import Song
-    return Song(ep.path("song.json"))
+    return Song(ep.song_path())
 
 
 def sm(x):
@@ -834,6 +834,7 @@ def drumsticks(dst, t, M, spec, H_screen):
             plan["R"].append((te, "crash_l"))
             plan["L"].append((te, "crash_r"))
     fist = spec.get("fist")
+    motion = {}
     for side in ("L", "R"):
         ev = sorted(plan[side])
         clean = []                                       # an accent replaces a time-keeping note near it
@@ -871,11 +872,18 @@ def drumsticks(dst, t, M, spec, H_screen):
             up = 1 - after
         hand = (g[0], g[1] - 0.035 * H_screen * up * (1.4 if accent else 1.0))
         dx, dy = math.cos(a), math.sin(a)
-        tip = (hand[0] + L * dx, hand[1] + L * dy)
+        # A real stroke ends on the selected drum, even when the two grips
+        # are different distances from it. The stick length stays rigid.
+        target = dr.get(prev[1], dr["snare"])
+        reach = math.hypot(target[0] - g[0], target[1] - g[1]) if spec.get("connected") else L
+        tip = (hand[0] + reach * dx, hand[1] + reach * dy)
         butt = (hand[0] - 0.12 * L * dx, hand[1] - 0.12 * L * dy)
-        stick(dst, butt, tip, max(2.0, 0.014 * H_screen))
-        if fist:
+        motion[side] = dict(hand=hand, tip=tip, butt=butt)
+        if dst is not None:
+            stick(dst, butt, tip, max(2.0, 0.014 * H_screen))
+        if fist and dst is not None:
             draw_fist(dst, fist, hand, side, 0.085 * H_screen)
+    return motion
 
 
 def draw_fist(dst, key, at, side, width):
@@ -1062,15 +1070,18 @@ def draw_actor(shared, a, t, s, M, sc, pos):
         g = dict(rot=g["rot"] * amt, sx=1 + (g["sx"] - 1) * amt, sy=1 + (g["sy"] - 1) * amt, jump=g["jump"] * amt,
                  dx=g["dx"] * amt, nod=g["nod"] * amt, tilt=g["tilt"] * amt, turn=g.get("turn", 0.0) * amt)
     st = R.PERF.state(who, t, R.world_resolver(s, who, pos), s["t"]) if d.has_face else {}
+    native = CAST.spec(key.split(":")[0])["drawings"][key.split(":")[1]].get("native_inst")
+    if native == "drumming":
+        # The kit is fixed on the stage; keep the seated player's wrists
+        # registered to it, with the connected forearms doing the strokes.
+        g = dict(g, rot=0.0, sx=1.0, sy=1.0, jump=0.0, dx=0.0, nod=0.0)
     if st:
         st = dict(st)
         # the face warp drops the face by a share of its height into the chin and the neck below it: past ~4 % that
         # visibly squashes them (a big face seems to bubble on every beat), so the rest of a nod's depth goes into
         # the body, which carries the head down whole (rigid_head)
         nod = st["nod"] + g["nod"]
-        st["nod"] = float(np.clip(nod, -4.0, 4.0))
-        if nod > 4.0:
-            g = dict(g, sy=max(0.9, g["sy"] - 0.005 * (nod - 4.0)))
+        st["nod"] = 0.0  # rigid head travel carries the beat without compressing the face
         st["tilt"] = st["tilt"] + g["tilt"]
         st["turn"] = st["turn"] + g.get("turn", 0.0)
         if a.get("look_at") is not None:                 # eyes on a point (layout px): the crowd on the band
@@ -1105,7 +1116,10 @@ def draw_actor(shared, a, t, s, M, sc, pos):
     if inst or a.get("blur") or a.get("cloud"):
         lay = np.zeros((OH, OW, 4), np.float32)
         E.place(lay, d, fst, Ms2, clip=clip, head=head)
-        if inst in ("guitar", "bass"):
+        if native:
+            from studio.film.concert import play_native
+            lay = play_native(lay, native, Ms2, key, t, H_screen, playing, M, R.D)
+        elif inst in ("guitar", "bass"):
             lay = play_strings(lay, inst, Ms2, key, t, mirror, H_screen, playing)
         elif inst == "keys":
             lay = play_keys(lay, Ms, Ms2, key, t, playing)
@@ -1485,7 +1499,9 @@ def render(s, t):
     # haze: the air glows with the lamps and the beams
     if s.get("haze", 0.0) > 0:
         src = room + bl if bl is not None else room
-        img = img + cv2.GaussianBlur(np.clip(src - 0.55, 0, 1), (0, 0), 30 * RS) * s["haze"]
+        glow = cv2.resize(np.clip(src - 0.55, 0, 1), (OW // 4, OH // 4), interpolation=cv2.INTER_AREA)
+        glow = cv2.GaussianBlur(glow, (0, 0), 7.5 * RS)
+        img = img + cv2.resize(glow, (OW, OH), interpolation=cv2.INTER_LINEAR) * s["haze"]
     if crash > 0.02 and s.get("flash", 1.0) > 0:
         f = s.get("flash", 1.0) * 0.30 * crash * energy
         img = img + (1 - img) * f * np.float32([1.0, 0.95, 0.88])

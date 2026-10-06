@@ -43,7 +43,11 @@ def sec(s):
 # ---------------------------------------------------------------- singing
 # Use the musical bar boundaries for every chorus. This prevents a lyric-line boundary from
 # leaving a visible singer resting in the middle of a chorus when the camera cuts to them.
-CHORUSES = [(bar(27), bar(36)), (bar(47), bar(57)), (bar(75), bar(83)), (bar(97), bar(108))]
+CHORUSES = [(bar(27) - 0.12, bar(36) + 0.12), (bar(47) - 0.12, bar(57)),
+            (bar(75) - 0.12, Le(34) + 0.3)]
+# The final chorus flows straight into the repeated anthem and Glory Glory.
+# Keep the band singing across that entire build; the shared vocal track
+# closes their mouths during the actual gaps in the recording.
 GLORY = [(L(32) - 0.2, Le(34))]
 LEAD = [(0.0, END)]                                     # Bruno: the lead vocal, every note of it
 ALL = [(L(0) - 0.2, Le(len(LINES) - 1) + 0.3)]          # every line of the song
