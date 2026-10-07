@@ -1,0 +1,59 @@
+{
+  "source_commit": "0de9cd33c2fd86cc3604bf4de0ab32c9b7cead68",
+  "render_run": 37540964194,
+  "assembly_run": 37574237104,
+  "master": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "frames": 7038,
+    "duration_seconds": 234.6,
+    "size_bytes": 572132970,
+    "sha256": "fbceb3143d64aba71e84cc8db7fa8cefe946fd091e57d0cbe393f217e8041e24",
+    "full_decode": "passed",
+    "continuous_frame_timestamps": true,
+    "max_frame_timestamp_error_seconds": 3.333333467026023e-07
+  },
+  "audio_boundary_samples": [
+    {
+      "time": 19.8,
+      "lag_ms": 0.0,
+      "correlation": 0.9993480209299019
+    },
+    {
+      "time": 99.8,
+      "lag_ms": 0.0,
+      "correlation": 0.9995529094287733
+    },
+    {
+      "time": 159.8,
+      "lag_ms": 0.0,
+      "correlation": 0.9998389010717788
+    },
+    {
+      "time": 219.8,
+      "lag_ms": 0.0,
+      "correlation": 0.9994781086585712
+    }
+  ],
+  "visual_review": {
+    "shot_midpoints": 109,
+    "detail_sequences": [
+      "guitar at 12.6\u201313.14s",
+      "drums and Maguire eyes at 106.15\u2013106.66s",
+      "Bruno chorus at 170\u2013170.45s"
+    ]
+  },
+  "download": {
+    "filename": "United_Road_Final_1080p.mp4",
+    "size_bytes": 423014423,
+    "sha256": "e306206fcc49fc9e994597fd73ff86762d716c083393aee139b2cc07ee39c3ca",
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "frames": 7038,
+    "duration_seconds": 234.6,
+    "encoder": "libx264 medium CRF 18, maxrate 16500k, original AAC copied",
+    "full_decode": "passed"
+  }
+}

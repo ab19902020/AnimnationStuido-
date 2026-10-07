@@ -69,5 +69,5 @@
       "changed_values": 0
     }
   ],
-  "status": "Source checks complete; final file validation follows full render."
+  "status": "Source checks complete. Full 1080p render completed; see render-validation.json and delivery-review.json for final file checks."
 }

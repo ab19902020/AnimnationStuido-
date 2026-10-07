@@ -6,7 +6,7 @@ sound and the finish. Give Claude the script and say "produce it" (the `produce`
 
 **Latest United Road production:** [combined performance edition](episodes/united-road-take-me-home/README.md).
 Continue from this edition, which combines the latest show and vocal timing with the approved connected guitar,
-bass and seated drum poses. Its production notes identify the source files and improvements to preserve.
+bass and seated drum poses. The [finished 1080p video](episodes/united-road-take-me-home/united-road-take-me-home.mp4) is checked in beside its validation record. Its production notes identify the source files and improvements to preserve.
 
 **Status.** Done: the character library and kit ingest, and the film engine (`studio/film`, the method All or
 Something was made with). A 60-second test of *The Appeals Department* is made with the actors' recordings:
