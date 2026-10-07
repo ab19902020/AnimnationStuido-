@@ -1,0 +1,11 @@
+{
+  "source_commit": "0de9cd33c2fd86cc3604bf4de0ab32c9b7cead68",
+  "assembly_commit": "7ae3586f5c876f0689b9ddb1c56b953dab765abc",
+  "render_run": 37540964194,
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "frames": 7038,
+  "duration": 234.6,
+  "full_decode": "passed"
+}
