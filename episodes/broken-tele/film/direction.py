@@ -10,6 +10,8 @@ drawings swapped on the action, as the drawings are made); close singles for eve
 the face acting; inserts on the props that change the story (the screen cracking, the card reader, the cards)."""
 import json
 
+import numpy as np
+
 from studio.film import ep
 from studio.film.cast import CAST, feet
 from studio.film.shots import Marks, card, finish, insert, shot_at as _shot_at, single, world
@@ -25,7 +27,7 @@ PLATES = {"LR": "home/family-living-room", "TW": "home/family-living-room-tv-wal
           # the telly wall with its screen cracked (TWc), smashed through (TWs), and the telly gone, a projector
           # throwing a picture on the wall where it was (TWp): props.plate_image
           "TWc": "home/family-living-room-tv-wall", "TWs": "home/family-living-room-tv-wall",
-          "TWp": "home/family-living-room-tv-wall"}
+          "TWp": "home/family-living-room-tv-wall", "LRs": "home/family-living-room"}
 # the plant on the telly unit stands in front of the screen's lower right corner (1x plate px, traced)
 PLANT = [(838, 541), (842, 520), (851, 506), (866, 497), (880, 500), (893, 489), (907, 487), (921, 494), (933, 506),
          (941, 512), (941, 640), (900, 640), (876, 600), (858, 586), (840, 573)]
@@ -50,12 +52,47 @@ def at_feet(draw, fx, fy, ed_p, mirror=False):
     return (fx + (-1 if mirror else 1) * (ax - ftx) * k, fy - (fty - ay) * k)
 
 
+# the floor's perspective in each set, measured from the plate: plate px to the metre at floor row y is
+# k * (y - horizon). Living room: the rug's near and far edges (1.96x wider at y 1095 than at y 830) and the
+# sofa (0.85 m, 215 px from its feet at y 805). Telly wall: the 55-inch screen (1.21 m, 372 px) at the back of the
+# unit (y 745) and the unit's front (0.55 m, 205 px, feet at y 790).
+FLOOR = {"LR": (1.0, 554), "LRs": (1.0, 554), "TW": (1.47, 536)}
+for _k in ("TWc", "TWs", "TWp"):
+    FLOOR[_k] = FLOOR["TW"]
+
+
+def ppm_at(plate, y):
+    k, h = FLOOR[plate]
+    return k * (y - h)
+
+
+def pose_scale(who, name):
+    """a pose's eye distance relative to the standing drawing's (the character is the same size in both): with open
+    eyes, their own spacing; a closed-eyed pose has only a guessed eye distance, so it takes the scale of the sheet
+    it is drawn on instead (the eye spacing of that sheet's poses with eyes)"""
+    cid = f"family-{who}"
+    stand = CAST.get(DRAW[who])[1]["ed"]
+    d, info = CAST.get(f"{cid}:{name}")
+    if d.spec["eyes"]:
+        return info["ed"] / stand
+    return info["ed"] / _sheet_ed(cid, CAST.spec(cid)["drawings"][name].get("sheet"))
+
+
+def _sheet_ed(cid, sheet):
+    """the eye distance (sheet px) the character has on a sheet: the median over that sheet's eyed full poses"""
+    sp = CAST.spec(cid)["drawings"]
+    eds = [CAST.get(f"{cid}:{n}")[1]["ed"] for n, d in sp.items()
+           if d.get("sheet") == sheet and d.get("head_frac", 0) < 0.6 and CAST.get(f"{cid}:{n}")[0].spec["eyes"]]
+    return float(np.median(eds))
+
+
 def actor(who, name, fx, fy, ppm, mirror=False, **opt):
-    """a world-shot actor stood on the floor at (fx, fy); opt["path"] as feet [(t, x, y)] is turned into eye points"""
+    """a world-shot actor stood on the floor at (fx, fy); opt["path"] as feet [(t, x, y)] is turned into eye points.
+    ppm: plate px to the metre, or the plate's key to take it from the floor's perspective at fy"""
     draw = f"family-{who}:{name}"
-    # every pose of a character is drawn at the same scale on its sheets: size them all as the standing drawing
-    # (their own eye spacing varies with the expression and the turn of the head)
-    ed_p = ed_at(who, ppm) * CAST.get(draw)[1]["ed"] / CAST.get(DRAW[who])[1]["ed"]
+    if isinstance(ppm, str):
+        ppm = ppm_at(ppm, fy)
+    ed_p = ed_at(who, ppm) * pose_scale(who, name)
     if "path" in opt:
         opt["path"] = [(t, *at_feet(draw, x, y, ed_p, mirror)) for t, x, y in opt["path"]]
     if "cycle" in opt:
@@ -80,7 +117,25 @@ def close(t, who, name, bg, ed=118.0, eye=None, push=(1.0, 1.05), mirror=False, 
                   **kw)
 
 
-def ecu(t, who, name, bg, eye=(900, 400), push=(1.0, 1.06), drift=0.6, **kw):
+def medium(t, plate, who, name, fx, fy, ed=112.0, eye=(800, 420), push=(1.0, 1.04), blur=4.0, mirror=False,
+           drift=0.6, extra=(), **kw):
+    """a single shot in the set at true scale: the character stood at (fx, fy) on the plate's floor, the camera
+    framing their eyes at screen `eye` with a screen eye distance `ed` (so the set behind is exactly as big as it
+    should be), the set out of focus behind; `extra` actors share the shot"""
+    a = actor(who, name, fx, fy, plate, mirror)
+    (ex, ey), ed_p = a[2], a[3]
+    from studio.paths import BACKGROUNDS
+    import cv2
+    W1 = cv2.imread(str(BACKGROUNDS / f"{PLATES[plate]}.png")).shape[1] if plate in PLATES else 941
+    z = ed / (1920 / W1 * ed_p)
+    sc = 1920 / W1 * z
+    c0 = (ex - (eye[0] - 960) / sc, ey - (eye[1] - 540) / sc, z)
+    k = push[1] / push[0]
+    c1 = (c0[0] + (ex - c0[0]) * (1 - 1 / k), c0[1] + (ey - c0[1]) * (1 - 1 / k), z * k)
+    return world(t, plate, c0, cam1=c1, drift=drift, blur=blur, layers=[("actors", [a, *extra])], **kw)
+
+
+def ecu(t, who, name, bg, eye=(900, 400), push=(1.0, 1.06), drift=0.6, size=None, **kw):
     """a big close-up on an expression head (a head-and-shoulders drawing): sized so its shoulders run off the
     bottom of the frame"""
     draw = f"family-{who}:{name}"
@@ -99,24 +154,24 @@ BOY_BG = ("LR", 640, 760, 2.2, 5.0)              # the boy on the rug: the sofa 
 TV_BG = {"TW": ("TW", 640, 430, 1.9, 4.5), "TWc": ("TWc", 640, 430, 1.9, 4.5), "TWs": ("TWs", 640, 430, 1.9, 4.5)}
 
 # the telly wall, wide: the boy in the foreground at screen left, the telly at right
-PPM_NEAR = 360                                    # px to the metre where the boy stands to throw
+PPM_NEAR = None                                   # px to the metre where the boy stands to throw (below)
 WIDE = (470, 560, 1.0)
 
 # the throws: the hand that lets go (plate px) and where it lands on the screen (uv on the screen, 0..1)
 THROW = {1: dict(t0=m("throw1"), t1=m("smash1"), toy="car", hit=(0.42, 0.44)),
          2: dict(t0=m("throw2"), t1=m("smash2"), toy="ball", hit=(0.52, 0.5))}
 
-BOY_X, BOY_Y = 240, 860                          # the boy's feet when throwing
+BOY_X, BOY_Y = 240, 790                          # the boy's feet when throwing
+PPM_NEAR = ppm_at("TW", BOY_Y)
 T_SNEAK = m("cut_sneak")
 
 SHOTS = finish([
     # ---------------------------------------------------------------- 1. five minutes of peace
-    world(0.0, "LR", (470, 700, 1.0), cams=[(0.0, (470, 690, 1.0)), (m("cut_vroom"), (480, 712, 1.08))], drift=0.4,
-          layers=[("actors", [actor("mum", "armchair", 175, 990, 270, rest="armchair"),
-                              actor("boy", "play", 600, 958, 285)])]),
+    world(0.0, "LR", (470, 600, 1.0), cams=[(0.0, (470, 590, 1.0)), (m("cut_vroom"), (480, 610, 1.08))], drift=0.4,
+          layers=[("actors", [actor("mum", "armchair", 160, 850, "LR"), actor("boy", "play", 590, 880, "LR")])]),
     world(m("cut_vroom"), "TW", (560, 640, 2.4), cam1=(600, 640, 2.5), drift=0.3, layers=[("props", "vroom")]),
-    close(m("cut_mum1"), "mum", "hips", MUM_BG, ed=150, eye=(820, 400), push=(1.0, 1.06)),
-    ecu(m("cut_look"), "boy", "smile", BOY_BG, eye=(1000, 410), push=(1.0, 1.03)),
+    medium(m("cut_mum1"), "LR", "mum", "hips", 260, 880, ed=145, eye=(800, 400), push=(1.0, 1.05)),
+    ecu(m("cut_look"), "boy", "smile", BOY_BG, eye=(1000, 470), push=(1.0, 1.03)),
     ecu(m("cut_narrow"), "mum", "angry", MUM_BG, eye=(860, 420), push=(1.0, 1.12)),
     # the telly wall: the boy winds up (the car in his raised hand), lets go, and the screen goes
     world(m("cut_wind1"), "TW", WIDE, drift=0.0,
@@ -128,19 +183,18 @@ SHOTS = finish([
                   ("actors", [actor("boy", "throw", BOY_X + 25, BOY_Y, PPM_NEAR)]), ("props", "impact1")]),
     world(m("cut_crack1"), "TW", (700, 420, 2.3), cam1=(700, 425, 2.6), drift=0.2, ease="out",
           layers=[("props", "screen1"), ("occl", "plant"), ("props", "falling1")]),
-    single(m("cut_shock1"), "mum", "family-mum:shock", MUM_BG, None, ed=96, eye=(860, 400), push=(1.0, 1.12),
-           drift=0.3),
-    world(m("cut_point1"), "TWc", (560, 540, 1.15), cam1=(560, 540, 1.2), drift=0.4,
-          layers=[("occl", "plant"), ("actors", [actor("boy", "point", 300, 770, 300)]), ("props", "fallen_car")]),
-    ecu(m("cut_boy1"), "boy", "smile", TV_BG["TWc"], eye=(900, 410), push=(1.0, 1.06)),
-    close(m("cut_mum2"), "mum", "crossed", MUM_BG, ed=150, eye=(840, 400)),
+    medium(m("cut_shock1"), "LR", "mum", "shock", 330, 880, ed=100, eye=(860, 380), push=(1.0, 1.1), drift=0.3),
+    world(m("cut_point1"), "TWc", (560, 520, 1.1), cam1=(560, 520, 1.15), drift=0.4,
+          layers=[("occl", "plant"), ("actors", [actor("boy", "point", 290, 770, "TWc")]), ("props", "fallen_car")]),
+    ecu(m("cut_boy1"), "boy", "smile", TV_BG["TWc"], eye=(900, 470), push=(1.0, 1.06)),
+    medium(m("cut_mum2"), "LR", "mum", "crossed", 300, 880, ed=145, eye=(820, 400)),
     # ---------------------------------------------------------------- 2. the call
     close(m("cut_office"), "dad", "phone", ("OF", 260, 330, 1.7, 4.0), ed=104, mirror=True, eye=(1130, 420)),
-    close(m("cut_mumph1"), "mum", "phone", TV_BG["TWc"], ed=104, eye=(760, 420)),
+    medium(m("cut_mumph1"), "TWc", "mum", "phone", 250, 760, ed=135, eye=(760, 420), push=(1.0, 1.02)),
     close(m("cut_dad2"), "dad", "phone", ("OF", 260, 330, 1.7, 4.0), ed=110, mirror=True, eye=(1130, 420)),
-    close(m("cut_mumph2"), "mum", "phone", TV_BG["TWc"], ed=110, eye=(760, 420), push=(1.0, 1.04)),
-    world(m("cut_pointing"), "TWc", (560, 540, 1.15), cam1=(560, 540, 1.17), drift=0.3,
-          layers=[("occl", "plant"), ("actors", [actor("boy", "point", 300, 770, 300)]), ("props", "fallen_car")]),
+    medium(m("cut_mumph2"), "TWc", "mum", "phone", 250, 760, ed=135, eye=(760, 420), push=(1.0, 1.04)),
+    world(m("cut_pointing"), "TWc", (560, 520, 1.1), cam1=(560, 520, 1.12), drift=0.3,
+          layers=[("occl", "plant"), ("actors", [actor("boy", "point", 290, 770, "TWc")]), ("props", "fallen_car")]),
     ecu(m("cut_dad3"), "dad", "angry", ("OF", 260, 330, 1.7, 4.0), eye=(1020, 400), push=(1.0, 1.08)),
     # ---------------------------------------------------------------- 3. the expensive way home
     ecu(m("cut_car"), "dad", "angry", ("CAR", 330, 300, 1.25, 3.5), eye=(900, 380), push=(1.0, 1.04),
@@ -157,18 +211,17 @@ SHOTS = finish([
                                     path=[(m("cut_hall"), -120, 560), (m("cut_install") - 0.05, 470, 560)],
                                     cycle=(["carry"], 2.4), bob=4.0, linear=True)])]),
     world(m("cut_install"), "TW", (520, 520, 1.04), cam1=(520, 516, 1.08), drift=0.3,
-          layers=[("props", "sparkle"), ("occl", "plant"), ("actors", [actor("dad", "install", 470, 800, 300)])]),
-    world(m("cut_ban"), "LR", (470, 720, 1.0), cam1=(500, 720, 1.03), drift=0.3,
-          layers=[("actors", [actor("mum", "toys", 60, 965, 250,
-                                    path=[(m("cut_ban"), 60, 965), (le("L015") + 0.3, 720, 965)],
+          layers=[("props", "sparkle"), ("occl", "plant"), ("actors", [actor("dad", "install", 540, 790, "TW")])]),
+    world(m("cut_ban"), "LR", (470, 610, 1.0), cam1=(500, 610, 1.03), drift=0.3,
+          layers=[("actors", [actor("mum", "toys", 60, 845, "LR",
+                                    path=[(m("cut_ban"), 60, 845), (le("L015") + 0.3, 720, 845)],
                                     cycle=(["toys"], 2.6), bob=4.0, linear=True)])]),
-    single(m("cut_sulk"), "boy", "family-boy:grump", BOY_BG, None, ed=112, eye=(960, 400), push=(1.0, 1.1),
-           drift=0.3),
+    medium(m("cut_sulk"), "LR", "boy", "grump", 520, 900, ed=118, eye=(960, 400), push=(1.0, 1.1), drift=0.3),
     # ---------------------------------------------------------------- 4. two weeks later
     insert(m("card_weeks"), "card_weeks"),
-    world(m("cut_dad5"), "TW", (500, 520, 1.0), cam1=(500, 516, 1.04), drift=0.3,
-          layers=[("occl", "plant"), ("actors", [actor("dad", "shrug", 330, 790, 270)]), ("props", "toy_box")]),
-    single(m("cut_mum5"), "mum", "family-mum:tired", MUM_BG, None, ed=104, eye=(900, 410), push=(1.0, 1.04)),
+    world(m("cut_dad5"), "TW", (500, 405, 1.0), cam1=(500, 400, 1.04), drift=0.3,
+          layers=[("occl", "plant"), ("actors", [actor("dad", "shrug", 330, 770, "TW")]), ("props", "toy_box")]),
+    medium(m("cut_mum5"), "LR", "mum", "tired", 330, 880, ed=110, eye=(900, 400), push=(1.0, 1.04)),
     insert(m("card_minutes"), "card_minutes"),
     world(T_SNEAK, "TW", WIDE, drift=0.0,
           layers=[("actors", [actor("boy", "walk1", -90, BOY_Y, PPM_NEAR,
@@ -183,27 +236,26 @@ SHOTS = finish([
                   ("actors", [actor("boy", "throw", BOY_X + 25, BOY_Y, PPM_NEAR)]), ("props", "impact2")]),
     world(m("cut_crack2"), "TW", (705, 415, 2.0), cam1=(705, 420, 2.3), drift=0.2, ease="out",
           layers=[("props", "screen2"), ("occl", "plant"), ("props", "falling2")]),
-    world(m("cut_run"), "TWs", (470, 545, 1.0), drift=0.5,
+    world(m("cut_run"), "TWs", (470, 455, 1.0), drift=0.5,
           layers=[("occl", "plant"),
-                  ("actors", [actor("boy", "point", 610, 760, 290),
-                              actor("dad", "panic", 420, 800, 280,
-                                    path=[(m("cut_run"), -150, 800), (m("cut_run") + 0.3, 420, 800)]),
-                              actor("mum", "shock", 135, 870, 310,
-                                    path=[(m("cut_run") + 0.08, -200, 870), (m("cut_run") + 0.4, 135, 870)])])]),
+                  ("actors", [actor("boy", "point", 640, 790, "TWs"),
+                              actor("dad", "panic", 420, 735, "TWs",
+                                    path=[(m("cut_run"), -150, 735), (m("cut_run") + 0.3, 420, 735)]),
+                              actor("mum", "shock", 170, 780, "TWs",
+                                    path=[(m("cut_run") + 0.08, -200, 780), (m("cut_run") + 0.4, 170, 780)])])]),
     ecu(m("cut_dad6"), "dad", "angry", TV_BG["TWs"], eye=(820, 400), push=(1.0, 1.12)),
-    ecu(m("cut_boy2"), "boy", "smile", TV_BG["TWs"], eye=(940, 410), push=(1.0, 1.1)),
-    close(m("cut_mum6"), "mum", "crossed", TV_BG["TWs"], ed=150, eye=(820, 400)),
+    ecu(m("cut_boy2"), "boy", "smile", TV_BG["TWs"], eye=(940, 470), push=(1.0, 1.1)),
+    medium(m("cut_mum6"), "TWs", "mum", "crossed", 260, 760, ed=145, eye=(820, 400)),
     # ---------------------------------------------------------------- 5. the solution
-    world(m("cut_sofa"), "TWs", (470, 600, 1.0), cam1=(470, 600, 1.05), drift=0.3,
-          layers=[("occl", "plant"),
-                  ("actors", [actor("dad", "sofa", 300, 900, 300), actor("mum", "tired", 690, 905, 300)])]),
+    world(m("cut_sofa"), "LRs", (470, 590, 1.0), cam1=(500, 600, 1.06), drift=0.3,
+          layers=[("actors", [actor("dad", "sofa", 400, 812, "LRs"), actor("mum", "tired", 690, 860, "LRs")])]),
     ecu(m("cut_dad7"), "dad", "worried", TV_BG["TWs"], eye=(1040, 400)),
     ecu(m("cut_mum7"), "mum", "cross", TV_BG["TWs"], eye=(860, 410), push=(1.0, 1.08)),
     ecu(m("cut_dad8"), "dad", "deadpan", TV_BG["TWs"], eye=(1040, 400)),
     world(m("cut_proj"), "TWp", (520, 300, 1.0), cams=[(m("cut_proj"), (520, 300, 1.0)),
                                                        (m("cut_proj") + 1.6, (520, 560, 1.0))], drift=0.2,
-          layers=[("props", "projection"), ("actors", [actor("boy", "sit", 470, 790, 300)])]),
-    ecu(m("cut_boy3"), "boy", "smile", ("TWp", 560, 420, 1.9, 5.0), eye=(960, 400), push=(1.0, 1.1)),
+          layers=[("props", "projection"), ("actors", [actor("boy", "sit", 470, 790, "TWp")])]),
+    ecu(m("cut_boy3"), "boy", "smile", ("TWp", 560, 420, 1.9, 5.0), eye=(960, 460), push=(1.0, 1.1)),
     card(m("cut_black"), "black"),
     card(m("cut_title"), "title"),
     card(m("cut_post"), "black"),

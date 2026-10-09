@@ -184,6 +184,15 @@ def stretches(y16, min_pause=0.35, top_db=38):
             out[-1][1] = b
         elif b - a >= 0.08:
             out.append([a, b])
+    if top_db > 20:                      # a noisy take (a hiss under the voice) that never falls silent: split long
+        long = []                        # stretches against a tighter threshold (Whisper hears 30 s at most)
+        for a, b in out:
+            if b - a > 20:
+                long += [[a + s, a + e] for s, e in stretches(y16[int(a * 16000):int(b * 16000)], min_pause * 0.6,
+                                                               top_db - 14)]
+            else:
+                long.append([a, b])
+        out = long
     return out
 
 

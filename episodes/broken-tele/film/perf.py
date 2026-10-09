@@ -50,7 +50,7 @@ UP_LEFT = ("dir", -0.5, -0.85, -0.15)           # the projector on the ceiling, 
 DOWN = ("dir", 0.1, 0.9, 0.0)
 L0 = m("cut_look")
 GAZE = {
-    "boy": [(L0, L0 + 0.8, "mum"), (L0 + 0.8, L0 + 1.6, DOWN), (L0 + 1.6, L0 + 2.4, "tv"), (L0 + 2.4, L0 + 3.3, "mum"),
+    "boy": [(L0, L0 + 0.6, "mum"), (L0 + 0.6, L0 + 1.2, DOWN), (L0 + 1.2, L0 + 1.8, "tv"), (L0 + 1.8, L0 + 2.6, "mum"),
             (m("cut_wind1"), m("cut_crack1"), "tv"),
             (m("cut_point1"), m("cut_boy1") + 0.45, "tv"), (m("cut_boy1") + 0.45, m("cut_mum2"), "cam"),
             (m("cut_pointing"), m("cut_dad3"), "tv"),
@@ -72,7 +72,7 @@ GAZE = {
 }
 # reactions outside their own lines: (t0, t1, brow, smile, ease-in)
 EXPR = {
-    "boy": [(L0 + 2.35, L0 + 3.3, 0.7, 1.0, 0.15),                      # his best smile
+    "boy": [(L0 + 1.75, L0 + 2.6, 0.7, 1.0, 0.15),                      # his best smile
             (m("cut_sulk"), m("card_weeks"), -0.6, -0.4, 0.3),
             (T_SNEAK + 1.3, m("cut_wind2") + 0.6, 0.4, 0.8, 0.2),
             (m("smile"), m("cut_black"), 0.5, 1.0, 0.2)],
@@ -83,9 +83,9 @@ EXPR = {
             (m("cut_install"), ls("L014"), 0.3, 0.6, 0.3),
             (m("cut_sofa"), m("cut_dad7"), -0.1, -0.3, 0.3)],
 }
-NODS = {"boy": [(L0 + 2.45, 1, 3.0)], "mum": [(le("L005") - 0.2, 1, 2.0)], "dad": [(le("L013") - 0.1, 1, 2.0)]}
+NODS = {"boy": [(L0 + 1.85, 1, 3.0)], "mum": [(le("L005") - 0.2, 1, 2.0)], "dad": [(le("L013") - 0.1, 1, 2.0)]}
 TURN = {}
-FORCED = {"mum": [m("cut_narrow") + 0.95, m("cut_sofa") + 0.9], "boy": [L0 + 2.3, m("cut_boy3") + 0.75],
+FORCED = {"mum": [m("cut_narrow") + 0.95, m("cut_sofa") + 0.9], "boy": [L0 + 1.7, m("cut_boy3") + 0.75],
           "dad": [m("cut_dad4") + 0.4, m("cut_sofa") + 0.5]}
 NOBLINK = {"boy": [(m("cut_boy1") + 0.5, m("cut_mum2")), (m("cut_boy2"), m("cut_mum6")),
                    (T_SNEAK + 1.3, m("cut_wind2")), (m("smile"), m("cut_black"))]}

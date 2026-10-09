@@ -21,7 +21,7 @@ drawings:
   install:  {sheet: reference/poses-walk-and-drive.png, box: [281, 778, 650, 1073], faces: R, holes: [[396, 989]], marks: {mouth: [450.2, 867.9, 466.0, 871.3, 458.1, 871.6]}}
   point:    {sheet: reference/poses-walk-and-drive.png, box: [798, 754, 1043, 1061], faces: R, marks: {mouth: null}}
   head:     {sheet: reference/poses-walk-and-drive.png, box: [124, 1039, 359, 1317], faces: F, marks: {mouth: null}}
-  sofa:     {sheet: reference/poses-walk-and-drive.png, box: [429, 1056, 1025, 1315], faces: F, open_ground: false, marks: {mouth: null}}
+  sofa:     {sheet: reference/poses-walk-and-drive.png, box: [429, 1056, 1025, 1315], faces: F, open_ground: false, holes: [[661, 1276]], marks: {mouth: null}}
   toys:     {sheet: reference/poses-and-expressions.png, box: [26, 661, 392, 1059], faces: R, marks: {mouth: null}}
   # expression heads (head and shoulders), for close singles
   worried:  {sheet: reference/poses-walk-and-drive.png, box: [142, 1314, 263, 1477], faces: R, head_frac: 0.85, marks: {mouth: [214.8, 1423.9, 232.8, 1418.2, 223.8, 1417.7]}}

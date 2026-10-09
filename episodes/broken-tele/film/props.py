@@ -159,6 +159,24 @@ def plate_image(k):
         return bake_screen(_base("home/family-living-room-tv-wall"), "cracked")
     if k == "TWs":
         return bake_screen(_base("home/family-living-room-tv-wall"), "smashed")
+    if k == "LRs":                                   # the living room after the second telly: its screen (seen at an
+        big = _base("home/family-living-room")       # angle, running off the plate) smashed through too
+        tex = prop(TEX["smashed"][0])
+        src = TEX["smashed"][1]
+        u = 0.36                                      # the share of the screen's width the plate shows
+        s0 = np.float32([src[0], src[0] + (src[1] - src[0]) * u, src[3] + (src[2] - src[3]) * u, src[3]])
+        dst = np.float32([(798, 396), (941, 382), (941, 650), (798, 645)]) * 4
+        Hm = cv2.getPerspectiveTransform(s0, dst)
+        H, W = big.shape[:2]
+        warped = cv2.warpPerspective(tex[..., :3], Hm, (W, H), flags=cv2.INTER_CUBIC)
+        msk = np.zeros((H, W), np.uint8)
+        cv2.fillConvexPoly(msk, np.int32(np.round(dst * 8)), 255, cv2.LINE_AA, 3)
+        hsv = cv2.cvtColor(big[..., ::-1].copy(), cv2.COLOR_BGR2HSV)
+        leaves = ((hsv[..., 0] > 25) & (hsv[..., 0] < 90) & (hsv[..., 1] > 60)).astype(np.uint8)
+        leaves = cv2.dilate(leaves, np.ones((5, 5), np.uint8))
+        msk[leaves > 0] = 0
+        a = (msk.astype(np.float32) / 255)[..., None]
+        return (big * (1 - a) + warped * a).astype(np.uint8)
     if k == "TWp":
         big = _base("home/family-living-room-tv-wall")
         src = cv2.imread(str(BACKGROUNDS / "home/family-living-room-tv-wall.png"))
@@ -239,6 +257,12 @@ def held_car(img, s, t, M, sc):
     (hx, hy), _, br = _throw(1)
     X, Y = P(M, hx, hy - 4)
     return sprite(img, "toy-car", X, Y, 0.24 * PPM_SCALE() * sc, ang=-12 + 6 * math.sin(t * 9))
+
+
+def _ppm(y):
+    """the telly wall's floor scale at floor row y (plate px to the metre)"""
+    from film.direction import ppm_at
+    return ppm_at("TW", y)
 
 
 def PPM_SCALE():
@@ -354,7 +378,7 @@ def car_after(img, t, M, sc):
     if u < 0:
         return img
     hx, hy = hit_point("cracked")
-    w = 0.24 * PPM_SCALE() * 0.55
+    w = 0.24 * _ppm(CAR_REST[1] + 170)
     if u < 0.55:
         q = u / 0.55
         x = hx + (CAR_REST[0] - hx) * q
@@ -368,7 +392,7 @@ def car_after(img, t, M, sc):
 
 
 def fallen_car(img, s, t, M, sc):
-    return sprite(img, "toy-car", *P(M, CAR_REST[0], CAR_REST[1] - 12), 0.24 * PPM_SCALE() * 0.55 * sc, 180)
+    return sprite(img, "toy-car", *P(M, CAR_REST[0], CAR_REST[1] - 12), 0.24 * _ppm(CAR_REST[1] + 170) * sc, 180)
 
 
 def impact1(img, s, t, M, sc):
@@ -420,11 +444,12 @@ def vroom(img, s, t, M, sc):
     q = 1 - (1 - min(1.0, u * 1.25)) ** 2
     x = 400 + (640 - 400) * q
     y = 708 - 4 * abs(math.sin(u * 22)) * (1 - q)
-    return sprite(img, "toy-car", *P(M, x, y), 0.24 * 300 * sc, 2 * math.sin(u * 30) * (1 - q), flip=True)
+    return sprite(img, "toy-car", *P(M, x, y), 0.24 * _ppm(780) * sc, 2 * math.sin(u * 30) * (1 - q), flip=True)
 
 
 def toy_box(img, s, t, M, sc):
-    return sprite(img, "toy-box", *P(M, 560, 745), 0.5 * 300 * sc)
+    from film.direction import ppm_at
+    return sprite(img, "toy-box", *P(M, 570, 770 - 0.15 * ppm_at("TW", 770)), 0.5 * ppm_at("TW", 770) * sc)
 
 
 def sparkle(img, s, t, M, sc):

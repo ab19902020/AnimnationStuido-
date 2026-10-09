@@ -246,7 +246,7 @@ def music(bus):
     s.y[:len(tremolo(["A3", "C4", "E4"], m("smash1") - m("cut_look")))] += \
         tremolo(["A3", "C4", "E4"], m("smash1") - m("cut_look")) * 0.5
     for k, nm in enumerate(("C6", "E6", "G6", "C7")):
-        i = int((m("cut_look") + 2.38 - s.t0 + 0.07 * k) * SR)
+        i = int((m("cut_look") + 1.78 - s.t0 + 0.07 * k) * SR)
         g = glock(nm, 0.9)
         s.y[i:i + len(g)] += g * 0.5
     bus.add(s.out(-30, 0.15, 0.004), m("cut_look"))
