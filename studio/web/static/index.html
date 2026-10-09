@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Animation Studio</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="dot"></span>Animation Studio</div>
+  <nav>
+    <a href="#episodes" data-view="episodes">Episodes</a>
+    <a href="#characters" data-view="characters">Characters</a>
+    <a href="#backgrounds" data-view="backgrounds">Backgrounds</a>
+    <a href="#jobs" data-view="jobs">Jobs <span id="jobs-badge" class="badge hidden">0</span></a>
+  </nav>
+</header>
+
+<main id="app"></main>
+
+<div id="modal" class="modal hidden"><div class="modal-box"><button class="modal-x" title="Close">&times;</button><div class="modal-body"></div></div></div>
+<div id="toast" class="toast hidden"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

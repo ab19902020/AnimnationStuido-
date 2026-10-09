@@ -14,6 +14,28 @@ Something was made with). A 60-second test of *The Appeals Department* is made w
 *United Road (Take Me Home)*: `episodes/united-road-take-me-home/` (the `music-video` skill). Not done: the rest of
 The Appeals Department. Gary Neville, Roy Keane and Jamie Carragher are still on off-style stand-in kits.
 
+## The web studio
+
+```bash
+python3 -m studio.web            # then open http://localhost:8000   (--host 0.0.0.0 --port N to share it)
+```
+
+The studio in a browser, on the same engine. **Characters**: upload a drawing (on white or transparent, or a model
+sheet and drag a box round the drawing to use); it is cut out whole, upscaled 4x and its face found, and *Fix
+face* sets the eyes and mouth by three clicks if detection misses. **Backgrounds**: upload an empty set (cropped
+to 16:9). **Episodes**: pick a set, add the cast and drag them to where they stand, write or paste the lines (who,
+said to whom, delivery, pauses), and give each character their recording (all their lines, in order, in one file)
+or a stand-in voice. Then *Stills*, *Make draft* (960 x 540) or *Make final* (1920 x 1080, with the contact and
+lip sheets). Jobs run one at a time and their logs are on the Jobs page.
+
+A web episode is an ordinary episode folder: `studio.json` (what the page edits), `script.md`, `voiceovers/` and a
+`film/` package of shims onto the auto-director (`studio/web/auto/`), which works out the edit, the shots (an
+establishing wide, close singles framed away from who they talk to with the set blurred behind at its true scale,
+two-shots, reaction cuts, name captions, the title card), the acting and the mix. So `python3 -m studio.film SLUG
+...` runs it like any other, and to direct it by hand you replace a shim with real code. Uploads are filed by the
+library rules (`library/characters/<id>/reference/`, `library/backgrounds/<setting>/`, the index rebuilt).
+Kit zips still go through Claude (`tools/import_kit.py`).
+
 ## How it works (the All or Something method)
 
 - **Whole drawings, never chopped.** A character is filmed as the drawings in their kit (each view's assembled
@@ -44,7 +66,7 @@ against it.
 | `library/audio/` | `voiceovers/<character id>/` (the voice bank), `sfx/`, `music/` |
 | `library/reference/`, `library/fonts/` | finished artwork kept for the look; fonts |
 | `episodes/<slug>/` | one folder per episode: `script.md` and `pack/` (the production pack as delivered), the voiceovers (`voiceovers/`, named `01-<character id>.mp3`), the production (`film/`, see "Making an episode"), the finished video. `build/` and `*_preview*.mp4` are regenerated and git-ignored |
-| `studio/` | the engine: `film/` (the house method), `ingest/` (kit sheets), `qc/` (grids and checks), `episode/` (speech tools, and the retired cut-out pipeline with its `rig/`, `anim/` and `face/`) |
+| `studio/` | the engine: `film/` (the house method), `web/` (the web studio and its auto-director), `ingest/` (kit sheets), `qc/` (grids and checks), `episode/` (speech tools, and the retired cut-out pipeline with its `rig/`, `anim/` and `face/`) |
 | `tools/` | importing kits, fetching models and sound effects (`get_sfx.py`), `index_library.py` (rebuilds the index and checks the library is tidy) |
 
 ## Characters

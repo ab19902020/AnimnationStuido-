@@ -16,7 +16,8 @@ Which drawings a character has is library/characters/<id>/film.yaml:
       talk:  {sheet: reference/model-sheet.png, box: [...], extend: 0.4, x8: true}   # waist-up gesture pose
 
   kit      the guide figure of library/characters/<id>/kit/<outfit>/<view>.png (its YAML says which drawing)
-  sheet    a box on any sheet in the character's folder; the paper is flood-filled away (model sheets, poses)
+  sheet    a box on any sheet in the character's folder; the paper is flood-filled away (model sheets, poses), or
+           a drawing already cut out on transparent keeps its own alpha
   faces    which way the drawing faces: F (front), L / R (turned towards the viewer's left / right), B (back)
   close_mouth   an open mouth (centre and radii, sheet px) painted shut so the lip sync can drive it
   extend   a waist-up drawing's body continued down by this fraction of its height (it never ends in mid-air)
@@ -96,8 +97,14 @@ def cut_kit(cid, ref):
 def cut_sheet(cid, path, box, holes=(), auto_holes=True):
     """a drawing on paper: the box upscaled, then the paper flood-filled away from the box border (the ink outline
     stops it); everything inside the outline is kept, so white eyes and shirts stay solid. -> (RGBA 4x, (x0, y0))"""
-    img = cv2.imread(str(CHARACTERS / cid / path), cv2.IMREAD_COLOR)
+    img = cv2.imread(str(CHARACTERS / cid / path), cv2.IMREAD_UNCHANGED)
     x0, y0, x1, y1 = box
+    if img.ndim == 2:
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    elif img.shape[2] == 4:
+        if (img[y0:y1, x0:x1, 3] < 128).mean() > 0.02:   # cut out already (a drawing on transparent): its own alpha
+            return upscale_rgba(cv2.cvtColor(img[y0:y1, x0:x1], cv2.COLOR_BGRA2RGBA)), (x0, y0)
+        img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
     im = x4(img[y0:y1, x0:x1])
     h, w = im.shape[:2]
     ff = cv2.GaussianBlur(im, (3, 3), 0)
