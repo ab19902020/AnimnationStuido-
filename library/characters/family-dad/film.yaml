@@ -13,12 +13,12 @@ drawings:
   walk3:    {sheet: reference/poses-walk-and-drive.png, box: [652, 23, 850, 410], faces: R, marks: {mouth: null}}
   walk4:    {sheet: reference/poses-walk-and-drive.png, box: [854, 26, 1034, 410], faces: R, marks: {mouth: null}}
   phone:    {sheet: reference/poses-walk-and-drive.png, box: [27, 408, 258, 732], faces: R, close_mouth: [138.5, 514.0, 17.0, 9.0], marks: {mouth: [123.5, 515.0, 153.5, 513.5, 138.5, 515.5]}}
-  panic:    {sheet: reference/poses-walk-and-drive.png, box: [267, 417, 493, 729], faces: F, marks: {mouth: null}}
+  panic:    {sheet: reference/poses-walk-and-drive.png, box: [267, 417, 493, 729], faces: F, holes: [[322, 538]], marks: {mouth: null}}
   facepalm: {sheet: reference/poses-walk-and-drive.png, box: [509, 426, 684, 733], faces: F, marks: {mouth: null}}
   drive:    {sheet: reference/poses-walk-and-drive.png, box: [797, 418, 1041, 752], faces: R, marks: {mouth: null}}
   carry:    {sheet: reference/poses-walk-and-drive.png, box: [14, 711, 344, 1051], faces: R, marks: {mouth: null}}
   shrug:    {sheet: reference/poses-walk-and-drive.png, box: [587, 732, 824, 1055], faces: F, marks: {mouth: [691.2, 809.2, 713.8, 807.4, 702.5, 810.6]}}
-  install:  {sheet: reference/poses-walk-and-drive.png, box: [281, 778, 650, 1073], faces: R, marks: {mouth: [450.2, 867.9, 466.0, 871.3, 458.1, 871.6]}}
+  install:  {sheet: reference/poses-walk-and-drive.png, box: [281, 778, 650, 1073], faces: R, holes: [[396, 989]], marks: {mouth: [450.2, 867.9, 466.0, 871.3, 458.1, 871.6]}}
   point:    {sheet: reference/poses-walk-and-drive.png, box: [798, 754, 1043, 1061], faces: R, marks: {mouth: null}}
   head:     {sheet: reference/poses-walk-and-drive.png, box: [124, 1039, 359, 1317], faces: F, marks: {mouth: null}}
   sofa:     {sheet: reference/poses-walk-and-drive.png, box: [429, 1056, 1025, 1315], faces: F, open_ground: false, marks: {mouth: null}}

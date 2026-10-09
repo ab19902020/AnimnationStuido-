@@ -12,19 +12,19 @@ drawings:
   walk2:    {sheet: reference/poses-walk-and-phone.png, box: [450, 24, 627, 479], faces: R, marks: {mouth: null}}
   walk3:    {sheet: reference/poses-walk-and-phone.png, box: [641, 26, 857, 478], faces: R, marks: {mouth: null}}
   walk4:    {sheet: reference/poses-walk-and-phone.png, box: [855, 28, 1034, 482], faces: R, marks: {mouth: null}}
-  hips:     {sheet: reference/poses-walk-and-phone.png, box: [19, 488, 217, 855], faces: R, marks: {mouth: [127.0, 622.5, 144.5, 622.5, 135.5, 619.5]}}
+  hips:     {sheet: reference/poses-walk-and-phone.png, box: [19, 488, 217, 855], faces: R, holes: [[89, 633], [80, 701], [165, 705], [80, 629], [103, 637], [188, 608]], marks: {mouth: [127.0, 622.5, 144.5, 622.5, 135.5, 619.5]}}
   scold:    {sheet: reference/poses-walk-and-phone.png, box: [241, 492, 458, 855], faces: R, marks: {mouth: null}}
   shock:    {sheet: reference/poses-walk-and-phone.png, box: [513, 488, 722, 869], faces: R, marks: {mouth: null}}
   rage:     {sheet: reference/poses-walk-and-phone.png, box: [728, 502, 1000, 852], faces: R, marks: {mouth: null}}
-  phone:    {sheet: reference/poses-walk-and-phone.png, box: [9, 859, 201, 1281], faces: R, close_mouth: [115.4, 980.5, 13.5, 7.5], marks: {mouth: [102.8, 980.0, 128.0, 980.0, 115.4, 981.5]}}
+  phone:    {sheet: reference/poses-walk-and-phone.png, box: [9, 859, 201, 1281], faces: R, close_mouth: [115.5, 983.0, 14.5, 10.5], holes: [[70, 997], [132, 1006], [66, 1066]], marks: {mouth: [104.0, 978.0, 128.0, 978.5, 116.0, 982.0]}}
   facepalm: {sheet: reference/poses-walk-and-phone.png, box: [218, 858, 382, 1283], faces: F, marks: {mouth: null}}
   crouch:   {sheet: reference/poses-walk-and-phone.png, box: [376, 934, 633, 1275], faces: R, marks: {mouth: null}}
-  toys:     {sheet: reference/poses-walk-and-phone.png, box: [621, 847, 854, 1271], faces: R, marks: {mouth: [722.2, 953.0, 741.7, 952.0, 731.5, 956.5]}}
+  toys:     {sheet: reference/poses-walk-and-phone.png, box: [621, 847, 854, 1271], faces: R, holes: [[690, 978]], marks: {mouth: [722.2, 953.0, 741.7, 952.0, 731.5, 956.5]}}
   tired:    {sheet: reference/poses-walk-and-phone.png, box: [827, 936, 1044, 1273], faces: F, open_ground: false, marks: {mouth: [971.5, 1056.3, 989.0, 1055.6, 980.2, 1055.1]}}
-  armchair: {sheet: reference/poses-and-expressions.png, box: [644, 613, 1097, 1104], faces: R, open_ground: false, marks: {mouth: [918.0, 775.6, 945.2, 776.1, 931.6, 780.0]}}
+  armchair: {sheet: reference/poses-and-expressions.png, box: [644, 613, 1097, 1104], faces: R, open_ground: false, holes: [[988, 784], [863, 622], [835, 637], [964, 674], [990, 723], [999, 763], [870, 800]], marks: {mouth: [918.0, 775.6, 945.2, 776.1, 931.6, 780.0]}}
   crossed:  {sheet: reference/poses-and-expressions.png, box: [330, 18, 542, 605], faces: R, marks: {mouth: [424.8, 202.9, 447.2, 203.6, 436.0, 199.1]}}
   # expression heads (head and shoulders), for close singles
-  angry:    {sheet: reference/poses-and-expressions.png, box: [245, 1114, 440, 1383], faces: R, head_frac: 0.85, marks: {mouth: [343.2, 1310.7, 367.5, 1311.0, 355.4, 1306.6]}}
+  angry:    {sheet: reference/poses-and-expressions.png, box: [245, 1114, 440, 1383], faces: R, head_frac: 0.85, holes: [[263, 1208]], marks: {mouth: [343.2, 1310.7, 367.5, 1311.0, 355.4, 1306.6]}}
   smirk:    {sheet: reference/poses-and-expressions.png, box: [891, 1117, 1090, 1384], faces: R, head_frac: 0.85, marks: {mouth: [991.2, 1292.3, 1016.5, 1300.0, 1003.9, 1299.2]}}
   cross:    {sheet: reference/poses-walk-and-phone.png, box: [143, 1289, 274, 1471], faces: R, head_frac: 0.85, marks: {mouth: [211.8, 1416.7, 227.8, 1417.2, 219.8, 1414.4]}}
   worried:  {sheet: reference/poses-walk-and-phone.png, box: [530, 1290, 662, 1471], faces: F, head_frac: 0.85, marks: {mouth: [597.0, 1416.5, 613.0, 1414.0, 605.0, 1413.0]}}

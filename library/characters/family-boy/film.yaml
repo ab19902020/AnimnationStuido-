@@ -13,7 +13,7 @@ drawings:
   walk3:   {sheet: reference/poses-walk-and-throw.png, box: [787, 93, 1025, 496], faces: R, marks: {mouth: null}}
   run:     {sheet: reference/poses-walk-and-throw.png, box: [16, 529, 248, 879], faces: R, marks: {mouth: null}}
   play:    {sheet: reference/poses-walk-and-throw.png, box: [236, 583, 514, 882], faces: F, marks: {mouth: null}}
-  wind:    {sheet: reference/poses-walk-and-throw.png, box: [512, 531, 770, 883], faces: R, marks: {mouth: null}}
+  wind:    {sheet: reference/poses-walk-and-throw.png, box: [512, 531, 770, 883], faces: R, holes: [[577, 703]], marks: {mouth: null}}
   throw:   {sheet: reference/poses-walk-and-throw.png, box: [761, 539, 1000, 883], faces: R, marks: {mouth: null}}
   point:   {sheet: reference/poses-walk-and-throw.png, box: [20, 913, 302, 1238], faces: R, marks: {mouth: null}}
   cheer:   {sheet: reference/poses-walk-and-throw.png, box: [532, 891, 766, 1241], faces: F, marks: {mouth: null}}
