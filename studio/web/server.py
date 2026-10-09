@@ -12,6 +12,10 @@ is needed: POST /api/characters?name=Roy%20Keane&filename=roy.png  <bytes>.
     POST /api/characters/<id>/build     {drawing}
     POST /api/characters/<id>/face      {drawing, eyes: [[x, y], [x, y]], mouth: [x, y]}   (built-drawing px)
     POST /api/backgrounds?title=&setting=&filename=     a new set
+    POST /api/productions {title}                      an episode to be produced from a pack: then
+    POST /api/episodes/<slug>/pack?filename=           every file of the pack (script, pictures, recordings, zips)
+    POST /api/episodes/<slug>/produce {quality}        read the pack (studio.web.autoprod) and make the film
+    GET  /api/episodes/<slug>/report                   what the import worked out
     GET  /api/episodes  POST /api/episodes {title}
     GET|PUT|DELETE /api/episodes/<slug>
     POST /api/episodes/<slug>/voice?cid=&filename=      a character's recording for the episode
@@ -191,6 +195,8 @@ class Handler(BaseHTTPRequestHandler):
             bid = P.add_background(q.get("title", ""), q.get("setting", ""), self.body(), q.get("filename", "set.png"),
                                    q.get("crop", "1") == "1")
             return dict(id=bid)
+        if what == "productions" and method == "POST":
+            return dict(slug=P.new_production(self.json_body().get("title", "")))
         if what == "episodes":
             return self.episodes(method, rest, q)
         if what == "jobs":
@@ -261,6 +267,15 @@ class Handler(BaseHTTPRequestHandler):
             if method == "DELETE":
                 P.delete_episode(slug)
                 return dict(ok=True)
+        if sub == "pack" and method == "POST":
+            return dict(file=P.add_to_pack(slug, self.body(), q.get("filename", "file")))
+        if sub == "produce" and method == "POST":
+            if not (P.EPISODES / slug / "pack").exists():
+                raise ApiError("upload the pack first")
+            b = self.json_body()
+            return dict(job=J.QUEUE.add(J.make_episode(slug, b.get("quality", "final") != "final", pack=True)).id)
+        if sub == "report" and method == "GET":
+            return P.report(slug) or {}
         if sub == "voice" and method == "POST":
             return dict(file=P.add_voice(slug, q["cid"], self.body(), q.get("filename", "voice.wav")))
         if sub == "make" and method == "POST":

@@ -1,18 +1,20 @@
 """A web episode's shot list, worked out the All or Something way from where everyone stands and who talks to whom.
 
-The set is one background with the cast standing in it at true scale (studio.json: x, floor, height). From that:
+Each scene is one background with its cast standing in it at true scale (studio.json scenes[k].stage). From that:
 
-  * the opening: the whole set, easing in on the cast while the place caption is up
+  * each scene opens on its whole set, easing in on the cast while the place caption is up
   * close singles on whoever is talking: the set behind them out of focus at the same scale it has in the wide
     (so the room stays the same room), the character placed on the side of the frame away from who they talk to,
-    turned towards them, with a slow push in; the last line gets a stronger push
+    turned towards them, with a slow push in, framed so the hanging hands stay out of shot; the last line of a
+    scene gets a stronger push
   * a cut on every change of speaker (on the gap before the line); a speaker who carries on for a long time gets a
     two-shot with whoever they are talking to; every few changes the scene opens out to a two-shot or the wide
   * a reaction: in a long line answered by the person it is said to, the cut to them comes early, on a word, so we
     see the line land before they answer
   * name captions on each character's first single, then the title card
 
-The geometry is in 1x background px (`plate px`) and 1920 x 1080 screen px, as in studio/film/shots.py."""
+The geometry is in 1x background px (`plate px`) and 1920 x 1080 screen px, as in studio/film/shots.py. Eyelines
+differ from scene to scene, so EYES follows the scene of the frame being rendered (set by shot_at)."""
 import json
 
 from studio.film import ep
@@ -24,7 +26,7 @@ L = json.loads(ep.path("lines.json").read_text())
 T = Marks(TL, L)
 m, ls, le = T.m, T.ls, T.le
 
-PLATES = {"S": S.BG}
+PLATES = {k: b for b, k in S.PLATE.items()}
 OCCL = {}
 WHIPS = []
 DRAW = {cid: S.draw(cid) for cid in S.WHO}
@@ -42,9 +44,7 @@ def _ensure_built():
 
 
 _ensure_built()
-from studio.film.cast import CAST, feet  # noqa: E402  (after the drawings exist)
-
-SX = 1920.0 / S.W1                    # screen px per plate px when the whole set fills the frame
+from studio.film.cast import CAST, feet, hands  # noqa: E402  (after the drawings exist)
 
 
 # ---------------------------------------------------------------- where everyone stands
@@ -54,40 +54,35 @@ def _faces_towards(cid, sgn):
     return (f == "R" and sgn < 0) or (f == "L" and sgn > 0)
 
 
-def _others_side(cid, x):
-    xs = [S.CAST[o]["x"] for o in S.WHO if o != cid]
-    if not xs:
-        return 0
-    mid = sum(xs) / len(xs)
-    return 1 if mid > x + 1e-6 else (-1 if mid < x - 1e-6 else 0)
-
-
-def _stand(cid):
-    """-> dict(x, eye (plate px), ed (plate px), mirror) for the character standing on the set"""
-    c = S.CAST[cid]
+def _stand(k, cid):
+    """-> dict(x, eye (plate px), ed (plate px), mirror) for the character standing on scene k's set"""
+    sc = S.SCENES[k]
+    W1, H1 = S.SIZE[sc["background"]]
+    c = sc["stage"][cid]
     d, info = CAST.get(DRAW[cid])
     top = d.oy
     bottom = d.oy + d.size(1.0)[1] / d.S
     fx, fy = feet(DRAW[cid])
-    k = float(c.get("height", 0.6)) * S.H1 / max(1.0, bottom - top)        # plate px per sheet px
-    x, floor = float(c.get("x", 0.5)) * S.W1, float(c.get("floor", 0.92)) * S.H1
-    mirror = _faces_towards(cid, _others_side(cid, c.get("x", 0.5)))
+    kk = float(c["height"]) * H1 / max(1.0, bottom - top)             # plate px per sheet px
+    x, floor = float(c["x"]) * W1, float(c["floor"]) * H1
+    xs = [v["x"] for o, v in sc["stage"].items() if o != cid]
+    mid = sum(xs) / len(xs) if xs else c["x"]
+    mirror = _faces_towards(cid, 0 if abs(mid - c["x"]) < 1e-6 else (1 if mid > c["x"] else -1))
     ax, ay = info["anchor"]
     sg = -1.0 if mirror else 1.0
-    return dict(x=x, eye=(x + sg * (ax - fx) * k, floor - (fy - ay) * k), ed=info["ed"] * k, mirror=mirror)
+    return dict(x=x, eye=(x + sg * (ax - fx) * kk, floor - (fy - ay) * kk), ed=info["ed"] * kk, mirror=mirror)
 
 
-STAND = {cid: _stand(cid) for cid in S.WHO}
+STAND = [{cid: _stand(k, cid) for cid in sc["stage"] if cid in S.CAST} for k, sc in enumerate(S.SCENES)]
 
 
 def _hands_clear(cid, ey=400):
     """the smallest eye distance (screen px) at which a single with the eyes at ey has the hanging hands below the
     frame: the house singles never show them (in a seated set a table edge would hide them)"""
-    from studio.film.cast import hands
     _, info = CAST.get(DRAW[cid])
     try:
         hs = hands(DRAW[cid])
-    except Exception:
+    except Exception:  # noqa: BLE001  (no hands found: no limit)
         hs = {}
     if not hs:
         return 0.0
@@ -99,71 +94,95 @@ def _hands_clear(cid, ey=400):
 HANDS = {cid: _hands_clear(cid) for cid in S.WHO}
 
 
-def side(a, b):
-    """screen direction from a to b: +1 right, -1 left, 0 (the lens, or the same spot)"""
-    if b not in STAND or a not in STAND:
+def side(k, a, b):
+    """screen direction from a to b in scene k: +1 right, -1 left, 0 (the lens, or not in the scene)"""
+    st = STAND[k]
+    if a not in st or b not in st:
         return 0
-    dx = STAND[b]["eye"][0] - STAND[a]["eye"][0]
+    dx = st[b]["eye"][0] - st[a]["eye"][0]
     return 0 if abs(dx) < 1 else (1 if dx > 0 else -1)
 
 
-# gaze towards characters out of frame in a single: screen direction (x, y) and head turn
-EYES = {a: {b: (0.75 * side(a, b), 0.04, 0.28 * side(a, b)) for b in S.WHO if b != a} for a in S.WHO}
+# gaze towards characters out of frame in a single, per scene: screen direction (x, y) and head turn
+SCENE_EYES = [{a: {b: (0.75 * side(k, a, b), 0.04, 0.28 * side(k, a, b)) for b in STAND[k] if b != a} for a in STAND[k]}
+              for k in range(len(S.SCENES))]
 
 
-def actor(cid):
-    st = STAND[cid]
-    return (cid, DRAW[cid], st["eye"], st["ed"], st["mirror"])
+class _Eyes(dict):
+    """the eyelines of the scene being rendered (studio/film/render.py reads D.EYES.get(who))"""
+    scene = 0
+
+    def get(self, who, default=None):
+        return SCENE_EYES[self.scene].get(who, default if default is not None else {})
+
+
+EYES = _Eyes()
+
+
+def actors(k):
+    return [(cid, DRAW[cid], st["eye"], st["ed"], st["mirror"]) for cid, st in STAND[k].items()]
+
+
+def plate_of(k):
+    b = S.SCENES[k]["background"]
+    return S.PLATE[b], S.SIZE[b]
 
 
 # ---------------------------------------------------------------- the kinds of shot
-def wide(t, who=None, push=1.12, z0=1.0, blur=0.0):
-    """the set with (some of) the cast in it, easing in on them"""
-    who = who or S.WHO
-    cx = sum(STAND[w]["eye"][0] for w in who) / len(who)
-    cy = sum(STAND[w]["eye"][1] for w in who) / len(who)
-    c0 = (S.W1 / 2, S.H1 / 2, z0)
-    c1 = (S.W1 / 2 + (cx - S.W1 / 2) * 0.5, S.H1 / 2 + (cy - S.H1 / 2) * 0.35, z0 * push)
-    return world(t, "S", c0, c1, layers=[("actors", [actor(w) for w in S.WHO])], drift=0.35, blur=blur)
+def wide(t, k, push=1.12, z0=1.0, blur=0.0, **extra):
+    """scene k's set with its cast in it, easing in on them"""
+    pk, (W1, H1) = plate_of(k)
+    st = STAND[k]
+    c0 = (W1 / 2, H1 / 2, z0)
+    if st:
+        cx = sum(v["eye"][0] for v in st.values()) / len(st)
+        cy = sum(v["eye"][1] for v in st.values()) / len(st)
+        c1 = (W1 / 2 + (cx - W1 / 2) * 0.5, H1 / 2 + (cy - H1 / 2) * 0.35, z0 * push)
+    else:
+        c1 = (W1 / 2, H1 / 2, z0 * push)
+    return world(t, pk, c0, c1, layers=[("actors", actors(k))], drift=0.35, blur=blur, scene=k, **extra)
 
 
-def two(t, a, b, push=1.05):
+def two(t, k, a, b, push=1.05):
     """a pair at true scale, framed so their eyes are about 520 px apart on screen"""
-    ea, eb = STAND[a]["eye"], STAND[b]["eye"]
-    gap = max(abs(ea[0] - eb[0]), 2.5 * max(STAND[a]["ed"], STAND[b]["ed"]))
+    pk, (W1, H1) = plate_of(k)
+    SX = 1920.0 / W1
+    ea, eb = STAND[k][a]["eye"], STAND[k][b]["eye"]
+    gap = max(abs(ea[0] - eb[0]), 2.5 * max(STAND[k][a]["ed"], STAND[k][b]["ed"]))
     z = min(3.2, max(1.15, 520.0 / (gap * SX)))
     sc = SX * z
     cx, cy = (ea[0] + eb[0]) / 2, (ea[1] + eb[1]) / 2 + (540 - 430) / sc
-    return world(t, "S", (cx, cy, z), (cx, cy, z * push), layers=[("actors", [actor(w) for w in S.WHO])],
-                 drift=0.5, blur=1.6)
+    return world(t, pk, (cx, cy, z), (cx, cy, z * push), layers=[("actors", actors(k))], drift=0.5, blur=1.6, scene=k)
 
 
-def close(t, who, to=None, ed=110.0, push=(1.0, 1.04)):
+def close(t, k, who, to=None, ed=110.0, push=(1.0, 1.04)):
     """a close single: the character on the side of the frame away from who they look at, the set behind them at
     the scale it has in the wide (out of focus)"""
-    st = STAND[who]
-    sgn = side(who, to) if to else 0
-    ex = 960 - 190 * sgn
-    ey = 400
+    pk, (W1, H1) = plate_of(k)
+    SX = 1920.0 / W1
+    st = STAND[k][who]
+    sgn = side(k, who, to) if to else 0
+    ex, ey = 960 - 190 * sgn, 400
     ed = max(ed, min(175.0, HANDS[who]))                 # tight enough that the hands are out of the frame
     z = min(4.0, max(1.2, ed / (st["ed"] * SX)))        # the set at the character's own scale
     sc = SX * z
-    bg = ("S", st["eye"][0] + (960 - ex) / sc, st["eye"][1] + (540 - ey) / sc, z, 4.5)
+    bg = (pk, st["eye"][0] + (960 - ex) / sc, st["eye"][1] + (540 - ey) / sc, z, 4.5)
     mirror = _faces_towards(who, sgn) if sgn else st["mirror"]
-    return single(t, who, DRAW[who], bg, None, ed=ed, eye=(ex, ey), push=push, drift=0.8, mirror=mirror)
+    return single(t, who, DRAW[who], bg, None, ed=ed, eye=(ex, ey), push=push, drift=0.8, mirror=mirror, scene=k)
 
 
 # ---------------------------------------------------------------- who each line is said to
 def _to(i):
     ln = S.LINES[i]
-    if ln.get("to") in S.CAST or ln.get("to") == "cam":
+    k = ln["scene"]
+    if ln.get("to") == "cam" or (ln.get("to") in STAND[k] and ln["to"] != ln["who"]):
         return ln["to"]
     for j in (i - 1, i + 1, i - 2, i + 2):            # the one they are answering, or the one who answers them
-        if 0 <= j < len(S.LINES) and S.LINES[j]["who"] != ln["who"]:
+        if 0 <= j < len(S.LINES) and S.LINES[j]["scene"] == k and S.LINES[j]["who"] != ln["who"]:
             return S.LINES[j]["who"]
-    others = [o for o in S.WHO if o != ln["who"]]
+    others = [o for o in STAND[k] if o != ln["who"]]
     if others:
-        return min(others, key=lambda o: abs(STAND[o]["x"] - STAND[ln["who"]]["x"]))
+        return min(others, key=lambda o: abs(STAND[k][o]["x"] - STAND[k][ln["who"]]["x"]))
     return "cam"
 
 
@@ -172,44 +191,48 @@ TO = {ln["id"]: _to(i) for i, ln in enumerate(S.LINES)}
 
 # ---------------------------------------------------------------- the edit
 def _shots():
-    out = [wide(0.0)]
     if not S.LINES:
-        return out
-    on = None                     # who the current single is on
-    since = 0.0                   # when the current shot started
-    changes = 0
+        return [wide(0.0, 0)]
+    out = []
     sizes = [(110.0, (1.0, 1.04)), (118.0, (1.0, 1.05)), (104.0, (1.0, 1.035))]
-    last = S.LINES[-1]["id"]
+    on = None
+    since = changes = 0
     for i, ln in enumerate(S.LINES):
-        lid, who, to = ln["id"], ln["who"], TO[ln["id"]]
-        t = m(f"pre_{lid}") if i else max(0.6, OPEN - 0.35)
+        lid, who, to, k = ln["id"], ln["who"], TO[ln["id"]], ln["scene"]
+        first = i == 0 or S.LINES[i - 1]["scene"] != k
+        last = i + 1 == len(S.LINES) or S.LINES[i + 1]["scene"] != k
+        if first:                                         # the scene's set, then in to the first speaker
+            t0 = 0.0 if i == 0 else m(f"scene_{k}")
+            out.append(wide(t0, k, opening=True))
+            t = max(t0 + 0.6, ls(lid) - 0.35)
+            on, changes = None, 0
+        else:
+            t = m(f"pre_{lid}")
         if who == on and ls(lid) - since < 7.0:
-            pass                                              # the same speaker carries on: no cut
-        elif who == on and to in S.CAST:
-            out.append(two(t, who, to))                        # carried on too long: open out to the pair
+            pass                                          # the same speaker carries on: no cut
+        elif who == on and to in STAND[k]:
+            out.append(two(t, k, who, to))                 # carried on too long: open out to the pair
             on, since = None, t
         else:
             changes += 1
-            if changes > 2 and changes % 5 == 4 and to in S.CAST:
-                out.append(two(t, who, to))
+            if changes > 2 and changes % 5 == 4 and to in STAND[k]:
+                out.append(two(t, k, who, to))
                 on = None
-            elif changes > 2 and changes % 7 == 6 and len(S.WHO) > 2:
-                out.append(wide(t, push=1.06, z0=1.08, blur=0.8))
+            elif changes > 2 and changes % 7 == 6 and len(STAND[k]) > 2:
+                out.append(wide(t, k, push=1.06, z0=1.08, blur=0.8))
                 on = None
             else:
                 ed, push = sizes[changes % 3]
-                if lid == last:
-                    push = (1.0, 1.08)
-                out.append(close(t, who, to, ed, push))
+                out.append(close(t, k, who, to, ed, (1.0, 1.08) if last else push))
                 on = who
             since = t
         # a reaction: a long line, answered by the one it is said to: cut to them on a word late in the line
-        nxt = S.LINES[i + 1] if i + 1 < len(S.LINES) else None
+        nxt = S.LINES[i + 1] if not last else None
         dur = le(lid) - ls(lid)
-        if nxt and nxt["who"] == to and to in S.CAST and dur > 4.0 and to != on:
+        if nxt and nxt["who"] == to and to in STAND[k] and dur > 4.0 and to != on:
             ws = [ls(lid) + w["s"] for w in L[lid]["words"] if 0.62 * dur < w["s"] < dur - 0.9]
             if ws:
-                out.append(close(ws[0], to, who, 110.0, (1.0, 1.03)))
+                out.append(close(ws[0], k, to, who, 110.0, (1.0, 1.03)))
                 on, since = to, ws[0]
     if "cut_title" in TL["marks"]:
         out.append(card(m("cut_title"), "title"))
@@ -230,8 +253,12 @@ TAGLINE = ((S.SPEC["tagline"].upper(), "BEBAS", 60, None, 5, 760, (236, 236, 236
 
 def _captions():
     caps = []
-    if S.SPEC.get("place"):
-        caps.append((0.35, max(0.6, OPEN - 0.45), "place", S.SPEC["place"].upper(), S.SPEC.get("place_sub", "")))
+    for s in SHOTS:
+        if s.get("opening"):
+            sc = S.SCENES[s["scene"]]
+            if sc.get("place"):
+                caps.append((s["t"] + 0.35, max(s["t"] + 0.6, s["end"] - 0.45), "place", sc["place"].upper(),
+                             sc.get("place_sub", "")))
     seen = set()
     for s in SHOTS:
         who = s.get("who")
@@ -246,4 +273,7 @@ CAPTIONS = _captions()
 
 
 def shot_at(t):
-    return _shot_at(SHOTS, t)
+    s = _shot_at(SHOTS, t)
+    if s.get("scene") is not None:
+        EYES.scene = s["scene"]
+    return s

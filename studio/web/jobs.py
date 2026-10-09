@@ -134,10 +134,11 @@ def web(slug, *args):
     return [PY, "-m", "studio.web.steps", slug, *args]
 
 
-def make_episode(slug, draft=True):
-    """the whole film: the drawings, the voices and lip sync, the edit, the mix, the picture"""
+def make_episode(slug, draft=True, pack=False):
+    """the whole film: (the pack read and filed,) the drawings, the voices and lip sync, the edit, the mix, the
+    picture"""
     cores = str(os.cpu_count() or 4)
-    steps = [("Cut out the cast", web(slug, "cast")),
+    steps = ([("Read the pack: script, cast, sets, voices", [PY, "-m", "studio.web.autoprod", slug])] if pack else []) + [("Cut out the cast", web(slug, "cast")),
              ("Voices and lip sync", web(slug, "voices")),
              ("The edit", film(slug, "timeline")),
              ("The mix", film(slug, "sound"))]
@@ -150,7 +151,8 @@ def make_episode(slug, draft=True):
                   ("Contact sheet", film(slug, "sheet")),
                   ("Lip sheet", film(slug, "lips"))]
         env = {}
-    return Job(f"{'Draft' if draft else 'Final'}: {slug}", steps, "episode", slug, env)
+    return Job(f"{'Production' if pack else 'Draft' if draft else 'Final'}{' (draft)' if pack and draft else ''}: {slug}",
+               steps, "episode", slug, env)
 
 
 def _draft(job, slug):

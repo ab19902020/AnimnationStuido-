@@ -5,11 +5,13 @@ import io
 import json
 import re
 import shutil
+from pathlib import Path
 
 import yaml
 from PIL import Image
 
 from studio.paths import BACKGROUNDS, BUILD, CHARACTERS, EPISODES, ROOT
+from studio.web.auto import normalize
 
 SETTINGS = ["stadiums", "training-ground", "club", "tv-and-media", "home", "spa-and-pool", "pub-and-restaurant",
             "nightlife", "street", "concert"]
@@ -327,7 +329,8 @@ def new_episode(title):
         slug = f"{base}-{k}"
         k += 1
     bg = next((b["id"] for b in backgrounds() if b["orientation"] == "landscape"), "")
-    sp = dict(title=title.strip(), show="", tagline="", place="", background=bg, cast=[], lines=[], open=2.2, hold=1.3)
+    sp = dict(title=title.strip(), show="", tagline="", cast=[], lines=[], open=2.2, hold=1.3,
+              scenes=[dict(name="", background=bg, place="", stage={})])
     save_episode(slug, sp)
     return slug
 
@@ -337,7 +340,11 @@ def load_episode(slug):
     f = d / "studio.json"
     if not f.exists():
         raise ValueError(f"{slug} is directed by hand (episodes/{slug}/film/): it can be watched, not edited, here")
-    sp = json.loads(f.read_text())
+    sp = normalize(json.loads(f.read_text()))
+    for c in sp["cast"]:                         # one recording or several
+        v = c.get("voice") or {}
+        if v.get("file") and not v.get("files"):
+            v["files"] = [v.pop("file")]
     vo = d / "voiceovers"
     sp["_files"] = sorted(p.name for p in vo.glob("*")) if vo.exists() else []
     return sp
@@ -347,7 +354,7 @@ def save_episode(slug, sp):
     """studio.json, script.md (the lines as a director's script) and the film/ shims"""
     d = EPISODES / slug
     (d / "film").mkdir(parents=True, exist_ok=True)
-    sp = {k: v for k, v in sp.items() if not k.startswith("_")}
+    sp = normalize({k: v for k, v in sp.items() if not k.startswith("_")})
     n = 0
     for ln in sp.get("lines", []):                 # line ids in order: L001, L002...
         n += 1
@@ -358,12 +365,17 @@ def save_episode(slug, sp):
         y = CHARACTERS / c["id"] / "character.yaml"
         info = yaml.safe_load(y.read_text()) if y.exists() else {}
         names[c["id"]] = kebab(info.get("short") or c["id"]).replace("-", "").upper()
-    script = [f"# {sp.get('title', slug)}", "", f"Made in the web studio: the set is `{sp.get('background', '')}`; "
-              "the production is `studio.json` (the cast, where they stand, their voices and the lines).", ""]
-    for ln in sp.get("lines", []):
-        if ln.get("text", "").strip():
-            script.append(f"[{ln['id']}] {names.get(ln['who'], ln['who'].upper())}: {ln['text'].strip()}")
-    (d / "script.md").write_text("\n".join(script) + "\n")
+    script = [f"# {sp.get('title', slug)}", "", "Made in the web studio: the production is `studio.json` (the scenes "
+              "and their sets, the cast, where they stand, their voices and the lines).", ""]
+    for k, sc in enumerate(sp["scenes"]):
+        script += [f"## SCENE {k + 1}" + (f" — {sc['name'].upper()}" if sc.get("name") else ""), "",
+                   f"*{sc.get('place') or sc['background']}*", ""]
+        for ln in sp.get("lines", []):
+            if ln.get("text", "").strip() and ln["scene"] == k:
+                script.append(f"[{ln['id']}] {names.get(ln['who'], ln['who'].upper())}: {ln['text'].strip()}")
+        script.append("")
+    if not sp.get("script_file"):                # a director's script, as delivered, is never overwritten
+        (d / "script.md").write_text("\n".join(script).rstrip() + "\n")
     f = d / "film" / "__init__.py"
     if not f.exists():
         f.write_text(f'"""{sp.get("title", slug)}, made in the web studio (studio/web): the film/ modules come from the\n'
@@ -385,13 +397,13 @@ def add_voice(slug, cid, data, filename):
     sp = load_episode(slug)
     order = [c["id"] for c in sp["cast"]]
     n = order.index(cid) + 1 if cid in order else len(order) + 1
-    for p in d.glob(f"*-{cid}.*"):
+    for p in list(d.glob(f"*-{cid}.*")) + list(d.glob(f"*-{cid}-*.*")):
         p.unlink()
     p = d / f"{n:02d}-{cid}{ext}"
     p.write_bytes(data)
     for c in sp["cast"]:
         if c["id"] == cid:
-            c["voice"] = dict(kind="recording", file=p.name)
+            c["voice"] = dict(kind="recording", files=[p.name])
     save_episode(slug, sp)
     return p.name
 
@@ -401,3 +413,40 @@ def delete_episode(slug):
     if not (d / "studio.json").exists():
         raise ValueError("only web episodes can be deleted here")
     shutil.rmtree(d)
+
+
+def new_production(title):
+    """an empty episode waiting for its pack"""
+    slug = kebab(title) or "new-episode"
+    base, k = slug, 2
+    while (EPISODES / slug).exists():
+        slug = f"{base}-{k}"
+        k += 1
+    (EPISODES / slug / "pack").mkdir(parents=True)
+    if title.strip():
+        (EPISODES / slug / "studio.json").write_text(json.dumps(dict(title=title.strip(), cast=[], lines=[],
+                                                                     scenes=[]), indent=1) + "\n")
+    return slug
+
+
+def add_to_pack(slug, data, filename):
+    """one file of a production pack, as delivered (byte for byte; the same file twice is kept once)"""
+    d = EPISODES / slug / "pack"
+    d.mkdir(parents=True, exist_ok=True)
+    name = re.sub(r"[/\\]", "_", filename).strip(". ") or "file"
+    digest = sha(data)
+    for p in d.rglob("*"):
+        if p.is_file() and p.stat().st_size == len(data) and sha(p.read_bytes()) == digest:
+            return p.name
+    p = d / name
+    k = 2
+    while p.exists():
+        p = d / f"{Path(name).stem}-{k}{Path(name).suffix}"
+        k += 1
+    p.write_bytes(data)
+    return p.name
+
+
+def report(slug):
+    f = EPISODES / slug / "build" / "import.json"
+    return json.loads(f.read_text()) if f.exists() else None

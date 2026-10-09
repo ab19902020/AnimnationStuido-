@@ -110,3 +110,9 @@ video { width: 100%; border-radius: 8px; background: #000; }
 .picker .pt { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; border: 2px solid #fff; pointer-events: none; }
 .picker .pt.eye { background: #2ecc71; } .picker .pt.mouth { background: var(--accent); }
 .empty { color: var(--muted); padding: 30px; text-align: center; }
+.panel.hero { border-color: #4a2a28; background: linear-gradient(160deg, #241a1a, var(--panel) 60%); }
+.drop.big { padding: 34px 18px; }
+.drop .drop-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.packlist { margin-top: 10px; }
+.tabs { margin: 6px 0 0; }
+.scenehead { margin: 12px 0 2px; padding-bottom: 4px; border-bottom: 1px solid var(--line); }

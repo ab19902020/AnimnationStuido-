@@ -20,21 +20,36 @@ The Appeals Department. Gary Neville, Roy Keane and Jamie Carragher are still on
 python3 -m studio.web            # then open http://localhost:8000   (--host 0.0.0.0 --port N to share it)
 ```
 
-The studio in a browser, on the same engine. **Characters**: upload a drawing (on white or transparent, or a model
-sheet and drag a box round the drawing to use); it is cut out whole, upscaled 4x and its face found, and *Fix
-face* sets the eyes and mouth by three clicks if detection misses. **Backgrounds**: upload an empty set (cropped
-to 16:9). **Episodes**: pick a set, add the cast and drag them to where they stand, write or paste the lines (who,
-said to whom, delivery, pauses), and give each character their recording (all their lines, in order, in one file)
-or a stand-in voice. Then *Stills*, *Make draft* (960 x 540) or *Make final* (1920 x 1080, with the contact and
-lip sheets). Jobs run one at a time and their logs are on the Jobs page.
+**Produce from a director's pack** (the Episodes page): drop in the director's script, a picture of each
+character, the sets and the voice recordings (or one zip), press *Produce*, and the studio makes the film with
+nobody choosing anything (`studio/web/autoprod.py`):
 
-A web episode is an ordinary episode folder: `studio.json` (what the page edits), `script.md`, `voiceovers/` and a
-`film/` package of shims onto the auto-director (`studio/web/auto/`), which works out the edit, the shots (an
-establishing wide, close singles framed away from who they talk to with the set blurred behind at its true scale,
-two-shots, reaction cuts, name captions, the title card), the acting and the mix. So `python3 -m studio.film SLUG
-...` runs it like any other, and to direct it by hand you replace a shim with real code. Uploads are filed by the
-library rules (`library/characters/<id>/reference/`, `library/backgrounds/<setting>/`, the index rebuilt).
-Kit zips still go through Claude (`tools/import_kit.py`).
+- the script (.md, .txt, .fountain, .docx, .pdf) is read for its title, scenes (`## SCENE` headings or
+  `INT.`/`EXT.` sluglines), lines (`[L001] GARY: ...` or `GARY: ...`; actor sheets repeating them are skipped),
+  deliveries (`(dry)` before a line) and stage directions (a beat before the next line);
+- every speaker becomes a character: a picture named for them (`Roy.png`; a model sheet's first figure is used),
+  else the library character of that name (the script's full names tell the two Garys apart);
+- pictures that aren't characters (landscape, filling the frame) are sets, filed in the library; each scene gets
+  the set its slugline or heading names best, and keeps the last one when it names none;
+- each recording goes to the speaker it is named for (`02-roy-keane.mp3`, `Roy take 2.wav`, `L012.wav`), else to
+  the speaker whose lines Whisper hears in it; speakers without one get a stand-in voice;
+- everyone who speaks in a scene stands in it (on the same set as the scene before, where they stood before);
+- then the drawings are cut out, the lines found and cut word-exact for the lip sync, and the film directed,
+  mixed and rendered (final 1920 x 1080 with contact and lip sheets, or a quick 960 x 540 draft).
+
+The episode page then shows what was worked out (and anything missing, such as a speaker with no picture) and
+everything stays editable: per-scene sets and staging (drag the characters), the cast's drawings and voices, the
+lines (who, to whom, delivery, pauses), stills, drafts and the final. **Characters** and **Backgrounds** can also
+be added one at a time: a drawing on white or transparent, or a sheet with a box dragged round the drawing; *Fix
+face* sets the eyes and mouth by three clicks if detection misses.
+
+A web episode is an ordinary episode folder: `studio.json` (what the page edits), `script.md`, `pack/` (the
+documents as delivered), `voiceovers/` and a `film/` package of shims onto the auto-director (`studio/web/auto/`),
+which works out the edit, the shots (each scene's establishing wide with a place caption, close singles framed
+away from who they talk to with the set blurred behind at its true scale, two-shots, reaction cuts, name
+captions, the title card), the acting and the mix. So `python3 -m studio.film SLUG ...` runs it like any other,
+and to direct it by hand you replace a shim with real code. Kit zips (four-sheet puppet kits) still go through
+Claude (`tools/import_kit.py`).
 
 ## How it works (the All or Something method)
 

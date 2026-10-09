@@ -24,7 +24,8 @@ MAXGAP = 0.22
 
 def load(slug):
     d = ep.use(slug)
-    sp = json.loads((d / "studio.json").read_text())
+    from studio.web.auto import normalize
+    sp = normalize(json.loads((d / "studio.json").read_text()))
     cast = {c["id"]: c for c in sp["cast"]}
     lines = [ln for ln in sp["lines"] if ln.get("text", "").strip() and ln.get("who") in cast]
     return d, sp, cast, lines
@@ -144,10 +145,11 @@ def voices(slug, force=False):
     for cid, c in cast.items():
         v = voice_of(c)
         if v["kind"] == "recording":
-            f = d / "voiceovers" / v.get("file", "")
-            if not v.get("file") or not f.exists():
+            files = v.get("files") or ([v["file"]] if v.get("file") else [])
+            fs = [d / "voiceovers" / f for f in files]
+            if not fs or not all(f.exists() for f in fs):
                 raise SystemExit(f"{cid}: their recording is missing; upload it or give them a stand-in voice")
-            recs.append((f, cid))
+            recs += [(f, cid) for f in fs]
     if recs:
         want = {ln["id"] for ln in lines if voice_of(cast[ln["who"]])["kind"] == "recording"}
         script = [(ln["id"], ln["who"], ln["text"]) for ln in lines]

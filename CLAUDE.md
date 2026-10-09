@@ -37,7 +37,8 @@ timing.
   Commit the sources and the finished `<slug>.mp4`; never `build/`. `studio/episode/` (the cut-out pipeline) is
   retired for episodes, but its speech tools are still used. A music video (a song to be performed) follows the
   `music-video` skill: `song` analyses the track, stage shots perform it.
-- The web studio (`python3 -m studio.web`, README "The web studio") makes episodes from `episodes/<slug>/studio.json`
+- The web studio (`python3 -m studio.web`, README "The web studio") produces episodes from an uploaded pack
+  (`studio/web/autoprod.py`: script, pictures, sets, recordings) into `episodes/<slug>/studio.json`, filmed
   through the auto-director (`studio/web/auto/`); their `film/*.py` are shims onto it. To polish one by hand, replace
   a shim with real code (the page then no longer drives that part). Characters uploaded there are `style: upload`.
 - Keep the repo root clean: no loose uploads or scratch files (use the session scratchpad).

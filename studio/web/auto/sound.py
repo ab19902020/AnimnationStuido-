@@ -1,5 +1,6 @@
-"""A web episode's mix: the dialogue with a little of the room, a recorded ambience bed chosen by the kind of set,
-and the title boom with its chord. python3 -m studio.film SLUG sound -> build/episode_audio.wav (-16 LUFS)"""
+"""A web episode's mix: the dialogue with a little of the room, under each scene a recorded ambience bed chosen by
+the kind of set, and the title boom with its chord. python3 -m studio.film SLUG sound -> build/episode_audio.wav
+(-16 LUFS)"""
 from studio.film import audio as A
 from studio.web.auto import spec as S
 from studio.web.auto.timeline import TL
@@ -15,9 +16,13 @@ ROOM = ("ambience/room-tone-hvac", -54, 3800)
 def main():
     dlg, amb, fx, mus = A.Bus(), A.Bus(), A.Bus(), A.Bus()
     A.dialogue(dlg, room_s=0.3, room_db=-24)
-    clip, level, lp = BEDS.get(S.BG.split("/")[0], ROOM)
     end = TL["marks"].get("cut_title", TL["total"])
-    A.bed(amb, clip, 0.0, end, level, lowpass=lp, fin=0.6, fout=0.05)
+    starts = [0.0] + [TL["marks"][f"scene_{k}"] for k in range(1, len(S.SCENES)) if f"scene_{k}" in TL["marks"]]
+    ks = [0] + [k for k in range(1, len(S.SCENES)) if f"scene_{k}" in TL["marks"]]
+    for j, k in enumerate(ks):                 # each scene's room, hard cut at the scene change
+        a, b = starts[j], starts[j + 1] if j + 1 < len(starts) else end
+        clip, level, lp = BEDS.get(S.SCENES[k]["background"].split("/")[0], ROOM)
+        A.bed(amb, clip, a, b, level, lowpass=lp, fin=0.6 if j == 0 else 0.004, fout=0.05)
     if "cut_title" in TL["marks"]:
         t = TL["marks"]["cut_title"]
         fx.add(A.at_level(A.big_boom(1.0), -16), t)

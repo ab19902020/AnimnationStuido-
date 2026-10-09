@@ -19,7 +19,7 @@ function h(tag, attrs = {}, ...kids) {
     else if (k === "html") el.innerHTML = v;
     else el.setAttribute(k, v === true ? "" : v);
   }
-  for (const k of kids.flat()) if (k !== null && k !== undefined && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
+  for (const k of kids.flat(Infinity)) if (k !== null && k !== undefined && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
   return el;
 }
 async function api(method, url, body, raw) {
@@ -114,16 +114,73 @@ async function route() {
 window.addEventListener("hashchange", route);
 
 // ---------------------------------------------------------------- episodes
+const KIND = name => {
+  const e = (name.match(/\.[a-z0-9]+$/i) || [""])[0].toLowerCase();
+  if ([".md", ".txt", ".fountain", ".docx", ".pdf"].includes(e)) return "script / notes";
+  if ([".png", ".jpg", ".jpeg", ".webp"].includes(e)) return "picture";
+  if ([".wav", ".mp3", ".m4a", ".flac", ".ogg"].includes(e)) return "recording";
+  if (e === ".zip") return "zip";
+  return "other";
+};
+
+async function uploadPack(slug, files, status) {
+  for (let i = 0; i < files.length; i++) {
+    status(`Uploading ${i + 1} of ${files.length}: ${files[i].name}`);
+    await api("POST", `/api/episodes/${slug}/pack?filename=${encodeURIComponent(files[i].name)}`, undefined, files[i]);
+  }
+}
+
+function packPanel() {
+  let files = [];
+  const title = h("input", { type: "text", placeholder: "Title (optional: read from the script)" });
+  const quality = h("select", {}, h("option", { value: "final" }, "Final film (1920 x 1080)"), h("option", { value: "draft" }, "Quick draft (960 x 540)"));
+  const list = h("div", { class: "packlist" });
+  const status = h("div", { class: "hint" });
+  const go = h("button", { class: "btn primary", disabled: true }, "Produce the episode");
+  const inp = h("input", { type: "file", multiple: true, class: "hidden" });
+  const zone = h("div", { class: "drop big" },
+    h("div", { class: "drop-title" }, "Drop the whole production here"),
+    h("div", {}, "The director's script, a picture of each character, the sets and the voice recordings (or one zip of it all). Click to choose files."), inp);
+  const add = fs => { for (const f of fs) if (!files.some(x => x.name === f.name && x.size === f.size)) files.push(f); show(); };
+  zone.onclick = () => inp.click();
+  inp.onchange = () => add(inp.files);
+  zone.ondragover = e => { e.preventDefault(); zone.classList.add("over"); };
+  zone.ondragleave = () => zone.classList.remove("over");
+  zone.ondrop = e => { e.preventDefault(); zone.classList.remove("over"); add(e.dataTransfer.files); };
+  function show() {
+    list.innerHTML = "";
+    const count = {};
+    files.forEach(f => count[KIND(f.name)] = (count[KIND(f.name)] || 0) + 1);
+    list.append(h("div", { class: "row" }, Object.entries(count).map(([k, n]) => h("span", { class: "tag ok" }, `${n} ${k}${n > 1 ? "s" : ""}`)),
+      files.length ? h("button", { class: "btn small ghost", onclick: () => { files = []; show(); } }, "Clear") : null));
+    list.append(h("div", { class: "hint" }, files.map(f => f.name).join(" · ")));
+    go.disabled = !files.length;
+  }
+  go.onclick = () => safe(async () => {
+    go.disabled = true;
+    const { slug } = await api("POST", "/api/productions", { title: title.value });
+    await uploadPack(slug, files, t => status.textContent = t);
+    const r = await api("POST", `/api/episodes/${slug}/produce`, { quality: quality.value });
+    sessionStorage.setItem("follow-" + slug, r.job);
+    location.hash = "episode/" + slug;
+  }).catch(() => { go.disabled = false; });
+  return h("div", { class: "panel hero" },
+    h("h2", {}, "Produce from a director's pack"),
+    h("p", { class: "hint" }, "The studio reads the script (scenes, lines, stage directions), works out who every speaker is (a picture named for them, or the library), sorts the pictures into characters and sets, gives each recording to whoever it is named for or whoever's lines it hears, stages every scene, then cuts out the characters, syncs the lips, directs, mixes and renders. Name pictures and recordings after the characters (Roy.png, 02-roy-keane.mp3) to be sure."),
+    zone, list, h("div", { class: "row", style: { marginTop: "10px" } }, title, quality, h("span", { class: "spacer" }), go), status);
+}
+
 async function viewEpisodes() {
   const eps = await api("GET", "/api/episodes");
-  const title = h("input", { type: "text", placeholder: "The title of the new episode" });
+  const title = h("input", { type: "text", placeholder: "Title of an episode to build by hand" });
   app.append(
     h("h1", {}, "Episodes"),
-    h("p", { class: "sub" }, "Pick a set, cast it, write the lines and give everyone a voice: the engine cuts the characters out, syncs their lips, directs the camera, mixes the sound and renders the film."),
-    h("div", { class: "panel row" }, title, h("button", { class: "btn primary", onclick: () => safe(async () => {
+    h("p", { class: "sub" }, "Upload a production and the studio makes the film: the cut-outs, the lip sync, the acting, the camera, the sound and the render."),
+    packPanel(),
+    h("div", { class: "panel row" }, title, h("button", { class: "btn", onclick: () => safe(async () => {
       const r = await api("POST", "/api/episodes", { title: title.value });
       location.hash = "episode/" + r.slug;
-    }) }, "New episode")),
+    }) }, "New empty episode"), h("span", { class: "hint" }, "Or start empty and set it up yourself: pick sets, cast, write lines.")),
     h("div", { class: "grid wide" }, eps.map(e => h("div", { class: "card", onclick: () => location.hash = "episode/" + e.slug },
       e.video || e.preview ? h("video", { src: fileUrl(e.video || e.preview) + "#t=6", preload: "metadata", muted: true, style: { aspectRatio: "16/9", borderRadius: 0 } }) : h("div", { class: "pic land", style: { background: "#26292f" } }),
       h("div", { class: "meta" }, h("div", { class: "name" }, e.title),
@@ -143,7 +200,8 @@ async function viewEpisode(slug) {
     return;
   }
   let outputs = {};
-  let selected = ep.cast[0] ? ep.cast[0].id : null;
+  let cur = 0;                                    // the scene being staged
+  let selected = null;
   let saveTimer = null;
   const save = (now) => {
     clearTimeout(saveTimer);
@@ -152,29 +210,76 @@ async function viewEpisode(slug) {
     if (now) return go();
     saveTimer = setTimeout(go, 600);
   };
+  const scene = () => ep.scenes[cur];
+  const nameOf = id => (charOf(id) || { name: id }).name;
+
+  // who stands in a scene: its staged cast and everyone who speaks in it, spread out where not placed
+  function staged(k) {
+    const sc = ep.scenes[k];
+    sc.stage = sc.stage || {};
+    for (const ln of ep.lines) if (ln.scene === k && ln.who && !sc.stage[ln.who]) {
+      const before = k && ep.scenes[k - 1].background === sc.background && (ep.scenes[k - 1].stage || {})[ln.who];
+      sc.stage[ln.who] = before ? { ...before } : {};        // the same set as before: they stay where they were
+    }
+    const ids = Object.keys(sc.stage).filter(id => ep.cast.some(c => c.id === id));
+    const free = ids.filter(id => sc.stage[id].x === undefined);
+    free.forEach((id, i) => { sc.stage[id].x = free.length === 1 ? 0.5 : +(0.22 + 0.56 * i / (free.length - 1)).toFixed(3); });
+    for (const id of ids) { sc.stage[id].floor ??= 0.93; sc.stage[id].height ??= 0.62; }
+    return ids;
+  }
 
   // header
   const fld = (label, key, ph) => h("label", { class: "f" }, label, h("input", { type: "text", value: ep[key] || "", placeholder: ph, oninput: e => { ep[key] = e.target.value; save(); } }));
   app.append(
     h("div", { class: "row" }, h("h1", {}, ep.title || slug), h("span", { class: "spacer" }), h("span", { id: "saved", class: "hint" }, "Saved"),
       h("button", { class: "btn ghost small", onclick: () => { if (confirm("Delete this episode and everything made for it?")) safe(async () => { await api("DELETE", `/api/episodes/${slug}`); location.hash = "episodes"; }); } }, "Delete")),
-    h("p", { class: "sub" }, `episodes/${slug}/`),
-    h("div", { class: "panel" }, h("div", { class: "fields" },
-      fld("Title", "title", "The title card"), fld("Show", "show", "Above the title (optional)"),
-      fld("Tagline", "tagline", "Under the title (optional)"), fld("Opening caption", "place", "Where we are (optional)"))));
+    h("p", { class: "sub" }, `episodes/${slug}/`));
+  const reportBox = h("div");
+  app.append(reportBox);
+  const makePanel = h("div", { class: "panel" });
+  app.append(makePanel);
+  app.append(h("div", { class: "panel" }, h("div", { class: "fields" },
+    fld("Title", "title", "The title card"), fld("Show", "show", "Above the title (optional)"), fld("Tagline", "tagline", "Under the title (optional)"))));
 
   const cols = h("div", { class: "cols" });
   const left = h("div"), right = h("div");
   cols.append(left, right);
   app.append(cols);
 
+  // ---- the import report
+  async function renderReport() {
+    const r = await api("GET", `/api/episodes/${slug}/report`);
+    reportBox.innerHTML = "";
+    if (!r || !r.script && !(r.missing || []).length) return;
+    const chars = Object.entries(r.characters || {}).map(([n, c]) => h("div", {}, h("strong", {}, n), ` = ${c.name} `, h("span", { class: "tag" }, c.source)));
+    const voices = Object.entries(r.voices || {}).map(([n, vs]) => h("div", {}, h("strong", {}, n), ": ",
+      vs.map(v => v.stand_in ? h("span", { class: "tag warn" }, `stand-in voice (${LIB.voices[v.stand_in] || v.stand_in})`) : h("span", { class: "tag ok" }, `${v.file} (${v.by})`))));
+    const more = h("input", { type: "file", multiple: true, class: "hidden", onchange: e => safe(async () => {
+      await uploadPack(slug, [...e.target.files], t => toast(t)); toast("Added to the pack: produce again to use them");
+    }) });
+    reportBox.append(h("div", { class: "panel" },
+      h("div", { class: "row" }, h("h2", {}, "What the studio worked out from the pack"), h("span", { class: "spacer" }),
+        h("button", { class: "btn small", onclick: () => more.click() }, "Add files to the pack"), more,
+        h("button", { class: "btn small", title: "Reads the pack again: the cast, sets and lines are worked out afresh", onclick: () => produce("final") }, "Read the pack again and produce")),
+      (r.missing || []).length ? h("div", { class: "tag bad", style: { fontSize: "13px", padding: "6px 10px" } }, `Needs a picture: ${r.missing.join(", ")} (name the file after them, e.g. ${r.missing[0][0]}${r.missing[0].slice(1).toLowerCase()}.png)`) : null,
+      h("div", { class: "cols", style: { marginTop: "8px" } },
+        h("div", {}, h("h3", {}, "Script"), h("div", {}, r.script || "none"), h("h3", { style: { marginTop: "10px" } }, "Cast"), chars,
+          h("h3", { style: { marginTop: "10px" } }, "Scenes"), (r.scenes || []).map((s, i) => h("div", {}, `${i + 1}. ${s.name || s.location || "scene"} → `, h("span", { class: "tag" }, s.set)))),
+        h("div", {}, h("h3", {}, "Voices"), voices,
+          (r.warnings || []).length ? [h("h3", { style: { marginTop: "10px" } }, "Notes"), r.warnings.map(w => h("div", { class: "hint" }, "• " + w))] : null))));
+  }
+
   // ---- the set and the staging
+  const sceneTabs = h("div", { class: "row tabs" });
+  const sceneFields = h("div", { class: "fields", style: { margin: "10px 0" } });
   const stage = h("div", { class: "stage" });
-  const stagePanel = h("div", { class: "panel" },
-    h("div", { class: "row" }, h("h2", {}, "The set"), h("span", { class: "spacer" }),
-      h("button", { class: "btn small", onclick: pickBackground }, "Change set")),
-    stage, h("p", { class: "hint" }, "Drag the characters to where they stand; their feet go where you drop them. The size slider on each one sets how tall they stand. The camera works out the shots from this."));
-  left.append(stagePanel);
+  const sizeRow = h("div", { class: "row", style: { marginTop: "8px" } });
+  left.append(h("div", { class: "panel" },
+    h("div", { class: "row" }, h("h2", {}, "Scenes and sets"), h("span", { class: "spacer" }),
+      h("button", { class: "btn small", onclick: pickBackground }, "Change set"),
+      h("button", { class: "btn small", onclick: () => { ep.scenes.push({ name: "", background: scene().background, place: "", stage: {} }); cur = ep.scenes.length - 1; save(); renderStage(); renderLines(); } }, "+ Scene")),
+    sceneTabs, sceneFields, stage, sizeRow,
+    h("p", { class: "hint" }, "Drag the characters to where they stand in this scene; their feet go where you drop them. The camera works out every shot from this.")));
 
   function drawingKey(c) { return c.drawing || "front"; }
   function actorImg(c) {
@@ -183,34 +288,65 @@ async function viewEpisode(slug) {
     return d && d.built ? thumbUrl(`build/film/${c.id}/${drawingKey(c)}.png`, 700, true) : charThumb(c.id);
   }
   function renderStage() {
+    cur = Math.min(cur, ep.scenes.length - 1);
+    sceneTabs.innerHTML = "";
+    ep.scenes.forEach((sc, k) => sceneTabs.append(h("button", { class: "btn small" + (k === cur ? " primary" : ""), onclick: () => { cur = k; selected = null; renderStage(); } },
+      `${k + 1}${sc.name ? " · " + sc.name : ""}`)));
+    if (ep.scenes.length > 1) sceneTabs.append(h("span", { class: "spacer" }), h("button", { class: "btn small ghost", onclick: () => {
+      if (!confirm("Delete this scene? Its lines move to the scene before it.")) return;
+      ep.lines.forEach(ln => { if (ln.scene === cur) ln.scene = Math.max(0, cur - 1); else if (ln.scene > cur) ln.scene -= 1; });
+      ep.scenes.splice(cur, 1); cur = Math.max(0, cur - 1); save(); renderStage(); renderLines();
+    } }, "Delete scene"));
+    sceneFields.innerHTML = "";
+    const sc = scene();
+    sceneFields.append(
+      h("label", { class: "f" }, "Scene name", h("input", { type: "text", value: sc.name || "", oninput: e => { sc.name = e.target.value; save(); } })),
+      h("label", { class: "f" }, "Caption on its opening shot", h("input", { type: "text", value: sc.place || "", placeholder: "Where we are (optional)", oninput: e => { sc.place = e.target.value; save(); } })),
+      h("label", { class: "f" }, "Set", h("div", { class: "hint" }, sc.background || "none chosen")));
     stage.innerHTML = "";
-    stage.style.backgroundImage = ep.background ? `url(${thumbUrl(`library/backgrounds/${ep.background}.png`, 720)})` : "";
-    for (const c of ep.cast) {
-      const ch = charOf(c.id);
-      const a = h("div", { class: "actor" + (c.id === selected ? " sel" : ""), style: { left: `${c.x * 100}%`, top: `${(c.floor - c.height) * 100}%`, height: `${c.height * 100}%` } },
-        h("img", { src: actorImg(c), alt: c.id }), h("div", { class: "lbl" }, ch ? ch.name : c.id));
+    stage.style.backgroundImage = sc.background ? `url(${thumbUrl(`library/backgrounds/${sc.background}.png`, 720)})` : "";
+    const ids = staged(cur);
+    for (const id of ids) {
+      const c = ep.cast.find(x => x.id === id);
+      const p = sc.stage[id];
+      const a = h("div", { class: "actor" + (id === selected ? " sel" : ""), style: { left: `${p.x * 100}%`, top: `${(p.floor - p.height) * 100}%`, height: `${p.height * 100}%` } },
+        h("img", { src: actorImg(c), alt: id }), h("div", { class: "lbl" }, nameOf(id)));
       a.onpointerdown = e => {
-        e.preventDefault(); selected = c.id; renderCast(); $$(".actor", stage).forEach(x => x.classList.remove("sel")); a.classList.add("sel");
+        e.preventDefault(); selected = id; $$(".actor", stage).forEach(x => x.classList.remove("sel")); a.classList.add("sel"); renderSize();
         a.setPointerCapture(e.pointerId);
         const r = stage.getBoundingClientRect();
-        const move = ev => {
-          c.x = Math.min(0.98, Math.max(0.02, (ev.clientX - r.left) / r.width));
-          c.floor = Math.min(1.2, Math.max(c.height * 0.3, (ev.clientY - r.top) / r.height));
-          c.x = Math.round(c.x * 1000) / 1000; c.floor = Math.round(c.floor * 1000) / 1000;
-          a.style.left = `${c.x * 100}%`; a.style.top = `${(c.floor - c.height) * 100}%`;
+        a.onpointermove = ev => {
+          p.x = Math.round(Math.min(0.98, Math.max(0.02, (ev.clientX - r.left) / r.width)) * 1000) / 1000;
+          p.floor = Math.round(Math.min(1.2, Math.max(p.height * 0.3, (ev.clientY - r.top) / r.height)) * 1000) / 1000;
+          a.style.left = `${p.x * 100}%`; a.style.top = `${(p.floor - p.height) * 100}%`;
         };
-        a.onpointermove = move;
         a.onpointerup = () => { a.onpointermove = null; save(); };
       };
       stage.append(a);
     }
+    renderSize();
+  }
+  function renderSize() {
+    sizeRow.innerHTML = "";
+    const sc = scene();
+    if (!selected || !sc.stage[selected]) { sizeRow.append(h("span", { class: "hint" }, "Click a character to size them or take them out of the scene.")); return; }
+    const p = sc.stage[selected];
+    const speaks = ep.lines.some(ln => ln.scene === cur && ln.who === selected);
+    sizeRow.append(h("strong", {}, nameOf(selected)), h("label", { class: "row hint" }, "Size",
+      h("input", { type: "range", min: 0.15, max: 1.4, step: 0.01, value: p.height, oninput: e => {
+        p.height = +e.target.value; const a = $$(".actor", stage).find(x => x.classList.contains("sel"));
+        if (a) { a.style.height = `${p.height * 100}%`; a.style.top = `${(p.floor - p.height) * 100}%`; } save();
+      } })), h("span", { class: "spacer" }),
+      speaks ? h("span", { class: "hint" }, "speaks in this scene") : h("button", { class: "btn small ghost", onclick: () => { delete sc.stage[selected]; selected = null; save(); renderStage(); } }, "Take out of this scene"),
+      h("select", { onchange: e => { if (e.target.value) { sc.stage[e.target.value] = {}; save(); renderStage(); } } },
+        h("option", { value: "" }, "+ Put someone else in"), ep.cast.filter(c => !sc.stage[c.id]).map(c => h("option", { value: c.id }, nameOf(c.id)))));
   }
   function pickBackground() {
     const grid = h("div", { class: "grid wide" }, LIB.backgrounds.filter(b => b.orientation === "landscape").map(b =>
-      h("div", { class: "card" + (b.id === ep.background ? " sel" : ""), onclick: () => { ep.background = b.id; save(); renderStage(); closeModal(); } },
+      h("div", { class: "card" + (b.id === scene().background ? " sel" : ""), onclick: () => { scene().background = b.id; save(); renderStage(); closeModal(); } },
         h("div", { class: "pic land", style: { backgroundImage: `url(${thumbUrl(b.path, 240)})` } }),
         h("div", { class: "meta" }, h("div", { class: "name" }, b.title), h("div", { class: "small" }, b.id)))));
-    modal("Choose the set", h("div", {}, h("p", { class: "hint" }, "Landscape sets only: the film is 16:9. Add your own on the Backgrounds page."), grid), true);
+    modal(`The set for scene ${cur + 1}`, h("div", {}, h("p", { class: "hint" }, "Landscape sets only: the film is 16:9. Add your own on the Backgrounds page."), grid), true);
   }
 
   // ---- the cast
@@ -219,7 +355,7 @@ async function viewEpisode(slug) {
   function renderCast() {
     castPanel.innerHTML = "";
     castPanel.append(h("div", { class: "row" }, h("h2", {}, "Cast"), h("span", { class: "spacer" }), h("button", { class: "btn small primary", onclick: addCast }, "+ Add character")));
-    if (!ep.cast.length) castPanel.append(h("div", { class: "empty" }, "Nobody is in this scene yet."));
+    if (!ep.cast.length) castPanel.append(h("div", { class: "empty" }, "Nobody is cast yet."));
     for (const c of ep.cast) {
       const ch = charOf(c.id) || { name: c.id, drawings: [] };
       c.voice = c.voice || { kind: "tts", voice: "bm_george", speed: 1.0 };
@@ -236,27 +372,25 @@ async function viewEpisode(slug) {
           h("label", { class: "f" }, `Pace ${(+v.speed || 1).toFixed(2)}`, h("input", { type: "range", min: 0.8, max: 1.25, step: 0.05, value: v.speed || 1,
             oninput: e => { v.speed = +e.target.value; e.target.previousSibling.textContent = `Pace ${v.speed.toFixed(2)}`; save(); } }))];
       } else {
-        const has = v.file && (ep._files || []).includes(v.file);
+        const fs = v.files || [];
+        const has = fs.length && fs.every(f => (ep._files || []).includes(f));
         const inp = h("input", { type: "file", accept: "audio/*", class: "hidden", onchange: e => uploadVoice(c, e.target.files[0]) });
-        voiceBits = [h("label", { class: "f" }, "Recording", h("div", { class: "row" },
-          h("span", { class: "tag " + (has ? "ok" : "bad") }, has ? v.file : "none yet"),
-          h("button", { class: "btn small", onclick: () => inp.click() }, has ? "Replace" : "Upload"), inp)),
-          h("div", { class: "hint", style: { gridColumn: "1 / -1" } }, "One file with all of this character's lines, read in script order. Each line is found in it by speech recognition and cut word-exact.")];
+        voiceBits = [h("label", { class: "f", style: { gridColumn: "1 / -1" } }, "Recordings", h("div", { class: "row" },
+          has ? fs.map(f => h("span", { class: "tag ok" }, f)) : h("span", { class: "tag bad" }, "none yet"),
+          h("button", { class: "btn small", onclick: () => inp.click() }, has ? "Replace" : "Upload"), inp))];
       }
-      const row = h("div", { class: "castrow" + (c.id === selected ? " sel" : ""), onclick: e => { if (selected !== c.id) { selected = c.id; renderStage(); $$(".castrow", castPanel).forEach(r => r.classList.remove("sel")); row.classList.add("sel"); } } },
+      castPanel.append(h("div", { class: "castrow" },
         h("div", { class: "face", style: { backgroundImage: `url(${charThumb(c.id)})` } }),
         h("div", {},
-          h("div", { class: "row" }, h("strong", {}, ch.name), ch.style === "provisional" ? h("span", { class: "tag warn" }, "stand-in kit") : null, h("span", { class: "spacer" }),
-            h("button", { class: "btn small ghost", title: "Remove from the scene", onclick: () => { ep.cast = ep.cast.filter(x => x !== c); save(); renderCast(); renderStage(); renderLines(); } }, "Remove")),
+          h("div", { class: "row" }, h("strong", {}, ch.name), ch.style === "provisional" ? h("span", { class: "tag warn" }, "stand-in kit") : null,
+            h("a", { class: "hint", href: "#character/" + c.id }, "drawings"), h("span", { class: "spacer" }),
+            h("button", { class: "btn small ghost", title: "Remove from the episode", onclick: () => {
+              ep.cast = ep.cast.filter(x => x !== c); ep.scenes.forEach(s => s.stage && delete s.stage[c.id]); save(); renderCast(); renderStage(); renderLines(); } }, "Remove")),
           h("div", { class: "fields" },
-            h("label", { class: "f" }, "Drawing", drawSel),
-            h("label", { class: "f" }, `Size ${Math.round(c.height * 100)}%`, h("input", { type: "range", min: 0.15, max: 1.4, step: 0.01, value: c.height,
-              oninput: e => { c.height = +e.target.value; e.target.previousSibling.textContent = `Size ${Math.round(c.height * 100)}%`; renderStage(); save(); } })),
-            h("label", { class: "f" }, "Voice from", kindSel), ...voiceBits,
+            h("label", { class: "f" }, "Drawing", drawSel), h("label", { class: "f" }, "Voice from", kindSel), ...voiceBits,
             h("label", { class: "f" }, "Caption", h("input", { type: "text", value: c.caption || "", placeholder: ch.role || "Under their name", oninput: e => set("caption", e.target.value) })),
             h("label", { class: "f" }, "Resting face", h("select", { onchange: e => set("mood", e.target.value) },
-              h("option", { value: "" }, "neutral"), LIB.tones.map(t => h("option", { value: t, selected: t === c.mood }, t)))))));
-      castPanel.append(row);
+              h("option", { value: "" }, "neutral"), LIB.tones.map(t => h("option", { value: t, selected: t === c.mood }, t))))))));
     }
   }
   async function uploadVoice(c, f) {
@@ -271,55 +405,64 @@ async function viewEpisode(slug) {
     const usable = LIB.characters.filter(c => c.drawings.length && !ep.cast.some(x => x.id === c.id));
     const grid = h("div", { class: "grid" }, usable.map(c => h("div", { class: "card", onclick: () => {
       const n = ep.cast.length;
-      const xs = [0.3, 0.7, 0.5, 0.15, 0.85, 0.4, 0.6];
-      ep.cast.push({ id: c.id, drawing: c.drawings[0].name, x: xs[n % xs.length], floor: 0.93, height: 0.62,
-        voice: { kind: "tts", voice: Object.keys(LIB.voices)[n % 4] || "bm_george", speed: 1.0 }, caption: "", mood: "" });
+      ep.cast.push({ id: c.id, drawing: c.drawings[0].name, voice: { kind: "tts", voice: Object.keys(LIB.voices)[n % 4] || "bm_george", speed: 1.0 }, caption: "", mood: "" });
+      scene().stage = scene().stage || {}; scene().stage[c.id] = {};
       selected = c.id;
       save(); renderCast(); renderStage(); renderLines(); closeModal();
     } }, h("div", { class: "pic", style: { backgroundImage: `url(${charThumb(c.id)})` } }),
       h("div", { class: "meta" }, h("div", { class: "name" }, c.name), h("div", { class: "small" }, c.role),
         c.drawings.some(d => d.built) ? h("span", { class: "tag ok" }, "ready") : h("span", { class: "tag" }, "cut on first use")))));
-    modal("Add a character to the scene", h("div", {}, h("p", { class: "hint" }, "Characters with drawings to film. Upload new ones on the Characters page."), grid), true);
+    modal("Add a character", h("div", {}, h("p", { class: "hint" }, `They join scene ${cur + 1}. Upload new characters on the Characters page.`), grid), true);
   }
 
   // ---- the script
   const linesPanel = h("div", { class: "panel" });
   app.append(linesPanel);
+  const blank = (k, who) => ({ who, to: "", text: "", tone: "", pause: "", scene: k });
   function renderLines() {
     linesPanel.innerHTML = "";
     const durs = outputs.lines || {};
     linesPanel.append(h("div", { class: "row" }, h("h2", {}, "Script"), h("span", { class: "spacer" }),
-      h("button", { class: "btn small", onclick: pasteScript }, "Paste a script"),
-      h("button", { class: "btn small primary", onclick: () => { ep.lines.push({ who: lastOther(), to: "", text: "", tone: "", pause: "" }); save(); renderLines(); const ins = $$(".line input[type=text]", linesPanel); ins.length && ins[ins.length - 1].focus(); } }, "+ Add line")));
-    if (!ep.cast.length) { linesPanel.append(h("div", { class: "empty" }, "Cast the scene first, then write who says what.")); return; }
+      h("button", { class: "btn small", onclick: pasteScript }, "Paste lines")));
+    if (!ep.cast.length) { linesPanel.append(h("div", { class: "empty" }, "Cast the episode first, then write who says what.")); return; }
     const list = h("div", { class: "lines" });
     list.append(h("div", { class: "line hint" }, h("span"), h("span", {}, "Who"), h("span", {}, "Line"), h("span", {}, "Said to"), h("span", {}, "Delivery"), h("span", {}, "Pause"), h("span")));
-    ep.lines.forEach((ln, i) => {
-      const set = (k, val) => { ln[k] = val; save(); };
-      const nameOf = id => (charOf(id) || { name: id }).name;
-      list.append(h("div", { class: "line" },
-        h("span", { class: "num" }, ln.id || `L${String(i + 1).padStart(3, "0")}`),
-        h("select", { onchange: e => set("who", e.target.value) }, ep.cast.map(c => h("option", { value: c.id, selected: c.id === ln.who }, nameOf(c.id)))),
-        h("div", {}, h("input", { type: "text", value: ln.text, placeholder: "What they say", oninput: e => set("text", e.target.value),
-          onkeydown: e => { if (e.key === "Enter") { ep.lines.splice(i + 1, 0, { who: otherThan(ln.who), to: "", text: "", tone: "", pause: "" }); save(); renderLines(); $$(".line input[type=text]", linesPanel)[i + 1].focus(); } } }),
-          durs[ln.id] ? h("span", { class: "dur" }, ` ${fmtT(durs[ln.id].dur)}`) : null),
-        h("select", { onchange: e => set("to", e.target.value) }, h("option", { value: "" }, "(worked out)"),
-          ep.cast.filter(c => c.id !== ln.who).map(c => h("option", { value: c.id, selected: c.id === ln.to }, nameOf(c.id))),
-          h("option", { value: "cam", selected: ln.to === "cam" }, "the camera")),
-        h("select", { onchange: e => set("tone", e.target.value) }, h("option", { value: "" }, "(from the text)"), LIB.tones.map(t => h("option", { value: t, selected: t === ln.tone }, t))),
-        h("input", { type: "number", min: 0, max: 10, step: 0.1, value: ln.pause ?? "", placeholder: "auto", title: "Seconds of silence before the line", oninput: e => set("pause", e.target.value) }),
-        h("div", { class: "row", style: { gap: "2px" } },
-          h("button", { class: "btn small ghost", title: "Move up", disabled: !i, onclick: () => { [ep.lines[i - 1], ep.lines[i]] = [ep.lines[i], ep.lines[i - 1]]; save(); renderLines(); } }, "↑"),
-          h("button", { class: "btn small ghost", title: "Delete", onclick: () => { ep.lines.splice(i, 1); save(); renderLines(); } }, "✕"))));
+    ep.scenes.forEach((sc, k) => {
+      list.append(h("div", { class: "scenehead row" }, h("strong", {}, `Scene ${k + 1}${sc.name ? " · " + sc.name : ""}`), h("span", { class: "hint" }, sc.background), h("span", { class: "spacer" }),
+        h("button", { class: "btn small", onclick: () => {
+          const last = ep.lines.map((l, i) => [l, i]).filter(([l]) => l.scene === k).pop();
+          const at = last ? last[1] + 1 : ep.lines.filter(l => l.scene < k).length;
+          ep.lines.splice(at, 0, blank(k, last ? otherThan(last[0].who) : (ep.cast[0] || {}).id)); save(); renderLines();
+        } }, "+ Line")));
+      ep.lines.forEach((ln, i) => {
+        if (ln.scene !== k) return;
+        const set = (key, val) => { ln[key] = val; save(); };
+        list.append(h("div", { class: "line" },
+          h("span", { class: "num" }, ln.id || ""),
+          h("select", { onchange: e => { set("who", e.target.value); renderStage(); } }, ep.cast.map(c => h("option", { value: c.id, selected: c.id === ln.who }, nameOf(c.id)))),
+          h("div", {}, h("input", { type: "text", value: ln.text, placeholder: "What they say", oninput: e => set("text", e.target.value),
+            onkeydown: e => { if (e.key === "Enter") { ep.lines.splice(i + 1, 0, blank(k, otherThan(ln.who))); save(); renderLines(); } } }),
+            durs[ln.id] ? h("span", { class: "dur" }, ` ${fmtT(durs[ln.id].dur)}`) : null),
+          h("select", { onchange: e => set("to", e.target.value) }, h("option", { value: "" }, "(worked out)"),
+            ep.cast.filter(c => c.id !== ln.who).map(c => h("option", { value: c.id, selected: c.id === ln.to }, nameOf(c.id))),
+            h("option", { value: "cam", selected: ln.to === "cam" }, "the camera")),
+          h("select", { onchange: e => set("tone", e.target.value) }, h("option", { value: "" }, "(from the text)"), LIB.tones.map(t => h("option", { value: t, selected: t === ln.tone }, t))),
+          h("input", { type: "number", min: 0, max: 10, step: 0.1, value: ln.pause ?? "", placeholder: "auto", title: "Seconds of silence before the line", oninput: e => set("pause", e.target.value) }),
+          h("div", { class: "row", style: { gap: "2px" } },
+            h("button", { class: "btn small ghost", title: "Move up", disabled: !i, onclick: () => {
+              const p = ep.lines[i - 1];
+              if (p.scene !== ln.scene) ln.scene = p.scene; else [ep.lines[i - 1], ep.lines[i]] = [ln, p];
+              save(); renderLines(); renderStage(); } }, "↑"),
+            h("button", { class: "btn small ghost", title: "Delete", onclick: () => { ep.lines.splice(i, 1); save(); renderLines(); } }, "✕"))));
+      });
     });
     linesPanel.append(list);
   }
   const otherThan = id => (ep.cast.find(c => c.id !== id) || ep.cast[0] || {}).id;
-  const lastOther = () => ep.lines.length ? otherThan(ep.lines[ep.lines.length - 1].who) : (ep.cast[0] || {}).id;
   function pasteScript() {
-    const ta = h("textarea", { rows: 14, style: { width: "100%" }, placeholder: "MICAH: Have you seen the state of this kitchen?\nCARRICK: I have. I made it like that on purpose.\n\nOne line each, NAME: what they say. [L001] numbers and (stage directions) are ignored." });
-    modal("Paste a script", h("div", {}, ta, h("div", { class: "row", style: { marginTop: "10px" } },
-      h("label", { class: "row hint" }, h("input", { type: "checkbox", id: "replace" }), "Replace the lines already there"), h("span", { class: "spacer" }),
+    const ta = h("textarea", { rows: 14, style: { width: "100%" }, placeholder: "MICAH: Have you seen the state of this kitchen?\nCARRICK: I have. I made it like that on purpose.\n\nOne line each, NAME: what they say. [L001] numbers and (stage directions) are ignored. Whole scripts with scenes: use Produce from a pack on the Episodes page." });
+    modal(`Paste lines into scene ${cur + 1}`, h("div", {}, ta, h("div", { class: "row", style: { marginTop: "10px" } },
+      h("span", { class: "spacer" }),
       h("button", { class: "btn primary", onclick: () => {
         const names = ep.cast.map(c => { const ch = charOf(c.id) || {}; return [c.id, [c.id, ch.name, ch.short, (ch.name || "").split(" ").slice(-1)[0]].filter(Boolean).map(s => s.toLowerCase().replace(/[^a-z0-9]/g, ""))]; });
         const out = [], missing = new Set();
@@ -330,28 +473,25 @@ async function viewEpisode(slug) {
           const key = m[1].toLowerCase().replace(/[^a-z0-9]/g, "");
           const hit = names.find(([, ns]) => ns.includes(key));
           if (!hit) { missing.add(m[1].trim()); continue; }
-          out.push({ who: hit[0], to: "", text: m[2].trim(), tone: "", pause: "" });
+          out.push(blank(cur, hit[0])); out[out.length - 1].text = m[2].trim();
         }
-        if ($("#replace").checked) ep.lines = out; else ep.lines.push(...out);
-        save(true); closeModal(); renderLines();
+        const last = ep.lines.map((l, i) => [l, i]).filter(([l]) => l.scene <= cur).pop();
+        ep.lines.splice(last ? last[1] + 1 : 0, 0, ...out);
+        save(true); closeModal(); renderLines(); renderStage();
         toast(`${out.length} lines added` + (missing.size ? `; not in the cast: ${[...missing].join(", ")}` : ""), missing.size > 0);
       } }, "Add the lines"))));
   }
 
   // ---- making it
-  const makePanel = h("div", { class: "panel" });
   const jobBox = h("div");
   const outBox = h("div");
-  left.append(makePanel);
-  makePanel.append(h("h2", {}, "Make it"),
-    h("p", { class: "hint" }, "Stills are quick frames to check the shots. A draft renders the whole film at 960 x 540; the final is 1920 x 1080 with a contact sheet and a lip-sync sheet. The first run cuts out the characters and fetches the speech models, so it takes longest."),
-    h("div", { class: "row" },
-      h("input", { type: "text", id: "still-t", placeholder: "Stills at (s), e.g. 3 8.5 12 (blank: every shot)", style: { flex: "1 1 220px" } }),
+  makePanel.append(h("div", { class: "row" }, h("h2", {}, "Make it"), h("span", { class: "spacer" }),
+      h("input", { type: "text", id: "still-t", placeholder: "Stills at (s): blank = every shot", style: { width: "230px" } }),
       h("button", { class: "btn", onclick: () => run("stills") }, "Stills"),
-      h("button", { class: "btn primary", onclick: () => run("draft") }, "Make draft"),
-      h("button", { class: "btn", onclick: () => run("final") }, "Make final")),
-    jobBox);
-  app.append(h("div", { class: "panel" }, h("h2", {}, "The film"), outBox));
+      h("button", { class: "btn", onclick: () => run("draft") }, "Draft"),
+      h("button", { class: "btn primary", onclick: () => run("final") }, "Final film")),
+    h("p", { class: "hint" }, "Stills: quick frames to check the shots. Draft: the whole film at 960 x 540. Final: 1920 x 1080 with a contact sheet and a lip-sync sheet."),
+    jobBox, outBox);
 
   async function run(kind) {
     await save(true);
@@ -362,12 +502,21 @@ async function viewEpisode(slug) {
     } else r = await safe(() => api("POST", `/api/episodes/${slug}/make`, { quality: kind }));
     follow(r.job);
   }
+  async function produce(quality) {
+    if (!confirm("Read the pack again? The cast, sets, staging and lines are worked out afresh from it (changes made here are replaced).")) return;
+    const r = await safe(() => api("POST", `/api/episodes/${slug}/produce`, { quality }));
+    follow(r.job);
+  }
   function follow(id) {
-    watch(id, j => {
+    watch(id, async j => {
       jobBox.innerHTML = ""; jobBox.append(jobView(j));
       const log = $("pre.log", jobBox); if (log) log.scrollTop = log.scrollHeight;
+      if (j.steps[0].startsWith("Read the pack") && (j.step > 0 || j.state !== "running") && !jobBox.dataset.reloaded) {
+        jobBox.dataset.reloaded = "1";               // the pack is read: show what came of it
+        await loadLib(); ep = await api("GET", `/api/episodes/${slug}`); renderAll();
+      }
       if (j.state === "done") { toast(j.title + ": done"); refreshOutputs(); }
-      if (j.state === "failed") toast(j.error, true);
+      if (j.state === "failed") { toast(j.error, true); renderReport(); }
     });
   }
   async function refreshOutputs() {
@@ -375,9 +524,9 @@ async function viewEpisode(slug) {
     const stills = await api("GET", `/api/episodes/${slug}/stills`);
     outBox.innerHTML = "";
     const vids = [];
-    if (outputs.video) vids.push(h("div", {}, h("h3", {}, "Final (1080p)"), h("video", { src: fileUrl(outputs.video.path) + `?v=${outputs.video.mtime}`, controls: true })));
+    if (outputs.video) vids.push(h("div", {}, h("h3", {}, "Final (1080p)"), h("video", { src: fileUrl(outputs.video.path) + `?v=${outputs.video.mtime}`, controls: true }),
+      h("a", { class: "btn small", href: fileUrl(outputs.video.path), download: `${slug}.mp4` }, "Download")));
     if (outputs.preview) vids.push(h("div", {}, h("h3", {}, "Draft"), h("video", { src: fileUrl(outputs.preview.path) + `?v=${outputs.preview.mtime}`, controls: true })));
-    if (!vids.length && !stills.length) outBox.append(h("div", { class: "empty" }, "Nothing made yet: try some stills, then a draft."));
     outBox.append(h("div", { class: "grid wide", style: { gridTemplateColumns: "repeat(auto-fill, minmax(420px, 1fr))" } }, vids));
     for (const [k, label] of [["contact", "Contact sheet: three frames of every shot"], ["lips", "Lip sync: the mouths on the stressed words"]]) {
       if (outputs[k]) outBox.append(h("h3", { style: { marginTop: "14px" } }, label), h("img", { class: "sheetimg", src: fileUrl(outputs[k].path) + `?v=${outputs[k].mtime}`, onclick: e => window.open(e.target.src) }));
@@ -386,10 +535,12 @@ async function viewEpisode(slug) {
       h("figure", {}, h("img", { src: fileUrl(s.path) + `?v=${s.mtime}`, onclick: e => window.open(e.target.src) }), h("figcaption", {}, fmtT(s.t))))));
     renderLines();
   }
+  function renderAll() { renderStage(); renderCast(); renderLines(); renderReport(); }
 
-  renderStage(); renderCast(); renderLines();
+  renderAll();
   await refreshOutputs();
-  const live = (await api("GET", "/api/jobs")).find(j => j.ref === slug && ["running", "queued"].includes(j.state));
+  const want = sessionStorage.getItem("follow-" + slug);
+  const live = (await api("GET", "/api/jobs")).find(j => j.ref === slug && (j.id === want || ["running", "queued"].includes(j.state)));
   if (live) follow(live.id);
 }
 
