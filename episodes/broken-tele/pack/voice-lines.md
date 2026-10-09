@@ -44,7 +44,7 @@ The boy's lines are already recorded.
 
 ---
 
-## MUM's lines (11)
+## MUM's lines (10)
 
 1. **L001** Five minutes of peace. That's all I want. *(sinking into the chair, a sigh)*
 2. **L002** Oi. Not near the telly. You'll break something. *(sharp "Oi", then a warning)*
@@ -57,7 +57,6 @@ The boy's lines are already recorded.
 9. **L020** Yes. We can see that. *(even flatter than before)*
 10. **L022** I can't do this anymore. We're getting a projector. *(exhausted, then decided)*
 
-*(10 lines.)*
 
 ## DAD's lines (11)
 
