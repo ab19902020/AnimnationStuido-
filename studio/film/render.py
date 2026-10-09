@@ -203,6 +203,34 @@ def cam_at(s, t):
     return tuple(a + (b - a) * u for a, b in zip(s["cam0"], s["cam1"]))
 
 
+def moving(opt, t, px, py, draw):
+    """a world actor on the move: opt "path" [(t, x, y)] (absolute times, 1x plate px of the eyes, eased between
+    keys), "cycle" ([drawings], drawings per second) swaps the drawing as it walks, "bob" (plate px) lifts it on
+    each step -> (x, y, drawing)"""
+    if opt.get("path"):
+        ks = opt["path"]
+        if t <= ks[0][0]:
+            px, py = ks[0][1:]
+        elif t >= ks[-1][0]:
+            px, py = ks[-1][1:]
+        else:
+            k = max(i for i, kk in enumerate(ks) if kk[0] <= t)
+            u = (t - ks[k][0]) / max(1e-3, ks[k + 1][0] - ks[k][0])
+            u = u if opt.get("linear") else ease(u)
+            px = ks[k][1] + (ks[k + 1][1] - ks[k][1]) * u
+            py = ks[k][2] + (ks[k + 1][2] - ks[k][2]) * u
+    if opt.get("cycle"):
+        seq, rate = opt["cycle"]
+        moving_now = not opt.get("path") or opt["path"][0][0] <= t < opt["path"][-1][0]
+        if moving_now:
+            i = int(t * rate) % len(seq)
+            draw = seq[i]
+            py -= opt.get("bob", 0.0) * abs(math.sin(math.pi * (t * rate % 1.0)))
+        elif opt.get("rest"):
+            draw = opt["rest"]
+    return px, py, draw
+
+
 def render_world(s, t):
     """the set at true scale; with `blur` the far wall is out of focus while the furniture named in ("near", mask)
     layers (behind the actors) and ("occl", mask) layers (in front of them) stays sharp, at the actors' depth"""
@@ -219,7 +247,8 @@ def render_world(s, t):
     for kind, val in s["layers"]:
         if kind == "actors":
             for a in val:
-                pos[a[0]] = M[0, 0] * a[2][0] + M[0, 2]
+                px = moving(a[5] if len(a) > 5 else {}, t, a[2][0], a[2][1], a[1])[0]
+                pos[a[0]] = M[0, 0] * px + M[0, 2]
     for kind, val in s["layers"]:
         if kind in ("occl", "near"):
             msk = P.mask(val, cx, cy, z)[..., None]
@@ -232,6 +261,9 @@ def render_world(s, t):
         for a in val:
             who, draw, (px, py), ed_p, mirror = a[:5]
             opt = a[5] if len(a) > 5 else {}
+            if "show" in opt and not opt["show"][0] <= t < opt["show"][1]:
+                continue
+            px, py, draw = moving(opt, t, px, py, draw)
             d, info = CAST.get(draw)
             ex, ey = M[0, 0] * px + M[0, 2], M[1, 1] * py + M[1, 2]
             k = ed_p * sc / info["ed"]

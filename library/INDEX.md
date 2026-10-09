@@ -21,6 +21,9 @@ Folder = id = the full name in kebab-case. Episodes refer to a character by id.
 | Diogo Dalot | [`diogo-dalot`](characters/diogo-dalot/) | player | home | no kit yet | 0 | 0 |
 | Eric Cantona | [`eric-cantona`](characters/eric-cantona/) | player | home | no kit yet | 1 | 0 |
 | Erling Haaland | [`erling-haaland`](characters/erling-haaland/) | player | home | 4/4 sheets checked | 3 | 0 |
+| The Boy | [`family-boy`](characters/family-boy/) | family | casual | no kit yet | 2 | 0 |
+| Dad | [`family-dad`](characters/family-dad/) | family | casual | no kit yet | 2 | 0 |
+| Mum | [`family-mum`](characters/family-mum/) | family | casual | no kit yet | 2 | 0 |
 | Gary Lineker | [`gary-lineker`](characters/gary-lineker/) | presenter | suit | 4/4 sheets checked | 1 | 0 |
 | Gary Neville (stand-in, off-style) | [`gary-neville`](characters/gary-neville/) | pundit | casual | 4/4 sheets checked | 0 | 0 |
 | Harry Maguire | [`harry-maguire`](characters/harry-maguire/) | player | home | no kit yet | 2 | 0 |
@@ -53,7 +56,7 @@ Puppet kit = the front, three-quarter, side and hands sheets, labelled part by p
 
 ## Backgrounds
 
-40 empty sets, by setting. Landscape fits the 16:9 episodes as they are; **portrait** ones (941x1672) need a landscape version or a crop first. Full details in [backgrounds.yaml](backgrounds/backgrounds.yaml).
+49 empty sets, by setting. Landscape fits the 16:9 episodes as they are; **portrait** ones (941x1672) need a landscape version or a crop first. Full details in [backgrounds.yaml](backgrounds/backgrounds.yaml).
 
 ### Stadiums
 
@@ -99,6 +102,13 @@ Puppet kit = the front, three-quarter, side and hands sheets, labelled part by p
 | [`home/garden`](backgrounds/home/garden.png) | Overcast Manchester Football Garden | portrait 941x1672 |
 | [`home/house-exterior`](backgrounds/home/house-exterior.png) | Cloudy Manchester Footballer’s Home | portrait 941x1672 |
 | [`home/living-room`](backgrounds/home/living-room.png) | Empty footballer living room | landscape 1672x941 |
+| [`home/family-living-room`](backgrounds/home/family-living-room.png) | The family living room, wide: L-shaped sofa, window, the telly on its unit at the right | portrait 941x1672 |
+| [`home/family-living-room-tv-wall`](backgrounds/home/family-living-room-tv-wall.png) | The family living room, low angle on the telly wall: the telly on its unit, the plant, the sofa arm | portrait 941x1672 |
+| [`home/family-living-room-corner`](backgrounds/home/family-living-room-corner.png) | The family living room from the sofa: coffee table, floor lamp, the telly at the right | portrait 941x1672 |
+| [`home/family-living-room-coffee-table`](backgrounds/home/family-living-room-coffee-table.png) | The family living room: sofa and blue throw, coffee table, the telly on its unit | portrait 941x1672 |
+| [`home/family-living-room-shelves`](backgrounds/home/family-living-room-shelves.png) | The family living room, wide, with the floating shelves over the telly | portrait 941x1672 |
+| [`home/family-office`](backgrounds/home/family-office.png) | Dad's office: desk with laptop and mug, black office chair, bookcase, window | portrait 516x734 |
+| [`home/family-hallway`](backgrounds/home/family-hallway.png) | The family's front hall: front door, side table and lamp, stairs, runner rug | portrait 515x742 |
 
 ### Spa and pool
 
@@ -132,6 +142,8 @@ Puppet kit = the front, three-quarter, side and hands sheets, labelled part by p
 | id | Set | Shape |
 |---|---|---|
 | [`street/manchester-matchday`](backgrounds/street/manchester-matchday.png) | Empty Manchester Street, Matchday Ready | landscape 1672x941 |
+| [`street/family-car-interior`](backgrounds/street/family-car-interior.png) | Dad's car from the passenger seat: dashboard, steering wheel, a sunny street outside | portrait 522x734 |
+| [`street/electronics-shop-tv-aisle`](backgrounds/street/electronics-shop-tv-aisle.png) | Electronics shop: the TV aisle, tellies on the wall over boxed tellies on the shelves | portrait 524x742 |
 
 ### Concert (Manchester Arena)
 
@@ -147,7 +159,7 @@ Puppet kit = the front, three-quarter, side and hands sheets, labelled part by p
 
 ## Props
 
-22 cut-out props (transparent PNG). Uncut sheets are in each set's `source/` folder.
+33 cut-out props (transparent PNG). Uncut sheets are in each set's `source/` folder.
 
 | id | Prop |
 |---|---|
@@ -173,6 +185,17 @@ Puppet kit = the front, three-quarter, side and hands sheets, labelled part by p
 | [`music/keyboard-on-stand`](props/music/keyboard-on-stand.png) | Red synth keyboard on an X stand |
 | [`music/microphone`](props/music/microphone.png) | Handheld microphone |
 | [`music/microphone-stand`](props/music/microphone-stand.png) | Microphone on a straight stand |
+| [`household/beach-ball`](props/household/beach-ball.png) | Beach ball: red, blue, yellow and white panels |
+| [`household/bin-bag`](props/household/bin-bag.png) | Full black bin bag, tied |
+| [`household/glass-shards`](props/household/glass-shards.png) | Pile of broken screen glass shards |
+| [`household/toy-box`](props/household/toy-box.png) | Wooden box of toys: teddy, rocket, ball, blocks, car |
+| [`household/toy-car`](props/household/toy-car.png) | Red toy racing car with a white stripe and a spoiler |
+| [`household/toy-dinosaur`](props/household/toy-dinosaur.png) | Green toy T-rex dinosaur |
+| [`household/toy-plane`](props/household/toy-plane.png) | Blue and white toy propeller plane |
+| [`household/tv`](props/household/tv.png) | Flat-screen television on two feet, screen off |
+| [`household/tv-box`](props/household/tv-box.png) | Cardboard box for a 55-inch 4K UHD television |
+| [`household/tv-cracked`](props/household/tv-cracked.png) | Television with its screen cracked from a single impact |
+| [`household/tv-smashed`](props/household/tv-smashed.png) | Television with a big jagged hole smashed through the screen |
 
 ## Extras (background cast)
 
@@ -188,4 +211,4 @@ Older finished 'Stick to Football' party artwork, kept for the look and the stag
 
 ## Audio
 
-Voice bank: 0 clips in 39 character folders; sound effects: 36; music: 0. See [audio/README.md](audio/README.md) for what goes where.
+Voice bank: 0 clips in 42 character folders; sound effects: 36; music: 0. See [audio/README.md](audio/README.md) for what goes where.

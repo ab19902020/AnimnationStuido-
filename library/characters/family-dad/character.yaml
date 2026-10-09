@@ -1,0 +1,15 @@
+name: Dad
+short: Dad
+role: family
+style: house
+likeness: Man in his thirties, messy dark-brown hair, light stubble, big round eyes, rosy cheeks; bold dark outline.
+outfits:
+  casual:
+    description: Navy-blue long-sleeve jumper with the sleeves pushed up, beige chinos rolled at the ankle, white
+      trainers.
+reference:
+  poses-and-expressions.png: 'Pose and expression sheet: standing hands in pockets, panicking, facepalm, carrying a
+    boxed TV, kneeling at a box of toys, pointing, slumped in an armchair; six expression heads'
+  poses-walk-and-drive.png: 'Pose sheet: standing, a four-drawing walk to the right, on the phone, panicking,
+    facepalm, driving (steering wheel), carrying a boxed TV, kneeling to unbox a TV, shrugging, pointing, hands on
+    head, slumped on a sofa; eight expression heads'

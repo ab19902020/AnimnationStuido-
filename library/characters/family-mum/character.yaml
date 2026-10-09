@@ -1,0 +1,16 @@
+name: Mum
+short: Mum
+role: family
+style: house
+likeness: Woman in her thirties with a big messy dark-brown top-knot bun and loose strands, large dark eyes with
+  lashes, rosy cheeks; bold dark outline.
+outfits:
+  casual:
+    description: Loose pink sweatshirt with the sleeves pushed up, black leggings, white trainers.
+reference:
+  poses-and-expressions.png: 'Pose and expression sheet: standing hand on hip, arms crossed, hands on hips glaring,
+    startled, laughing, pointing, relaxing in an armchair; five expression heads (happy, angry, startled,
+    exhausted sigh, smirk)'
+  poses-walk-and-phone.png: 'Pose sheet: standing, a four-drawing walk to the right, hands on hips, scolding with a
+    raised finger, startled, raging, on the phone, facepalm, crouching and pointing, carrying a box of toys, slumped
+    on a pouffe; eight expression heads'

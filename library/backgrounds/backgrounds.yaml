@@ -202,3 +202,66 @@ pub-and-restaurant/united-pub-stage-side-crowd:
   size: [1672, 941]
   orientation: landscape
   source: uploaded in chat (music video, 4 October 2026)
+home/family-living-room:
+  title: 'The family living room, wide: L-shaped sofa, window, the telly on its unit at the right'
+  size:
+  - 941
+  - 1672
+  orientation: portrait
+  source: family pack
+home/family-living-room-tv-wall:
+  title: 'The family living room, low angle on the telly wall: the telly on its unit, the plant, the sofa arm'
+  size:
+  - 941
+  - 1672
+  orientation: portrait
+  source: family pack
+home/family-living-room-corner:
+  title: 'The family living room from the sofa: coffee table, floor lamp, the telly at the right'
+  size:
+  - 941
+  - 1672
+  orientation: portrait
+  source: family pack
+home/family-living-room-coffee-table:
+  title: 'The family living room: sofa and blue throw, coffee table, the telly on its unit'
+  size:
+  - 941
+  - 1672
+  orientation: portrait
+  source: family pack
+home/family-living-room-shelves:
+  title: The family living room, wide, with the floating shelves over the telly
+  size:
+  - 941
+  - 1672
+  orientation: portrait
+  source: family pack
+home/family-office:
+  title: 'Dad''s office: desk with laptop and mug, black office chair, bookcase, window'
+  size:
+  - 516
+  - 734
+  orientation: portrait
+  source: crop of reference/family-office-car-hall-shop.png
+home/family-hallway:
+  title: 'The family''s front hall: front door, side table and lamp, stairs, runner rug'
+  size:
+  - 515
+  - 742
+  orientation: portrait
+  source: crop of reference/family-office-car-hall-shop.png
+street/family-car-interior:
+  title: 'Dad''s car from the passenger seat: dashboard, steering wheel, a sunny street outside'
+  size:
+  - 522
+  - 734
+  orientation: portrait
+  source: crop of reference/family-office-car-hall-shop.png
+street/electronics-shop-tv-aisle:
+  title: 'Electronics shop: the TV aisle, tellies on the wall over boxed tellies on the shelves'
+  size:
+  - 524
+  - 742
+  orientation: portrait
+  source: crop of reference/family-office-car-hall-shop.png

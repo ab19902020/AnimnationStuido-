@@ -110,3 +110,127 @@ music/microphone-stand:
   size: [169, 537]
   cut_from: music/source/instruments-sheet.png
   sheet_box: [864, 699, 1033, 1236]
+
+# household: the Broken Tele family's props, cut at 4x (4 px per sheet px) by studio.film.art.cut_sheet. The two
+# delivered sheets are in household/source/ (household-props-a.png is the earlier sheet, kept for its TV unit and box).
+household/beach-ball:
+  title: 'Beach ball: red, blue, yellow and white panels'
+  size:
+  - 666
+  - 669
+  cut_from: household/source/household-props-b.png
+  sheet_box:
+  - 25
+  - 923
+  - 205
+  - 1112
+household/bin-bag:
+  title: Full black bin bag, tied
+  size:
+  - 918
+  - 934
+  cut_from: household/source/household-props-b.png
+  sheet_box:
+  - 542
+  - 880
+  - 796
+  - 1133
+household/glass-shards:
+  title: Pile of broken screen glass shards
+  size:
+  - 649
+  - 798
+  cut_from: household/source/household-props-b.png
+  sheet_box:
+  - 789
+  - 911
+  - 1038
+  - 1125
+household/toy-box:
+  title: 'Wooden box of toys: teddy, rocket, ball, blocks, car'
+  size:
+  - 1259
+  - 968
+  cut_from: household/source/household-props-b.png
+  sheet_box:
+  - 211
+  - 882
+  - 552
+  - 1139
+household/toy-car:
+  title: Red toy racing car with a white stripe and a spoiler
+  size:
+  - 1140
+  - 751
+  cut_from: household/source/household-props-b.png
+  sheet_box:
+  - 30
+  - 687
+  - 329
+  - 890
+household/toy-dinosaur:
+  title: Green toy T-rex dinosaur
+  size:
+  - 1139
+  - 834
+  cut_from: household/source/household-props-b.png
+  sheet_box:
+  - 367
+  - 670
+  - 665
+  - 893
+household/toy-plane:
+  title: Blue and white toy propeller plane
+  size:
+  - 1266
+  - 755
+  cut_from: household/source/household-props-b.png
+  sheet_box:
+  - 700
+  - 694
+  - 1030
+  - 898
+household/tv:
+  title: Flat-screen television on two feet, screen off
+  size:
+  - 1785
+  - 1205
+  cut_from: household/source/household-props-b.png
+  sheet_box:
+  - 566
+  - 38
+  - 1032
+  - 353
+household/tv-box:
+  title: Cardboard box for a 55-inch 4K UHD television
+  size:
+  - 2009
+  - 1282
+  cut_from: household/source/household-props-b.png
+  sheet_box:
+  - 8
+  - 13
+  - 559
+  - 354
+household/tv-cracked:
+  title: Television with its screen cracked from a single impact
+  size:
+  - 1816
+  - 1236
+  cut_from: household/source/household-props-b.png
+  sheet_box:
+  - 34
+  - 352
+  - 507
+  - 675
+household/tv-smashed:
+  title: Television with a big jagged hole smashed through the screen
+  size:
+  - 1769
+  - 1225
+  cut_from: household/source/household-props-b.png
+  sheet_box:
+  - 560
+  - 352
+  - 1021
+  - 672

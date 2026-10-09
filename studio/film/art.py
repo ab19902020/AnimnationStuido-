@@ -23,8 +23,13 @@ Which drawings a character has is library/characters/<id>/film.yaml:
   x8       a second upscale pass for small drawings seen large
   marks    hand-set landmarks where detection can't see them (beards): {eyes, mouth, chin, neck, head}
   head     the head's box [x0, y0, x1, y1] (sheet px) if the automatic one (top of the figure) is wrong
+  head_frac  how far down the figure the automatic head box reaches (default 0.38; big-headed children more, a
+           head-and-shoulders drawing about 0.8); set for the whole character at the top of film.yaml
   plain    no face to animate (backs, walking poses seen small)
   holes    points in paper the drawing encloses that the cut keeps (between an arm and the body)
+  open_ground  true: paper and ground shadow joined to the sheet's paper without crossing an ink line are cut away
+           (between the legs above a shadow), so auto_holes can be false and white socks, soles and eyes stay; a
+           number (0.3) also clears paper caught between flyaway hair strands in that top fraction of the box
   auto_holes  false: keep flat paper-coloured patches inside the figure (cream boots, a white shirt drawn flat);
            by default they are taken out as enclosed paper (between the legs, closed off by the ground shadow)"""
 import argparse
@@ -93,7 +98,7 @@ def cut_kit(cid, ref):
     return out, (int(x0), int(y0))
 
 
-def cut_sheet(cid, path, box, holes=(), auto_holes=True):
+def cut_sheet(cid, path, box, holes=(), auto_holes=True, open_ground=False):
     """a drawing on paper: the box upscaled, then the paper flood-filled away from the box border (the ink outline
     stops it); everything inside the outline is kept, so white eyes and shirts stay solid. -> (RGBA 4x, (x0, y0))"""
     img = cv2.imread(str(CHARACTERS / cid / path), cv2.IMREAD_COLOR)
@@ -110,6 +115,25 @@ def cut_sheet(cid, path, box, holes=(), auto_holes=True):
         if g[y, x] > 200 and mask[y + 1, x + 1] == 0:
             cv2.floodFill(ff, mask, (int(x), int(y)), 0, (3, 3, 3), (3, 3, 3), flags)
     paper = mask[1:-1, 1:-1] > 0
+    gaps = np.zeros_like(paper)
+    if open_ground:
+        # the ground shadow under the feet closes off the paper between the legs: everything light and colourless
+        # that joins the paper without crossing an ink line is paper too (white socks, soles and eyes are inked)
+        hsv = cv2.cvtColor(ff, cv2.COLOR_BGR2HSV)
+        light = ((g > 188) & (hsv[..., 1] < 48)).astype(np.uint8)
+        n0, lab0 = cv2.connectedComponents(light, connectivity=4)
+        touch = np.unique(lab0[paper & (light > 0)])
+        paper |= np.isin(lab0, touch[touch > 0])
+        # paper caught between flyaway strands of hair at the top of the head: light patches within a strand's
+        # width of the paper, in the top part of the figure only (eye whites and white clothes are further in)
+        top = int(open_ground * h) if open_ground is not True else 0
+        if top:
+            near = cv2.dilate(paper.astype(np.uint8), np.ones((31, 31), np.uint8)) > 0
+            n1, lab1, st1, _ = cv2.connectedComponentsWithStats(light * (~paper).astype(np.uint8), 4)
+            for k in np.unique(lab1[near & (light > 0) & ~paper]):
+                if k and st1[k, cv2.CC_STAT_TOP] + st1[k, cv2.CC_STAT_HEIGHT] < top and st1[k, 4] < 0.004 * w * h:
+                    gaps |= lab1 == k
+            paper |= gaps
     fig = cv2.morphologyEx((~paper).astype(np.uint8), cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
     n, lab, st, _ = cv2.connectedComponentsWithStats(fig, 8)
     cx0, cy0, cx1, cy1 = int(0.3 * w), int(0.15 * h), int(0.7 * w), int(0.85 * h)
@@ -121,6 +145,7 @@ def cut_sheet(cid, path, box, holes=(), auto_holes=True):
         xx, yy, ww, hh, a = st2[k]
         if xx > 0 and yy > 0 and xx + ww < w and yy + hh < h and a < 0.02 * w * h:
             keep[lab2 == k] = 1
+    keep[gaps] = 0                               # but not the paper caught in the hair
     keep = cv2.erode(keep, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))     # 2 px inside the outline
     a = cv2.GaussianBlur(keep.astype(np.float32), (0, 0), 0.9)
     a = np.clip((a - 0.25) / 0.5, 0, 1)
@@ -208,7 +233,7 @@ def close_mouth(rgba, K, off, cx, cy, rx, ry):
     return out
 
 
-def extend_down(rgba, frac):
+def extend_down(rgba, frac, flat=False):
     """continue a waist-up body below the drawing's edge: its lowest wide row (arms excluded) repeated downwards,
     with the outline down both sides, so the figure runs out of the frame as a solid body"""
     im = cv2.cvtColor(np.ascontiguousarray(rgba[..., :3]), cv2.COLOR_RGB2BGR)
@@ -236,7 +261,7 @@ def extend_down(rgba, frac):
     if run is None:
         return rgba
     best = (run[1] - run[0], r, run)
-    for y in range(r, max(0, int(r - 0.08 * H)), -2):
+    for y in range(r, max(0, int(r - (0.3 if flat else 0.08) * H)), -2):
         rr = main_run(y)
         if rr and rr[1] - rr[0] > best[0]:
             best = (rr[1] - rr[0], y, rr)
@@ -247,6 +272,9 @@ def extend_down(rgba, frac):
     lum = band.mean(1)
     cloth = np.median(band[lum >= np.median(lum) * 0.6], 0)
     band[lum < np.median(lum) * 0.45] = cloth
+    if flat:                                     # a head-and-shoulders drawing: plain cloth, rounded by shading
+        u = np.linspace(-1, 1, len(band))[:, None]
+        band = np.repeat(cloth[None], len(band), 0) * (1 - 0.14 * u ** 2)
     ink = ink_of(rgba)[::-1]
     lw = max(4, int(0.004 * W + 3))
     ext = np.zeros((n, W, 3), np.uint8)
@@ -286,12 +314,13 @@ def make(cid, name, d):
         K = 4
     else:
         part, off = cut_sheet(cid, d["sheet"], d["box"], [tuple(h) for h in d.get("holes", [])],
-                              d.get("auto_holes", True))
+                              d.get("auto_holes", spec_of(cid).get("auto_holes", True)),
+                              d.get("open_ground", spec_of(cid).get("open_ground", False)))
         K = 4
     if d.get("close_mouth"):
         part = close_mouth(part, K, off, *d["close_mouth"])
     if d.get("extend"):
-        part = extend_down(part, d["extend"])
+        part = extend_down(part, d["extend"], d.get("head_frac", 0) > 0.6)
     ys, xs = np.nonzero(part[..., 3] > 5)
     bx0, by0 = max(0, xs.min() - 8), max(0, ys.min() - 8)
     bx1, by1 = min(part.shape[1], xs.max() + 9), min(part.shape[0], ys.max() + 9)
@@ -305,11 +334,11 @@ def make(cid, name, d):
 
 
 # ---------------------------------------------------------------- face landmarks
-def auto_head(part, meta):
-    """the head's box (sheet px): the top of the figure down to 38 % of its height"""
+def auto_head(part, meta, frac=0.38):
+    """the head's box (sheet px): the top of the figure down to `frac` (38 %) of its height"""
     a = part[..., 3] > 128
     ys, xs = np.nonzero(a)
-    y0, y1 = ys.min(), ys.min() + 0.38 * np.ptp(ys)
+    y0, y1 = ys.min(), ys.min() + frac * np.ptp(ys)
     band = a[int(y0):int(y1)]
     bx = np.nonzero(band.any(0))[0]
     K = meta["scale"]
@@ -458,10 +487,11 @@ def build(cid, only=(), force=False):
             mf.write_text(json.dumps(meta, indent=1))
             print(f"{cid} {name}: {m['size']} x{m['scale']}", file=sys.stderr)
         part = cv2.cvtColor(cv2.imread(str(f), cv2.IMREAD_UNCHANGED), cv2.COLOR_BGRA2RGBA)
+        frac = d.get("head_frac", sp.get("head_frac", 0.38))
         if d.get("plain"):
-            mk = dict(head=d.get("head") or auto_head(part, meta[name]))
+            mk = dict(head=d.get("head") or auto_head(part, meta[name], frac))
         else:
-            mk = marks(part, meta[name], d.get("head") or auto_head(part, meta[name]))
+            mk = marks(part, meta[name], d.get("head") or auto_head(part, meta[name], frac))
         mk.update(d.get("marks") or {})
         mks[name] = json.loads(json.dumps(mk, default=float))
         tiles.append((name, check_tile(part, meta[name], mks[name])))

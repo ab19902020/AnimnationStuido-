@@ -1,0 +1,17 @@
+name: The Boy
+short: Boy
+role: family
+style: house
+likeness: Small boy of about five, big round head, spiky messy brown hair, huge round eyes, rosy cheeks; bold dark
+  outline. Says very little and breaks televisions.
+outfits:
+  casual:
+    description: Bright blue short-sleeve T-shirt, navy shorts with a drawstring, white socks, blue and white
+      trainers.
+reference:
+  poses-and-expressions.png: 'Pose and expression sheet: standing, sitting with a ball, winding up and throwing a
+    ball, sneaking with a ball behind his back (finger to lips), cheering, arms crossed in a sulk, running; six
+    expression heads (big smile, grin, closed smile, angry, shocked, laughing)'
+  poses-walk-and-throw.png: 'Pose sheet: standing, a three-drawing walk to the right, running, playing on the
+    floor with a toy car, dinosaur and blocks, winding up and throwing a red ball, pointing, sneaking, cheering,
+    sulking; eight expression heads (big smile, grin, closed smile, angry, shocked, laughing, worried, crying)'

@@ -38,6 +38,10 @@ def prepare():
         for kind, val in s.get("layers", []):
             if kind == "actors":
                 keys.update(a["draw"] if isinstance(a, dict) else a[1] for a in val)
+                for a in val:                            # walking actors swap drawings (render.moving)
+                    opt = a[5] if not isinstance(a, dict) and len(a) > 5 else {}
+                    keys.update(opt.get("cycle", ([], 0))[0])
+                    keys.update([opt["rest"]] if opt.get("rest") else [])
             if kind == "sticks" and val.get("fist"):
                 keys.add(val["fist"])
     keys.update(getattr(D, "DRAW", {}).values())
@@ -161,6 +165,8 @@ def main():
                                    getattr(L, "EXTRA", None))
         else:                                  # one take per line (text-to-speech stand-ins)
             voices.build(ep.BUILD, L.lines(), L.MAXGAP, L.GAPS, L.TEMPO, getattr(L, "EXTRA", None))
+        if hasattr(L, "after"):                # hand-timed lines the aligner can't follow (a small child)
+            L.after(ep.BUILD)
     elif cmd == "song":                        # a music video: the beat grid, hits and singing mouths
         from studio.film import song
         if (d / "song-timing.json").exists():

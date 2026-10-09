@@ -1,0 +1,29 @@
+# Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
+# given face landmarks. Check build/film/family-boy_check.jpg after any change.
+# A = reference/poses-and-expressions.png, B = reference/poses-walk-and-throw.png
+# Sheet drawings on flat paper with a ground shadow: cut through the shadow (open_ground), keep white socks,
+# soles and eyes (auto_holes off). Big heads: the automatic head box reaches further down (head_frac).
+auto_holes: false
+open_ground: true
+head_frac: 0.5
+drawings:
+  stand:   {sheet: reference/poses-walk-and-throw.png, box: [40, 88, 218, 498], faces: F, marks: {mouth: null}}
+  walk1:   {sheet: reference/poses-walk-and-throw.png, box: [280, 96, 494, 495], faces: R, marks: {mouth: null}}
+  walk2:   {sheet: reference/poses-walk-and-throw.png, box: [532, 97, 760, 497], faces: R, marks: {mouth: null}}
+  walk3:   {sheet: reference/poses-walk-and-throw.png, box: [787, 93, 1025, 496], faces: R, marks: {mouth: null}}
+  run:     {sheet: reference/poses-walk-and-throw.png, box: [16, 529, 248, 879], faces: R, marks: {mouth: null}}
+  play:    {sheet: reference/poses-walk-and-throw.png, box: [236, 583, 514, 882], faces: F, marks: {mouth: null}}
+  wind:    {sheet: reference/poses-walk-and-throw.png, box: [512, 531, 770, 883], faces: R, marks: {mouth: null}}
+  throw:   {sheet: reference/poses-walk-and-throw.png, box: [761, 539, 1000, 883], faces: R, marks: {mouth: null}}
+  point:   {sheet: reference/poses-walk-and-throw.png, box: [20, 913, 302, 1238], faces: R, marks: {mouth: null}}
+  cheer:   {sheet: reference/poses-walk-and-throw.png, box: [532, 891, 766, 1241], faces: F, marks: {mouth: null}}
+  sneak:   {sheet: reference/poses-walk-and-throw.png, box: [296, 909, 522, 1239], faces: R, marks: {mouth: null}}
+  sit:     {sheet: reference/poses-and-expressions.png, box: [228, 247, 441, 556], faces: F, marks: {mouth: null}}
+  grump:   {sheet: reference/poses-walk-and-throw.png, box: [817, 900, 1004, 1243], faces: F, marks: {mouth: null}}
+  # expression heads (head and shoulders), for close singles
+  smile:   {sheet: reference/poses-walk-and-throw.png, box: [262, 1262, 388, 1442], faces: F, head_frac: 0.85,
+            marks: {mouth: [322.8, 1372.0, 354.5, 1369.5, 338.3, 1376.5], chin: 1397.0, neck: [338.0, 1412.0]}}
+  angry:   {sheet: reference/poses-walk-and-throw.png, box: [386, 1266, 520, 1442], faces: F, head_frac: 0.85, marks: {mouth: null}}
+  shocked: {sheet: reference/poses-walk-and-throw.png, box: [517, 1262, 646, 1442], faces: F, head_frac: 0.85, marks: {mouth: null}}
+  worried: {sheet: reference/poses-walk-and-throw.png, box: [773, 1266, 901, 1442], faces: F, head_frac: 0.85, marks: {mouth: null}}
+  happy:   {sheet: reference/poses-and-expressions.png, box: [380, 1075, 556, 1318], faces: F, head_frac: 0.85, marks: {mouth: null}}
