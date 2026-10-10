@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Animation Studio</title>
+<meta name="theme-color" content="#121316">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Studio">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/static/icon-192.png">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="dot"></span>Animation Studio</div>
+  <nav class="tabs-nav">
+    <a href="#produce" data-view="produce"><span class="ico">🎬</span><span>Produce</span></a>
+    <a href="#episodes" data-view="episodes"><span class="ico">🎞</span><span>Episodes</span></a>
+    <a href="#characters" data-view="characters"><span class="ico">🧍</span><span>Cast</span></a>
+    <a href="#backgrounds" data-view="backgrounds"><span class="ico">🏞</span><span>Sets</span></a>
+    <a href="#jobs" data-view="jobs"><span class="ico">⚙️</span><span>Jobs</span> <span id="jobs-badge" class="badge hidden">0</span></a>
+  </nav>
+</header>
+
+<main id="app"></main>
+
+<div id="modal" class="modal hidden"><div class="modal-box"><button class="modal-x" title="Close">&times;</button><div class="modal-body"></div></div></div>
+<div id="toast" class="toast hidden"></div>
+
+<script src="/static/app.js"></script>
+<script>
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+</script>
+</body>
+</html>

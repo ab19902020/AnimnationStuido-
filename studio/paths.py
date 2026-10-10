@@ -14,6 +14,7 @@ SFX = AUDIO / "sfx"
 MUSIC = AUDIO / "music"
 FONTS = LIBRARY / "fonts"
 EPISODES = ROOT / "episodes"
+SHOWS = ROOT / "shows"                    # <slug>/show.json: a show's cast, sets and voices; pack/: its directive
 MODELS = ROOT / "models"
 BUILD = ROOT / "build"
 

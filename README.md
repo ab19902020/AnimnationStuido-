@@ -14,6 +14,53 @@ Something was made with). A 60-second test of *The Appeals Department* is made w
 *United Road (Take Me Home)*: `episodes/united-road-take-me-home/` (the `music-video` skill). Not done: the rest of
 The Appeals Department. Gary Neville, Roy Keane and Jamie Carragher are still on off-style stand-in kits.
 
+## The web studio
+
+```bash
+python3 -m studio.web            # then open http://localhost:8000   (--host 0.0.0.0 --port N to share it)
+```
+
+**On a phone:** the studio runs on a server and installs on the phone's home screen as an app (password
+protected). `DEPLOY.md` has the steps; in short, tap
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/ab19902020/AnimnationStuido-),
+choose a password, and open the link Render gives you (any Docker host works too: `Dockerfile`).
+
+**Shows** (the Shows page): upload a show's directive (the show bible: title, tagline, cast list) with a picture of
+each character and its sets, and the show keeps that cast, those sets and a stand-in voice for each character
+(`shows/<slug>/show.json`). Each episode is then produced inside the show from its own directive or script: the
+show's characters, sets and voices are used without being uploaded again, and its title goes on the title card.
+
+**Produce from a director's pack** (a show's page, or the Episodes page for a one-off): drop in the director's script, a picture of each
+character, the sets and the voice recordings (or one zip), press *Produce*, and the studio makes the film with
+nobody choosing anything (`studio/web/autoprod.py`):
+
+- the script (.md, .txt, .fountain, .docx, .pdf) is read for its title, scenes (`## SCENE` headings or
+  `INT.`/`EXT.` sluglines), lines (`[L001] GARY: ...` or `GARY: ...`; actor sheets repeating them are skipped),
+  deliveries (`(dry)` before a line) and stage directions (a beat before the next line);
+- every speaker becomes a character: a picture named for them (`Roy.png`; a model sheet's first figure is used),
+  else the library character of that name (the script's full names tell the two Garys apart);
+- pictures that aren't characters (landscape, filling the frame) are sets, filed in the library; each scene gets
+  the set its slugline or heading names best, and keeps the last one when it names none;
+- each recording goes to the speaker it is named for (`02-roy-keane.mp3`, `Roy take 2.wav`, `L012.wav`), else to
+  the speaker whose lines Whisper hears in it; speakers without one get a stand-in voice;
+- everyone who speaks in a scene stands in it (on the same set as the scene before, where they stood before);
+- then the drawings are cut out, the lines found and cut word-exact for the lip sync, and the film directed,
+  mixed and rendered (final 1920 x 1080 with contact and lip sheets, or a quick 960 x 540 draft).
+
+The episode page then shows what was worked out (and anything missing, such as a speaker with no picture) and
+everything stays editable: per-scene sets and staging (drag the characters), the cast's drawings and voices, the
+lines (who, to whom, delivery, pauses), stills, drafts and the final. **Characters** and **Backgrounds** can also
+be added one at a time: a drawing on white or transparent, or a sheet with a box dragged round the drawing; *Fix
+face* sets the eyes and mouth by three clicks if detection misses.
+
+A web episode is an ordinary episode folder: `studio.json` (what the page edits), `script.md`, `pack/` (the
+documents as delivered), `voiceovers/` and a `film/` package of shims onto the auto-director (`studio/web/auto/`),
+which works out the edit, the shots (each scene's establishing wide with a place caption, close singles framed
+away from who they talk to with the set blurred behind at its true scale, two-shots, reaction cuts, name
+captions, the title card), the acting and the mix. So `python3 -m studio.film SLUG ...` runs it like any other,
+and to direct it by hand you replace a shim with real code. Kit zips (four-sheet puppet kits) still go through
+Claude (`tools/import_kit.py`).
+
 ## How it works (the All or Something method)
 
 - **Whole drawings, never chopped.** A character is filmed as the drawings in their kit (each view's assembled
@@ -44,7 +91,7 @@ against it.
 | `library/audio/` | `voiceovers/<character id>/` (the voice bank), `sfx/`, `music/` |
 | `library/reference/`, `library/fonts/` | finished artwork kept for the look; fonts |
 | `episodes/<slug>/` | one folder per episode: `script.md` and `pack/` (the production pack as delivered), the voiceovers (`voiceovers/`, named `01-<character id>.mp3`), the production (`film/`, see "Making an episode"), the finished video. `build/` and `*_preview*.mp4` are regenerated and git-ignored |
-| `studio/` | the engine: `film/` (the house method), `ingest/` (kit sheets), `qc/` (grids and checks), `episode/` (speech tools, and the retired cut-out pipeline with its `rig/`, `anim/` and `face/`) |
+| `studio/` | the engine: `film/` (the house method), `web/` (the web studio and its auto-director), `ingest/` (kit sheets), `qc/` (grids and checks), `episode/` (speech tools, and the retired cut-out pipeline with its `rig/`, `anim/` and `face/`) |
 | `tools/` | importing kits, fetching models and sound effects (`get_sfx.py`), `index_library.py` (rebuilds the index and checks the library is tidy) |
 
 ## Characters

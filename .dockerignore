@@ -1,0 +1,10 @@
+.git
+.claude
+build
+models/*
+!models/realesrgan_x4_anime6b.onnx
+!models/README.md
+**/__pycache__
+episodes/*/build
+episodes/*/*_preview*.mp4
+shows/*/build
