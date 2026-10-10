@@ -2,14 +2,15 @@
 # given face landmarks. Check build/film/jamie-carragher_check.jpg after any change.
 # The seated pose sheets are drawn to one scale (head height ~255 sheet px in every pose, both men): every drawing
 # is sized by the same eye distance, `ed: 59`, so heads match from cut to cut whichever way the eyes look. `jaw`
-# opens the mouths wider than the default (a moustache and stubble hide a small opening); the shouts more.
+# opens the mouths wider than the default: their mouths are drawn small for the face (a moustache and stubble
+# hide the rest), so at a normal speaking level the default jaw drop is only a slit; the shouts open more.
 drawings:
   front: {kit: casual/front, faces: F}          # the old provisional kit
-  shrug: {sheet: reference/poses-seated-1.png, box: [21, 5, 585, 684], faces: F, main: true, ed: 59, jaw: 1.35}
-  knees: {sheet: reference/poses-seated-1.png, box: [613, 33, 1032, 686], faces: F, main: true, ed: 59, jaw: 1.35}
-  thumb: {sheet: reference/poses-seated-1.png, box: [81, 683, 503, 1369], faces: F, main: true, ed: 59, jaw: 1.35}
-  arms: {sheet: reference/poses-seated-1.png, box: [478, 682, 1122, 1368], faces: F, main: true, ed: 59, close_mouth: [795, 848, 21, 10], close_fit: true, jaw: 1.35}
-  crossed: {sheet: reference/poses-seated-2.png, box: [93, 9, 529, 707], faces: R, main: true, ed: 59, jaw: 1.35}
-  point: {sheet: reference/poses-seated-2.png, box: [564, 15, 1104, 708], faces: R, main: true, ed: 59, close_mouth: [752, 217, 32, 20], close_fit: true, jaw: 1.55}
-  fist: {sheet: reference/poses-seated-2.png, box: [41, 712, 557, 1383], faces: R, main: true, ed: 59, close_mouth: [364, 905, 24, 13], close_fit: true, jaw: 1.35}
+  shrug: {sheet: reference/poses-seated-1.png, box: [21, 5, 585, 684], faces: F, main: true, ed: 59, jaw: 1.8}
+  knees: {sheet: reference/poses-seated-1.png, box: [613, 33, 1032, 686], faces: F, main: true, ed: 59, jaw: 1.8}
+  thumb: {sheet: reference/poses-seated-1.png, box: [81, 683, 503, 1369], faces: F, main: true, ed: 59, jaw: 1.8}
+  arms: {sheet: reference/poses-seated-1.png, box: [478, 682, 1122, 1368], faces: F, main: true, ed: 59, close_mouth: [795, 848, 21, 10], close_fit: true, jaw: 1.8}
+  crossed: {sheet: reference/poses-seated-2.png, box: [93, 9, 529, 707], faces: R, main: true, ed: 59, jaw: 1.8}
+  point: {sheet: reference/poses-seated-2.png, box: [564, 15, 1104, 708], faces: R, main: true, ed: 59, close_mouth: [752, 217, 32, 20], close_fit: true, jaw: 2.0}
+  fist: {sheet: reference/poses-seated-2.png, box: [41, 712, 557, 1383], faces: R, main: true, ed: 59, close_mouth: [364, 905, 24, 13], close_fit: true, jaw: 1.8}
   laugh: {sheet: reference/poses-seated-2.png, box: [676, 701, 1081, 1384], faces: R, main: true, ed: 59, plain: true}
