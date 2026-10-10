@@ -24,7 +24,7 @@ Folder = id = the full name in kebab-case. Episodes refer to a character by id.
 | Gary Lineker | [`gary-lineker`](characters/gary-lineker/) | presenter | suit | 4/4 sheets checked | 1 | 0 |
 | Gary Neville (stand-in, off-style) | [`gary-neville`](characters/gary-neville/) | pundit | casual | 4/4 sheets checked | 0 | 0 |
 | Harry Maguire | [`harry-maguire`](characters/harry-maguire/) | player | home | no kit yet | 2 | 0 |
-| Jamie Carragher (stand-in, off-style) | [`jamie-carragher`](characters/jamie-carragher/) | pundit | casual | 4/4 sheets checked | 0 | 0 |
+| Jamie Carragher (stand-in, off-style) | [`jamie-carragher`](characters/jamie-carragher/) | pundit | casual | 4/4 sheets checked | 5 | 0 |
 | Jim Ratcliffe | [`jim-ratcliffe`](characters/jim-ratcliffe/) | owner | casual | 4/4 sheets checked | 2 | 0 |
 | Joshua Zirkzee | [`joshua-zirkzee`](characters/joshua-zirkzee/) | player | home | no kit yet | 0 | 0 |
 | Kobbie Mainoo | [`kobbie-mainoo`](characters/kobbie-mainoo/) | player | home | no kit yet | 1 | 0 |
@@ -32,6 +32,7 @@ Folder = id = the full name in kebab-case. Episodes refer to a character by id.
 | Lisandro Martínez | [`lisandro-martinez`](characters/lisandro-martinez/) | player | home | no kit yet | 0 | 0 |
 | Luke Shaw | [`luke-shaw`](characters/luke-shaw/) | player | home | no kit yet | 1 | 0 |
 | Manuel Ugarte | [`manuel-ugarte`](characters/manuel-ugarte/) | player | home | no kit yet | 0 | 0 |
+| Mark Goldbridge | [`mark-goldbridge`](characters/mark-goldbridge/) | pundit | casual | no kit yet | 5 | 0 |
 | Mason Mount | [`mason-mount`](characters/mason-mount/) | player | home | no kit yet | 0 | 0 |
 | Matheus Cunha | [`matheus-cunha`](characters/matheus-cunha/) | player | home | 4/4 sheets checked | 3 | 0 |
 | Matthijs de Ligt | [`matthijs-de-ligt`](characters/matthijs-de-ligt/) | player | home | no kit yet | 0 | 0 |
@@ -53,7 +54,7 @@ Puppet kit = the front, three-quarter, side and hands sheets, labelled part by p
 
 ## Backgrounds
 
-40 empty sets, by setting. Landscape fits the 16:9 episodes as they are; **portrait** ones (941x1672) need a landscape version or a crop first. Full details in [backgrounds.yaml](backgrounds/backgrounds.yaml).
+41 empty sets, by setting. Landscape fits the 16:9 episodes as they are; **portrait** ones (941x1672) need a landscape version or a crop first. Full details in [backgrounds.yaml](backgrounds/backgrounds.yaml).
 
 ### Stadiums
 
@@ -89,6 +90,7 @@ Puppet kit = the front, three-quarter, side and hands sheets, labelled part by p
 |---|---|---|
 | [`tv-and-media/crisis-control-room`](backgrounds/tv-and-media/crisis-control-room.png) | Lavish football crisis control room | landscape 1672x941 |
 | [`tv-and-media/podcast-studio`](backgrounds/tv-and-media/podcast-studio.png) | Empty Football Podcast Studio | landscape 1672x941 |
+| [`tv-and-media/two-chair-pundit-studio`](backgrounds/tv-and-media/two-chair-pundit-studio.png) | Two-chair pundit studio (red and blue walls, stadium screen, two grey armchairs angled in, round wooden table) | landscape 1672x941 |
 | [`tv-and-media/press-conference-room`](backgrounds/tv-and-media/press-conference-room.png) | Empty Football Press Conference Room | landscape 1672x941 |
 
 ### Home
@@ -188,4 +190,4 @@ Older finished 'Stick to Football' party artwork, kept for the look and the stag
 
 ## Audio
 
-Voice bank: 0 clips in 39 character folders; sound effects: 36; music: 0. See [audio/README.md](audio/README.md) for what goes where.
+Voice bank: 0 clips in 40 character folders; sound effects: 36; music: 0. See [audio/README.md](audio/README.md) for what goes where.

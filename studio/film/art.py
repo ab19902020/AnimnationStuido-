@@ -20,12 +20,15 @@ Which drawings a character has is library/characters/<id>/film.yaml:
            a drawing already cut out on transparent keeps its own alpha
   faces    which way the drawing faces: F (front), L / R (turned towards the viewer's left / right), B (back)
   close_mouth   an open mouth (centre and radii, sheet px) painted shut so the lip sync can drive it
+  close_fit     true: close_mouth masks the drawn opening itself (rim, teeth, tongue) instead of an ellipse
   extend   a waist-up drawing's body continued down by this fraction of its height (it never ends in mid-air)
   x8       a second upscale pass for small drawings seen large
   marks    hand-set landmarks where detection can't see them (beards): {eyes, mouth, chin, neck, head}
   head     the head's box [x0, y0, x1, y1] (sheet px) if the automatic one (top of the figure) is wrong
   plain    no face to animate (backs, walking poses seen small)
   holes    points in paper the drawing encloses that the cut keeps (between an arm and the body)
+  main     true: a box on a sheet of drawings on transparent keeps only the figure in its middle (pose sheets
+           whose neighbouring poses reach into the box)
   auto_holes  false: keep flat paper-coloured patches inside the figure (cream boots, a white shirt drawn flat);
            by default they are taken out as enclosed paper (between the legs, closed off by the ground shadow)"""
 import argparse
@@ -94,7 +97,21 @@ def cut_kit(cid, ref):
     return out, (int(x0), int(y0))
 
 
-def cut_sheet(cid, path, box, holes=(), auto_holes=True):
+def main_figure(rgba):
+    """a box cut from a sheet of drawings on transparent: only the figure in the middle of the box (and the soft
+    edge round it), never a neighbour's hand or shoe that reaches into the box"""
+    a = rgba[..., 3]
+    h, w = a.shape
+    n, lab, st, _ = cv2.connectedComponentsWithStats((a > 96).astype(np.uint8), 8)
+    core = set(np.unique(lab[int(0.3 * h):int(0.7 * h), int(0.3 * w):int(0.7 * w)])) - {0}
+    keep = np.isin(lab, [k for k in core if st[k, cv2.CC_STAT_AREA] > 0.01 * w * h])
+    keep = cv2.dilate(keep.astype(np.uint8), np.ones((5, 5), np.uint8)) > 0
+    out = rgba.copy()
+    out[..., 3] = np.where(keep, a, 0)
+    return out
+
+
+def cut_sheet(cid, path, box, holes=(), auto_holes=True, main=False):
     """a drawing on paper: the box upscaled, then the paper flood-filled away from the box border (the ink outline
     stops it); everything inside the outline is kept, so white eyes and shirts stay solid. -> (RGBA 4x, (x0, y0))"""
     img = cv2.imread(str(CHARACTERS / cid / path), cv2.IMREAD_UNCHANGED)
@@ -103,7 +120,8 @@ def cut_sheet(cid, path, box, holes=(), auto_holes=True):
         img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     elif img.shape[2] == 4:
         if (img[y0:y1, x0:x1, 3] < 128).mean() > 0.02:   # cut out already (a drawing on transparent): its own alpha
-            return upscale_rgba(cv2.cvtColor(img[y0:y1, x0:x1], cv2.COLOR_BGRA2RGBA)), (x0, y0)
+            crop = cv2.cvtColor(img[y0:y1, x0:x1], cv2.COLOR_BGRA2RGBA)
+            return upscale_rgba(main_figure(crop) if main else crop), (x0, y0)
         img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
     im = x4(img[y0:y1, x0:x1])
     h, w = im.shape[:2]
@@ -192,15 +210,48 @@ def ink_of(rgba):
     return np.median(rgb[lum <= np.percentile(lum, 4)], 0)
 
 
-def close_mouth(rgba, K, off, cx, cy, rx, ry):
+def opening_mask(rgb, X, Y, RX, RY, K):
+    """the drawn opening of a mouth (its ink rim, teeth, tongue, throat), found as everything round (X, Y) that is
+    the opening's colours and connected to its middle; grown past the rim's antialiasing"""
+    H, W = rgb.shape[:2]
+    reg = np.zeros((H, W), np.uint8)
+    cv2.ellipse(reg, (int(X), int(Y)), (int(RX * 1.5), int(RY * 1.7)), 0, 0, 360, 1, -1)
+    lab = cv2.cvtColor(rgb, cv2.COLOR_BGR2LAB).astype(np.float32)
+    L, A, B = lab[..., 0], lab[..., 1] - 128, lab[..., 2] - 128
+    # the opening's own colours: ink and throat (dark), teeth (white), tongue (pink); never the skin, the brown of a
+    # moustache or the stubble round it
+    off = (L < 75) | ((L > 185) & (np.hypot(A, B) < 22)) | ((A > 26) & (B < A * 0.9))
+    cand = (off & (reg > 0)).astype(np.uint8)
+    cand = cv2.morphologyEx(cand, cv2.MORPH_CLOSE, np.ones((K + 1, K + 1), np.uint8))
+    n, labl, st, _ = cv2.connectedComponentsWithStats(cand, 8)
+    core = np.zeros((H, W), np.uint8)
+    cv2.ellipse(core, (int(X), int(Y)), (int(RX * 0.5), int(RY * 0.5)), 0, 0, 360, 1, -1)
+    keep = [k for k in set(np.unique(labl[core > 0])) - {0}]
+    m = np.isin(labl, keep).astype(np.uint8)
+    m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (4 * K + 1, 4 * K + 1)))
+    return cv2.dilate(m, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * K + 1, 2 * K + 1))) * 255
+
+
+def close_mouth(rgba, K, off, cx, cy, rx, ry, fit=False):
     """paint an open mouth shut on a part (K part px per sheet px): the opening inpainted from the skin round it,
-    a soft closed-mouth line drawn across its upper third"""
+    a soft closed-mouth line drawn across its upper third. fit: the mask is the drawn opening itself (its rim, teeth
+    and tongue) rather than an ellipse, so no ink is left at its edge to be smeared into stubble"""
     rgb = cv2.cvtColor(np.ascontiguousarray(rgba[..., :3]), cv2.COLOR_RGB2BGR)
     X, Y = (cx - off[0]) * K, (cy - off[1]) * K
     RX, RY = rx * K * 1.22, ry * K * 1.35
-    m = np.zeros(rgb.shape[:2], np.uint8)
-    cv2.ellipse(m, (int(X), int(Y)), (int(RX), int(RY)), 0, 0, 360, 255, -1)
-    rgb = cv2.inpaint(rgb, m, 9, cv2.INPAINT_TELEA)
+    if fit:
+        m = opening_mask(rgb, X, Y, rx * K, ry * K, K)
+        rgb = cv2.inpaint(rgb, m, 3 * K, cv2.INPAINT_NS)
+        # the stubble's grain over the smooth repair, so it doesn't read as a patch
+        grain = cv2.GaussianBlur(np.random.default_rng(1).normal(0, 1, rgb.shape[:2]).astype(np.float32), (0, 0), K * 0.35)
+        grain = (grain - grain.mean()) / (grain.std() + 1e-6)
+        dark = np.clip(-grain - 0.9, 0, None) * 26
+        w = cv2.GaussianBlur(m.astype(np.float32) / 255, (0, 0), K)[..., None]
+        rgb = np.clip(rgb.astype(np.float32) - dark[..., None] * w * np.float32([0.8, 1.0, 1.1]), 0, 255).astype(np.uint8)
+    else:
+        m = np.zeros(rgb.shape[:2], np.uint8)
+        cv2.ellipse(m, (int(X), int(Y)), (int(RX), int(RY)), 0, 0, 360, 255, -1)
+        rgb = cv2.inpaint(rgb, m, 9, cv2.INPAINT_TELEA)
     w = rx * K * 0.78
     yl = Y - ry * K * 0.25
     pts = np.array([[X - w, yl + 0.10 * w], [X - 0.45 * w, yl - 0.02 * w], [X, yl - 0.05 * w],
@@ -293,10 +344,10 @@ def make(cid, name, d):
         K = 4
     else:
         part, off = cut_sheet(cid, d["sheet"], d["box"], [tuple(h) for h in d.get("holes", [])],
-                              d.get("auto_holes", True))
+                              d.get("auto_holes", True), d.get("main", False))
         K = 4
     if d.get("close_mouth"):
-        part = close_mouth(part, K, off, *d["close_mouth"])
+        part = close_mouth(part, K, off, *d["close_mouth"], fit=d.get("close_fit", False))
     if d.get("extend"):
         part = extend_down(part, d["extend"])
     ys, xs = np.nonzero(part[..., 3] > 5)

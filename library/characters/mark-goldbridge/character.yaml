@@ -1,0 +1,24 @@
+name: Mark Goldbridge
+short: Goldbridge
+role: pundit
+style: house
+height_cm: 178
+note: United fan-channel host. No kit yet; filmed from the seated pose sheets (reference/poses-seated-*.png). Delivered
+  with The Fraud Off production pack (episodes/overcrap-the-fraud-off).
+likeness: Short light-brown hair, faded at the sides and swept up at the front, light stubble and a thin moustache,
+  big ears, large white cartoon eyes, quick to scowl or crack up.
+outfits:
+  casual:
+    description: Black blazer over a plain black T-shirt, black trousers, white trainers with a black tick.
+    sheets: []
+reference:
+  poses-standing-1.png: 'Four standing poses (1122 x 1402, transparent): sarcastic shrug, accusing point to the
+    viewer''s right, mocking laugh pointing right, raised finger debate (pack Sheet_01, S01_P01..P04)'
+  poses-standing-2.png: 'Four standing poses (transparent): rant point to the viewer''s left, arms spread, fists
+    raised shouting, smug arms crossed (pack Sheet_02)'
+  poses-standing-3.png: 'Four standing poses (transparent): laughing with arms crossed, dismissive shrug, leaning
+    lecture, cocky finger-gun point (pack Sheet_03)'
+  poses-seated-1.png: 'Four seated poses (transparent): shouting and pointing to the viewer''s left, shrug, laughing
+    and pointing left, raised finger'
+  poses-seated-2.png: 'Four seated poses (transparent): smirk with arms crossed, open-mouthed shrug, leaning back
+    laughing, finger-gun to the viewer''s right'

@@ -1,0 +1,10 @@
+In,Out,Speaker,Dialogue,Camera,Pose cue,Action / edit
+00:00.0,00:04.2,Jamie,"First show and we've already got the biggest fraud in football! You're a Forest fan, Mark!",Two-shot to Jamie medium,S01_P01,Opening grin and accusing finger
+00:04.2,00:07.6,Mark,That's rich from an Everton fan who's spent his life pretending to love Liverpool!,Mark medium,S01_P01,"Dry eyebrow, Everton emphasis"
+00:07.6,00:10.0,Jamie,"I won the Champions League with Liverpool, mate!",Jamie medium,S03_P02,Chest out and proud
+00:10.0,00:14.6,Mark,Exactly! You've done more for Liverpool than Everton have in thirty years!,Mark medium to Jamie reaction,S03_P01,Mocking laugh
+00:14.6,00:17.6,Jamie,"At least I use my real name, Brent!",Jamie tight,S02_P02,Tiny beat after Brent
+00:17.6,00:25.2,Mark,"Everton fan, Liverpool player, now working for a United legend! You'll support anyone with a payslip!",Mark medium with two-shot insert,S02_P02 + S02_P01,"Controlled to rant, payslip finger jab"
+00:25.2,00:27.5,Jamie,FRAUD!,Jamie tight,S01_P01,Big shout
+00:27.5,00:29.5,Mark,BLUE NOSE!,Mark tight,S02_P03,Immediate retort
+00:29.5,00:30.0,Both,,Two-shot freeze,Seated bases,Hard comedy sting then black

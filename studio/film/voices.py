@@ -254,16 +254,20 @@ def locate(chunks, lines):
     return out
 
 
-def from_recordings(out_dir, recordings, script, want, maxgap=0.2, gaps=None, k=1.0, extra=None):
+def from_recordings(out_dir, recordings, script, want, maxgap=0.2, gaps=None, k=1.0, extra=None, fixes=None):
     """cut the lines `want` out of recordings that each hold many lines.
     recordings: [(path, speaker)], the speaker's lines read in script order (one file or several);
-    script: [(id, speaker, text)] every scripted line in order. -> lines.json dict"""
+    script: [(id, speaker, text)] every scripted line in order; fixes: {file name: {pattern of what Whisper heard
+    (a regex for the whole stretch): what was said}} for a stretch it mishears (a stretched shout), so the line can be placed. -> lines.json dict"""
     (out_dir / "lines").mkdir(parents=True, exist_ok=True)
     out, found = {}, {}
     for path, spk in recordings:
         y, _ = librosa.load(str(path), sr=SR, mono=True)
         y16 = librosa.resample(y, orig_sr=SR, target_sr=16000)
         chunks = heard(path, y16, out_dir / "asr")
+        fx = (fixes or {}).get(path.name, {})
+        chunks = [[s, e, next((v for pat, v in fx.items() if re.fullmatch(pat, t.strip(), re.I)), t)]
+                  for s, e, t in chunks]
         mine = [(lid, text) for lid, sp, text in script if sp == spk]
         where = {lid: v for lid, v in locate(chunks, mine).items() if lid in want and lid not in found}
         order = [lid for lid, _ in mine if lid in where]

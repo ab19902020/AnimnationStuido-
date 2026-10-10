@@ -182,6 +182,11 @@ tv-and-media/podcast-studio:
   size: [1672, 941]
   orientation: landscape
   source: Empty Football Podcast Studio.png
+tv-and-media/two-chair-pundit-studio:
+  title: Two-chair pundit studio (red and blue walls, stadium screen, two grey armchairs angled in, round wooden table)
+  size: [1672, 941]
+  orientation: landscape
+  source: delivered with The Fraud Off (episodes/overcrap-the-fraud-off)
 tv-and-media/press-conference-room:
   title: Empty Football Press Conference Room
   size: [1672, 941]

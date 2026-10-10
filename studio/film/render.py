@@ -8,7 +8,8 @@ Kinds of shot (built with the helpers in studio.film.shots):
   world   characters placed in a plate at true scale (1x plate px) with the plate's own furniture in front
   group   several characters composited like a single (blurred set behind, furniture edge in front)
   insert  a full-frame close-up drawn by the episode's props.py (a screen, a sign, a document)
-  black / title   black with closing captions / the title card"""
+  black / title   black with closing captions / the title card
+Any shot with `still=True` is a freeze frame: it holds its first frame (a comic freeze before the cut to black)."""
 import importlib
 import math
 import os
@@ -291,6 +292,8 @@ def render_frame(f):
     t = f / FPS
     s = D.shot_at(t)
     kind = s["kind"]
+    if s.get("still"):                                        # a freeze frame: the shot holds its first frame
+        t = s["t"]
     if kind == "black":
         img = np.zeros((OH, OW, 3), np.float32)
     elif kind == "title":

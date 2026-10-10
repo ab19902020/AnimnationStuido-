@@ -3,8 +3,9 @@ short: Carra
 role: pundit
 style: provisional
 height_cm: 185
-note: Off-style stand-in (thin outline, Studio Mayhem look). Replace with a dark-outline house-style kit like Haaland's;
-  the new kit drops into the same folder.
+note: 'The kit is an off-style stand-in (thin outline, Studio Mayhem look). Replace with a dark-outline house-style kit like Haaland''s;
+  the new kit drops into the same folder. The reference pose sheets ARE house style (dark outline, black blazer,
+  black T-shirt and trousers, white trainers) and are what he is filmed from (film.yaml).'
 likeness: 'Jamie Carragher, the man on the LEFT of the reference: side-combed silver-grey hair, grey stubble, broad
   cheekbones, mischievous brows, large white cartoon eyes.'
 outfits:
@@ -15,3 +16,14 @@ outfits:
     - three_quarter
     - side
     - hands
+reference:
+  poses-standing-1.png: 'Four standing poses (1122 x 1402, transparent), house style, black blazer: shouting FRAUD
+    and pointing to the viewer''s left, smug grin arms crossed, side talk with an open palm, belly laugh (pack Sheet_01)'
+  poses-standing-2.png: 'Four standing poses (transparent): smug laugh arms crossed, pointing at the viewer, confident
+    grin hands in pockets, talking with open palms (pack Sheet_02)'
+  poses-standing-3.png: 'Four standing poses (transparent): arguing, hands on hips, arms wide challenge, big laugh
+    (pack Sheet_03)'
+  poses-seated-1.png: 'Four seated poses (transparent): smirking shrug, glaring with hands on knees, thumb-point
+    smirk, arms out shrug'
+  poses-seated-2.png: 'Four seated poses (transparent): legs and arms crossed laughing, grinning and pointing to the
+    viewer''s right, fist on chest with an open palm, laughing hand on belly'

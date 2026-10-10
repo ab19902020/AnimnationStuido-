@@ -158,7 +158,7 @@ def main():
         L = importlib.import_module("film.lines")
         if hasattr(L, "RECORDINGS"):           # the actors' recordings, many lines to a file
             voices.from_recordings(ep.BUILD, L.RECORDINGS, L.script(), set(L.IDS), L.MAXGAP, L.GAPS, L.TEMPO,
-                                   getattr(L, "EXTRA", None))
+                                   getattr(L, "EXTRA", None), getattr(L, "HEARD", None))
         else:                                  # one take per line (text-to-speech stand-ins)
             voices.build(ep.BUILD, L.lines(), L.MAXGAP, L.GAPS, L.TEMPO, getattr(L, "EXTRA", None))
     elif cmd == "song":                        # a music video: the beat grid, hits and singing mouths
