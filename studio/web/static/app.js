@@ -6,6 +6,7 @@
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const app = $("#app");
+const put = (...kids) => app.append(...kids.flat(Infinity).filter(k => k !== null && k !== undefined && k !== false));
 let LIB = { characters: [], backgrounds: [], settings: [], voices: {}, tones: [] };
 
 // ---------------------------------------------------------------- helpers
@@ -28,6 +29,7 @@ async function api(method, url, body, raw) {
   else if (body !== undefined) { opt.body = JSON.stringify(body); opt.headers["Content-Type"] = "application/json"; }
   const r = await fetch(url, opt);
   const j = await r.json().catch(() => ({}));
+  if (r.status === 401 && !url.startsWith("/api/login")) { if (!$(".login")) viewLogin(); throw new Error("Log in first"); }
   if (!r.ok) throw new Error(j.error || r.statusText);
   return j;
 }
@@ -101,15 +103,16 @@ function jobView(j, onCancel) {
 }
 
 // ---------------------------------------------------------------- router
-const VIEWS = { episodes: viewEpisodes, episode: viewEpisode, characters: viewCharacters, character: viewCharacter,
+const VIEWS = { shows: viewShows, show: viewShow, episodes: viewEpisodes, episode: viewEpisode, characters: viewCharacters, character: viewCharacter,
   backgrounds: viewBackgrounds, jobs: viewJobs };
 async function route() {
-  const [v, arg] = (location.hash.slice(1) || "episodes").split("/");
-  $$("nav a").forEach(a => a.classList.toggle("on", a.dataset.view === v || (v === "episode" && a.dataset.view === "episodes") || (v === "character" && a.dataset.view === "characters")));
+  document.body.classList.remove("locked");
+  const [v, arg] = (location.hash.slice(1) || "shows").split("/");
+  $$("nav a").forEach(a => a.classList.toggle("on", a.dataset.view === v || (v === "episode" && a.dataset.view === "episodes") || (v === "character" && a.dataset.view === "characters") || (v === "show" && a.dataset.view === "shows")));
   JOBS.watchers.clear();
   app.innerHTML = "";
-  try { await (VIEWS[v] || viewEpisodes)(arg && decodeURIComponent(arg)); }
-  catch (e) { app.append(h("div", { class: "empty" }, e.message)); }
+  try { await (VIEWS[v] || viewShows)(arg && decodeURIComponent(arg)); }
+  catch (e) { if (e.message !== "Log in first") put(h("div", { class: "empty" }, e.message)); }
 }
 window.addEventListener("hashchange", route);
 
@@ -123,27 +126,39 @@ const KIND = name => {
   return "other";
 };
 
-async function uploadPack(slug, files, status) {
+// a pack's files, sent in 8 MB pieces: a phone's upload survives a dropped connection (each piece is retried and
+// the server says how much it already has) and no host limit on a request's size gets in the way
+async function uploadPack(base, files, status) {
+  const CH = 8 * 1024 * 1024;
   for (let i = 0; i < files.length; i++) {
-    status(`Uploading ${i + 1} of ${files.length}: ${files[i].name}`);
-    await api("POST", `/api/episodes/${slug}/pack?filename=${encodeURIComponent(files[i].name)}`, undefined, files[i]);
+    const f = files[i];
+    let off = 0, tries = 0;
+    while (off < f.size || (f.size === 0 && off === 0)) {
+      const pct = f.size ? Math.round(100 * off / f.size) : 0;
+      status(`Uploading ${i + 1} of ${files.length}: ${f.name} (${pct}%)`);
+      try {
+        const r = await api("POST", `${base}/pack?filename=${encodeURIComponent(f.name)}&offset=${off}&total=${f.size}`, undefined, f.slice(off, off + CH));
+        off = r.offset; tries = 0;
+        if (r.file || f.size === 0) break;
+      } catch (e) {
+        if (++tries > 6 || /log in|too big|no such/.test(e.message)) throw e;
+        status(`Connection lost: trying again (${tries})...`);
+        await new Promise(res => setTimeout(res, 1500 * tries));
+      }
+    }
   }
+  status("Uploaded.");
 }
 
-function packPanel() {
+function filePicker(title, sub) {
   let files = [];
-  const title = h("input", { type: "text", placeholder: "Title (optional: read from the script)" });
-  const quality = h("select", {}, h("option", { value: "final" }, "Final film (1920 x 1080)"), h("option", { value: "draft" }, "Quick draft (960 x 540)"));
   const list = h("div", { class: "packlist" });
-  const status = h("div", { class: "hint" });
-  const go = h("button", { class: "btn primary", disabled: true }, "Produce the episode");
   const inp = h("input", { type: "file", multiple: true, class: "hidden" });
-  const zone = h("div", { class: "drop big" },
-    h("div", { class: "drop-title" }, "Drop the whole production here"),
-    h("div", {}, "The director's script, a picture of each character, the sets and the voice recordings (or one zip of it all). Click to choose files."), inp);
+  const zone = h("div", { class: "drop big" }, h("div", { class: "drop-title" }, title), h("div", {}, sub), inp);
+  const listeners = [];
   const add = fs => { for (const f of fs) if (!files.some(x => x.name === f.name && x.size === f.size)) files.push(f); show(); };
   zone.onclick = () => inp.click();
-  inp.onchange = () => add(inp.files);
+  inp.onchange = () => { add(inp.files); inp.value = ""; };
   zone.ondragover = e => { e.preventDefault(); zone.classList.add("over"); };
   zone.ondragleave = () => zone.classList.remove("over");
   zone.ondrop = e => { e.preventDefault(); zone.classList.remove("over"); add(e.dataTransfer.files); };
@@ -151,29 +166,150 @@ function packPanel() {
     list.innerHTML = "";
     const count = {};
     files.forEach(f => count[KIND(f.name)] = (count[KIND(f.name)] || 0) + 1);
+    const mb = files.reduce((a, f) => a + f.size, 0) / 1048576;
     list.append(h("div", { class: "row" }, Object.entries(count).map(([k, n]) => h("span", { class: "tag ok" }, `${n} ${k}${n > 1 ? "s" : ""}`)),
+      files.length ? h("span", { class: "hint" }, `${mb.toFixed(mb < 10 ? 1 : 0)} MB`) : null,
       files.length ? h("button", { class: "btn small ghost", onclick: () => { files = []; show(); } }, "Clear") : null));
-    list.append(h("div", { class: "hint" }, files.map(f => f.name).join(" · ")));
-    go.disabled = !files.length;
+    if (files.length) list.append(h("div", { class: "hint filenames" }, files.map(f => f.name).join(" · ")));
+    listeners.forEach(fn => fn(files));
   }
+  return { el: h("div", {}, zone, list), files: () => files, onChange: fn => listeners.push(fn) };
+}
+
+const QUALITY = () => h("select", {}, h("option", { value: "final" }, "Final film (1920 x 1080)"), h("option", { value: "draft" }, "Quick draft (960 x 540)"));
+
+// an episode's directive and assets -> produced (in a show when given)
+function packPanel(show) {
+  const pick = filePicker(show ? `New episode of ${show.title}` : "Drop the whole production here",
+    "The episode's directive or script, and any new pictures, sets and voice recordings (or one zip of it all). Tap to choose files.");
+  const title = h("input", { type: "text", placeholder: "Title (optional: read from the script)" });
+  const quality = QUALITY();
+  const status = h("div", { class: "hint" });
+  const go = h("button", { class: "btn primary", disabled: true }, "Produce the episode");
+  pick.onChange(fs => go.disabled = !fs.length);
   go.onclick = () => safe(async () => {
     go.disabled = true;
-    const { slug } = await api("POST", "/api/productions", { title: title.value });
-    await uploadPack(slug, files, t => status.textContent = t);
+    const { slug } = await api("POST", "/api/productions", { title: title.value, show: show ? show.slug : "" });
+    await uploadPack(`/api/episodes/${slug}`, pick.files(), t => status.textContent = t);
     const r = await api("POST", `/api/episodes/${slug}/produce`, { quality: quality.value });
     sessionStorage.setItem("follow-" + slug, r.job);
     location.hash = "episode/" + slug;
   }).catch(() => { go.disabled = false; });
   return h("div", { class: "panel hero" },
-    h("h2", {}, "Produce from a director's pack"),
-    h("p", { class: "hint" }, "The studio reads the script (scenes, lines, stage directions), works out who every speaker is (a picture named for them, or the library), sorts the pictures into characters and sets, gives each recording to whoever it is named for or whoever's lines it hears, stages every scene, then cuts out the characters, syncs the lips, directs, mixes and renders. Name pictures and recordings after the characters (Roy.png, 02-roy-keane.mp3) to be sure."),
-    zone, list, h("div", { class: "row", style: { marginTop: "10px" } }, title, quality, h("span", { class: "spacer" }), go), status);
+    h("h2", {}, show ? "Produce an episode" : "Produce from a director's pack"),
+    h("p", { class: "hint" }, show
+      ? `Characters and sets from ${show.title} are used automatically, with the voices they always have. Only upload what's new for this episode: the script, plus pictures of new characters, new sets and the actors' recordings.`
+      : "The studio reads the script (scenes, lines, stage directions), works out who every speaker is (a picture named for them, or the library), sorts the pictures into characters and sets, gives each recording to whoever it is named for or whoever's lines it hears, stages every scene, then cuts out the characters, syncs the lips, directs, mixes and renders. Name pictures and recordings after the characters (Roy.png, 02-roy-keane.mp3) to be sure."),
+    pick.el, h("div", { class: "row", style: { marginTop: "10px" } }, title, quality, h("span", { class: "spacer" }), go), status);
+}
+
+// ---------------------------------------------------------------- shows
+async function viewShows() {
+  const shows = await api("GET", "/api/shows");
+  const pick = filePicker("Drop the show's directive here",
+    "The show bible or directive (who's in it, where it's set), a picture of each character named after them, and the sets. Or one zip. Tap to choose files.");
+  const title = h("input", { type: "text", placeholder: "Show title (optional: read from the directive)" });
+  const status = h("div", { class: "hint" });
+  const go = h("button", { class: "btn primary", disabled: true }, "Create the show");
+  pick.onChange(fs => go.disabled = !fs.length);
+  go.onclick = () => safe(async () => {
+    go.disabled = true;
+    const { slug } = await api("POST", "/api/shows", { title: title.value });
+    await uploadPack(`/api/shows/${slug}`, pick.files(), t => status.textContent = t);
+    const r = await api("POST", `/api/shows/${slug}/read`);
+    sessionStorage.setItem("follow-show-" + slug, r.job);
+    location.hash = "show/" + slug;
+  }).catch(() => { go.disabled = false; });
+  put(h("h1", {}, "Shows"),
+    h("p", { class: "sub" }, "A show keeps its cast, sets and voices. Set it up once from its directive, then each episode is just its script."),
+    h("div", { class: "grid wide" }, shows.map(sh => h("div", { class: "card", onclick: () => location.hash = "show/" + sh.slug },
+      h("div", { class: "showcast" }, sh.cast.slice(0, 5).map(id => h("div", { class: "pic", style: { backgroundImage: `url(${charThumb(id)})` } }))),
+      h("div", { class: "meta" }, h("div", { class: "name" }, sh.title), h("div", { class: "small" }, sh.tagline || " "),
+        h("span", { class: "tag" }, `${sh.cast.length} cast`), h("span", { class: "tag" }, `${sh.sets.length} set${sh.sets.length === 1 ? "" : "s"}`),
+        h("span", { class: "tag ok" }, `${sh.episodes.length} episode${sh.episodes.length === 1 ? "" : "s"}`))))),
+    shows.length ? null : h("div", { class: "empty" }, "No shows yet: create one below."),
+    h("div", { class: "panel hero" }, h("h2", {}, "Create a show"), pick.el,
+      h("div", { class: "row", style: { marginTop: "10px" } }, title, h("span", { class: "spacer" }), go), status));
+}
+
+async function viewShow(slug) {
+  await loadLib();
+  let sh = await api("GET", `/api/shows/${slug}`);
+  const jobBox = h("div");
+  const body = h("div");
+  put(h("div", { class: "row" }, h("a", { href: "#shows", class: "hint" }, "← Shows")), body);
+  async function render() {
+    sh = await api("GET", `/api/shows/${slug}`);
+    const rep = await api("GET", `/api/shows/${slug}/report`);
+    body.innerHTML = "";
+    const more = h("input", { type: "file", multiple: true, class: "hidden", onchange: e => safe(async () => {
+      const fs = [...e.target.files];
+      await uploadPack(`/api/shows/${slug}`, fs, t => toast(t));
+      follow((await api("POST", `/api/shows/${slug}/read`)).job);
+    }) });
+    const fld = (label, key, ph) => h("label", { class: "f" }, label, h("input", { type: "text", value: sh[key] || "", placeholder: ph,
+      onchange: e => safe(async () => { sh[key] = e.target.value; await api("PUT", `/api/shows/${slug}`, sh); toast("Saved"); }) }));
+    body.append(
+      h("div", { class: "row" }, h("h1", {}, sh.title || slug), h("span", { class: "spacer" }),
+        h("button", { class: "btn small ghost", onclick: () => { if (confirm("Delete this show? Its episodes are kept.")) safe(async () => { await api("DELETE", `/api/shows/${slug}`); location.hash = "shows"; }); } }, "Delete show")),
+      h("p", { class: "sub" }, sh.tagline || `shows/${slug}/`),
+      jobBox,
+      packPanel(sh),
+      h("div", { class: "panel" }, h("h2", {}, "Episodes"),
+        sh.episodes.length ? h("div", { class: "grid wide" }, sh.episodes.map(e => h("div", { class: "card", onclick: () => location.hash = "episode/" + e.slug },
+          e.video || e.preview ? h("video", { src: fileUrl(e.video || e.preview) + "#t=6", preload: "metadata", muted: true, playsinline: true, style: { aspectRatio: "16/9", borderRadius: 0 } }) : h("div", { class: "pic land", style: { background: "#26292f" } }),
+          h("div", { class: "meta" }, h("div", { class: "name" }, e.title),
+            e.video ? h("span", { class: "tag ok" }, "finished") : e.preview ? h("span", { class: "tag warn" }, "draft") : h("span", { class: "tag" }, "not made yet")))))
+          : h("div", { class: "empty" }, "No episodes yet: produce the first one above.")),
+      h("div", { class: "panel" }, h("div", { class: "row" }, h("h2", {}, "Cast"), h("span", { class: "spacer" }),
+          h("button", { class: "btn small", onclick: () => more.click() }, "Add to the show"), more),
+        h("p", { class: "hint" }, "Add pictures (named after the character), sets or an updated directive: the show is read again."),
+        h("div", { class: "grid" }, sh.cast.map(c => {
+          const ch = charOf(c.id) || { name: c.id };
+          const v = c.voice || {};
+          return h("div", { class: "card", onclick: () => location.hash = "character/" + c.id },
+            h("div", { class: "pic", style: { backgroundImage: `url(${charThumb(c.id)})` } }),
+            h("div", { class: "meta" }, h("div", { class: "name" }, ch.name),
+              h("select", { onclick: e => e.stopPropagation(), onchange: e => safe(async () => { c.voice = { kind: "tts", voice: e.target.value, speed: 1.0 }; await api("PUT", `/api/shows/${slug}`, sh); toast(`${ch.name}'s stand-in voice: ${LIB.voices[e.target.value]}`); }) },
+                Object.entries(LIB.voices).map(([k, n]) => h("option", { value: k, selected: k === v.voice }, n)))));
+        })),
+        rep && (rep.missing || []).length ? h("div", { class: "tag bad", style: { marginTop: "8px", padding: "6px 10px" } }, `Named in the directive but no picture or library character: ${rep.missing.join(", ")}`) : null,
+        rep && (rep.warnings || []).length ? rep.warnings.map(w => h("div", { class: "hint" }, "• " + w)) : null),
+      h("div", { class: "panel" }, h("h2", {}, "Sets"), h("div", { class: "grid wide" }, (sh.sets || []).map(b => h("div", { class: "card", onclick: () => window.open(fileUrl(`library/backgrounds/${b}.png`)) },
+        h("div", { class: "pic land", style: { backgroundImage: `url(${thumbUrl(`library/backgrounds/${b}.png`, 240)})` } }), h("div", { class: "meta" }, h("div", { class: "small" }, b))))),
+        (sh.sets || []).length ? null : h("div", { class: "hint" }, "No sets of its own yet: episodes use the library's.")),
+      h("div", { class: "panel" }, h("h2", {}, "Show details"), h("div", { class: "fields" }, fld("Title", "title", "On every title card"), fld("Tagline", "tagline", "")),
+        h("div", { class: "hint", style: { marginTop: "8px" } }, "Directive: " + ((sh.pack || []).join(", ") || "none"))));
+  }
+  function follow(id) {
+    watch(id, async j => {
+      jobBox.innerHTML = ""; jobBox.append(h("div", { class: "panel" }, jobView(j)));
+      if (j.state === "done") { jobBox.innerHTML = ""; toast("The show is ready"); await loadLib(); render(); }
+      if (j.state === "failed") toast(j.error, true);
+    });
+  }
+  await render();
+  const want = sessionStorage.getItem("follow-show-" + slug);
+  const live = (await api("GET", "/api/jobs")).find(j => j.ref === slug && (j.id === want || ["running", "queued"].includes(j.state)));
+  if (live) follow(live.id);
+}
+
+// ---------------------------------------------------------------- login
+function viewLogin() {
+  const pw = h("input", { type: "password", placeholder: "Password", autocomplete: "current-password" });
+  const go = () => safe(async () => { await api("POST", "/api/login", { password: pw.value }); route(); });
+  pw.onkeydown = e => { if (e.key === "Enter") go(); };
+  app.innerHTML = "";
+  document.body.classList.add("locked");
+  put(h("div", { class: "login" }, h("img", { src: "/static/icon-192.png", alt: "" }), h("h1", {}, "Animation Studio"),
+    h("p", { class: "sub" }, "Enter the studio's password."), pw, h("button", { class: "btn primary", onclick: go }, "Open the studio")));
+  setTimeout(() => pw.focus(), 50);
 }
 
 async function viewEpisodes() {
   const eps = await api("GET", "/api/episodes");
   const title = h("input", { type: "text", placeholder: "Title of an episode to build by hand" });
-  app.append(
+  put(
     h("h1", {}, "Episodes"),
     h("p", { class: "sub" }, "Upload a production and the studio makes the film: the cut-outs, the lip sync, the acting, the camera, the sound and the render."),
     packPanel(),
@@ -195,7 +331,7 @@ async function viewEpisode(slug) {
   catch (e) {                                     // a hand-directed episode: watch only
     const all = await api("GET", "/api/episodes");
     const x = all.find(a => a.slug === slug);
-    app.append(h("h1", {}, x ? x.title : slug), h("p", { class: "sub" }, e.message),
+    put(h("h1", {}, x ? x.title : slug), h("p", { class: "sub" }, e.message),
       x && x.video ? h("video", { src: fileUrl(x.video), controls: true }) : null);
     return;
   }
@@ -230,21 +366,21 @@ async function viewEpisode(slug) {
 
   // header
   const fld = (label, key, ph) => h("label", { class: "f" }, label, h("input", { type: "text", value: ep[key] || "", placeholder: ph, oninput: e => { ep[key] = e.target.value; save(); } }));
-  app.append(
+  put(
     h("div", { class: "row" }, h("h1", {}, ep.title || slug), h("span", { class: "spacer" }), h("span", { id: "saved", class: "hint" }, "Saved"),
       h("button", { class: "btn ghost small", onclick: () => { if (confirm("Delete this episode and everything made for it?")) safe(async () => { await api("DELETE", `/api/episodes/${slug}`); location.hash = "episodes"; }); } }, "Delete")),
     h("p", { class: "sub" }, `episodes/${slug}/`));
   const reportBox = h("div");
-  app.append(reportBox);
+  put(reportBox);
   const makePanel = h("div", { class: "panel" });
-  app.append(makePanel);
-  app.append(h("div", { class: "panel" }, h("div", { class: "fields" },
+  put(makePanel);
+  put(h("div", { class: "panel" }, h("div", { class: "fields" },
     fld("Title", "title", "The title card"), fld("Show", "show", "Above the title (optional)"), fld("Tagline", "tagline", "Under the title (optional)"))));
 
   const cols = h("div", { class: "cols" });
   const left = h("div"), right = h("div");
   cols.append(left, right);
-  app.append(cols);
+  put(cols);
 
   // ---- the import report
   async function renderReport() {
@@ -255,7 +391,7 @@ async function viewEpisode(slug) {
     const voices = Object.entries(r.voices || {}).map(([n, vs]) => h("div", {}, h("strong", {}, n), ": ",
       vs.map(v => v.stand_in ? h("span", { class: "tag warn" }, `stand-in voice (${LIB.voices[v.stand_in] || v.stand_in})`) : h("span", { class: "tag ok" }, `${v.file} (${v.by})`))));
     const more = h("input", { type: "file", multiple: true, class: "hidden", onchange: e => safe(async () => {
-      await uploadPack(slug, [...e.target.files], t => toast(t)); toast("Added to the pack: produce again to use them");
+      await uploadPack(`/api/episodes/${slug}`, [...e.target.files], t => toast(t)); toast("Added to the pack: produce again to use them");
     }) });
     reportBox.append(h("div", { class: "panel" },
       h("div", { class: "row" }, h("h2", {}, "What the studio worked out from the pack"), h("span", { class: "spacer" }),
@@ -417,7 +553,7 @@ async function viewEpisode(slug) {
 
   // ---- the script
   const linesPanel = h("div", { class: "panel" });
-  app.append(linesPanel);
+  put(linesPanel);
   const blank = (k, who) => ({ who, to: "", text: "", tone: "", pause: "", scene: k });
   function renderLines() {
     linesPanel.innerHTML = "";
@@ -555,7 +691,7 @@ async function viewCharacters() {
     const r = await api("POST", `/api/characters?name=${encodeURIComponent(name.value)}&role=${encodeURIComponent(role.value)}&filename=${encodeURIComponent(f.name)}`, undefined, f);
     location.hash = "character/" + r.id;
   }));
-  app.append(h("h1", {}, "Characters"),
+  put(h("h1", {}, "Characters"),
     h("p", { class: "sub" }, "Every character in the library. A new one is cut out of its picture whole (never chopped into limbs), upscaled 4x and given face landmarks so the eyes, brows and mouth can act."),
     h("div", { class: "panel" }, h("h2", {}, "Add a character"), h("div", { class: "fields", style: { marginBottom: "10px" } }, name, role), zone),
     h("div", { class: "grid" }, LIB.characters.map(c => h("div", { class: "card", onclick: () => location.hash = "character/" + c.id },
@@ -570,11 +706,11 @@ async function viewCharacter(cid) {
   const c = charOf(cid);
   if (!c) throw new Error("No such character");
   const sheets = await api("GET", `/api/characters/${cid}/sheets`);
-  app.append(h("div", { class: "row" }, h("a", { href: "#characters", class: "hint" }, "← Characters")),
+  put(h("div", { class: "row" }, h("a", { href: "#characters", class: "hint" }, "← Characters")),
     h("h1", {}, c.name), h("p", { class: "sub" }, `library/characters/${cid}/ · ${c.role || "character"}${c.style === "provisional" ? " · stand-in kit (off-style)" : ""}`));
   const jobBox = h("div");
   const draws = h("div", { class: "grid wide" });
-  app.append(h("div", { class: "panel" }, h("div", { class: "row" }, h("h2", {}, "Drawings to film"), h("span", { class: "spacer" }),
+  put(h("div", { class: "panel" }, h("div", { class: "row" }, h("h2", {}, "Drawings to film"), h("span", { class: "spacer" }),
     h("button", { class: "btn small primary", onclick: () => newDrawing() }, "+ New drawing from a sheet")),
     h("p", { class: "hint" }, "Green rings should sit on the eyes and the red dots on the mouth (its corners and middle). If they don't, use Fix face."), jobBox, draws));
 
@@ -704,7 +840,7 @@ async function viewBackgrounds() {
     const r = await api("POST", `/api/backgrounds?title=${encodeURIComponent(title.value)}&setting=${setting.value}&crop=${crop.checked ? 1 : 0}&filename=${encodeURIComponent(f.name)}`, undefined, f);
     toast("Filed as " + r.id); title.value = ""; route();
   }));
-  app.append(h("h1", {}, "Backgrounds"),
+  put(h("h1", {}, "Backgrounds"),
     h("p", { class: "sub" }, "Empty sets. The camera moves inside them: the wide shows the whole set, the close-ups a blurred piece of it behind the speaker."),
     h("div", { class: "panel" }, h("h2", {}, "Add a set"), h("div", { class: "fields", style: { marginBottom: "10px" } }, title, setting,
       h("label", { class: "row hint" }, crop, "Crop to 16:9")), zone),
@@ -717,11 +853,11 @@ async function viewBackgrounds() {
 // ---------------------------------------------------------------- jobs
 async function viewJobs() {
   const list = await api("GET", "/api/jobs");
-  app.append(h("h1", {}, "Jobs"), h("p", { class: "sub" }, "What the engine is doing and has done since the server started. One job runs at a time: a render uses every core."));
-  if (!list.length) app.append(h("div", { class: "empty" }, "Nothing yet."));
+  put(h("h1", {}, "Jobs"), h("p", { class: "sub" }, "What the engine is doing and has done since the server started. One job runs at a time: a render uses every core."));
+  if (!list.length) put(h("div", { class: "empty" }, "Nothing yet."));
   for (const j of list) {
     const box = h("div", { class: "panel" }, jobView(j, route));
-    app.append(box);
+    put(box);
     if (["running", "queued"].includes(j.state)) watch(j.id, jj => { box.innerHTML = ""; box.append(jobView(jj, route)); });
   }
 }

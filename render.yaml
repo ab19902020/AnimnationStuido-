@@ -1,0 +1,20 @@
+# One-tap hosting on Render (render.com: New > Blueprint > this repository). See DEPLOY.md.
+services:
+  - type: web
+    name: animation-studio
+    runtime: docker
+    plan: pro plus            # 8 GB, 4 CPUs: the renderer needs the memory; smaller plans run out of it
+    healthCheckPath: /healthz
+    disk:
+      name: studio-data
+      mountPath: /data        # the library, shows, episodes, films and speech models live here
+      sizeGB: 50
+    envVars:
+      - key: STUDIO_PASSWORD  # asked for when the Blueprint is created: the password the app opens with
+        sync: false
+      - key: STUDIO_SECRET
+        generateValue: true
+      - key: FILM_MEM_GB      # how much of the 8 GB the render may take
+        value: "6.5"
+      - key: STUDIO_JOBS
+        value: "4"

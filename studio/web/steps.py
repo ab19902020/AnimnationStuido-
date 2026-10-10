@@ -1,5 +1,6 @@
 """The steps of a web episode the engine's own CLI (python3 -m studio.film) doesn't have.
 
+    python3 -m studio.web.steps SHOW show-cast  a show's cast cut out (shows/<slug>/show.json)
     python3 -m studio.web.steps SLUG cast       cut, upscale and measure every drawing the cast is filmed in
                                                 (studio.film.art); fetch the speech models the voices need
     python3 -m studio.web.steps SLUG voices     the stand-in voices (Kokoro) for characters with no recording, then
@@ -184,8 +185,23 @@ def stills(slug, ts):
         print(p, flush=True)
 
 
+def show_cast(slug):
+    """a show's cast cut out as soon as the show is read, so its first episode starts sooner"""
+    from studio.film import art
+    from studio.paths import SHOWS
+    sh = json.loads((SHOWS / slug / "show.json").read_text())
+    for c in sh.get("cast", []):
+        print(f"{c['id']}: {c.get('drawing') or 'front'}", flush=True)
+        try:
+            art.build(c["id"], [c.get("drawing") or "front"])
+        except Exception as e:  # noqa: BLE001  (one bad drawing doesn't stop the rest; the episode will say)
+            print(f"{c['id']}: could not be cut out: {e}", flush=True)
+
+
 def main():
     slug, cmd = sys.argv[1], sys.argv[2]
+    if cmd == "show-cast":
+        return show_cast(slug)
     if cmd == "cast":
         cast(slug)
     elif cmd == "voices":

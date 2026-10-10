@@ -31,7 +31,7 @@ import numpy as np
 import yaml
 from PIL import Image
 
-from studio.paths import BACKGROUNDS, CHARACTERS, EPISODES
+from studio.paths import BACKGROUNDS, CHARACTERS, EPISODES, SHOWS
 from studio.web import projects as P
 from studio.web.auto import normalize
 
@@ -39,6 +39,11 @@ DOCS = (".md", ".txt", ".fountain", ".docx", ".pdf")
 STAND_IN = ["bm_george", "bm_lewis", "bm_daniel", "am_michael", "bm_fable", "am_adam", "am_eric", "am_liam",
             "am_onyx", "am_puck"]
 STAND_IN_F = ["bf_emma", "bf_isabella", "bf_alice", "af_heart", "af_bella", "bf_lily"]
+
+
+def titled(s):
+    """Title Case that leaves the letter after an apostrophe alone (Barry's, not Barry'S)"""
+    return " ".join(w[:1].upper() + w[1:].lower() for w in s.split())
 
 
 def norm(s):
@@ -159,7 +164,7 @@ def parse_script(text):
         parts = re.split(r"\s+[—–:\-]\s+", title, maxsplit=1)
         if len(parts) == 2:
             show, title = parts[0].strip(), parts[1].strip()
-    return dict(title=title.title() if title.isupper() else title, show=show.title() if show.isupper() else show,
+    return dict(title=titled(title) if title.isupper() else title, show=titled(show) if show.isupper() else show,
                 scenes=[sc for k, sc in enumerate(scenes) if any(ln["scene"] == k for ln in lines)] or [dict(name="", location="")],
                 lines=_renumber_scenes(scenes, lines))
 
@@ -253,12 +258,8 @@ def named_for(stem, name, full):
 
 
 # ---------------------------------------------------------------- the import
-def run(slug):
-    d = EPISODES / slug
-    pack = d / "pack"
-    build = d / "build"
-    build.mkdir(parents=True, exist_ok=True)
-    report = dict(script=None, characters={}, sets=[], scenes=[], voices={}, warnings=[], missing=[])
+def unpack(pack):
+    """zips in a pack unpacked beside it (and removed); -> every file in the pack"""
     for z in list(pack.rglob("*.zip")):
         with zipfile.ZipFile(z) as zf:
             for info in zf.infolist():
@@ -272,7 +273,16 @@ def run(slug):
                 out.write_bytes(zf.read(info))
         z.unlink()
         print(f"unpacked {z.name}", flush=True)
-    files = [p for p in sorted(pack.rglob("*")) if p.is_file() and not p.name.startswith(".")]
+    return [p for p in sorted(pack.rglob("*")) if p.is_file() and not p.name.startswith(".")]
+
+
+def run(slug):
+    d = EPISODES / slug
+    pack = d / "pack"
+    build = d / "build"
+    build.mkdir(parents=True, exist_ok=True)
+    report = dict(script=None, characters={}, sets=[], scenes=[], voices={}, warnings=[], missing=[])
+    files = unpack(pack)
     docs = [p for p in files if p.suffix.lower() in DOCS]
     pics = [p for p in files if p.suffix.lower() in P.IMAGE_TYPES]
     auds = [p for p in files if p.suffix.lower() in P.AUDIO_TYPES]
@@ -292,6 +302,11 @@ def run(slug):
         raise SystemExit("no script found: upload the director's script (.md, .txt, .docx or .pdf) with lines like "
                          "'GARY: text' or '[L001] GARY: text'")
     sp_path, script, text = best
+    old = json.loads((d / "studio.json").read_text()) if (d / "studio.json").exists() else {}
+    show = _show(old.get("show_id"))
+    if show:
+        text = text + "\n" + show["directive"]                 # the show's full names help tell people apart
+        report["show"] = show["title"]
     report["script"] = str(sp_path.relative_to(d))
     print(f"script: {sp_path.name}: {len(script['lines'])} lines in {len(script['scenes'])} scenes", flush=True)
     if sp_path.suffix.lower() in (".md", ".txt", ".fountain"):
@@ -325,8 +340,12 @@ def run(slug):
     for n in names:
         if n in cast_of:
             continue
-        c = match_library(n, fulls[n], text, lib)
-        if c and c["drawings"]:
+        c = (match_library(n, fulls[n], text, [x for x in lib if x["id"] in show["by_id"]]) if show else None) \
+            or match_library(n, fulls[n], text, lib)
+        if c and show and c["id"] in show["by_id"] and show["by_id"][c["id"]].get("drawing"):
+            cast_of[n] = (c["id"], show["by_id"][c["id"]]["drawing"])
+            report["characters"][n] = dict(id=c["id"], name=c["name"], source="the show's cast")
+        elif c and c["drawings"]:
             cast_of[n] = (c["id"], "front" if "front" in c["drawings"] else c["drawings"][0])
             report["characters"][n] = dict(id=c["id"], name=c["name"], source="library")
         elif unnamed:
@@ -353,7 +372,7 @@ def run(slug):
         def score(b):
             have = set(words(b["title"] + " " + b["id"].replace("/", " ").replace("-", " ")))
             return sum(1 for w in want if w in have or (w.endswith("s") and w[:-1] in have))
-        pool = [b for b in land if b["id"] in sets] or []
+        pool = [b for b in land if b["id"] in sets or (show and b["id"] in show["sets"])] or []
         pick = max(pool, key=score) if pool and want and score(max(pool, key=score)) > 0 else None
         if not pick and want and land:
             lb = max(land, key=score)
@@ -365,16 +384,17 @@ def run(slug):
         elif spare:
             bid = spare[0]
         else:
-            bid = prev or (sets[0] if sets else (land[0]["id"] if land else ""))
+            bid = prev or (sets[0] if sets else (show["sets"][0] if show and show["sets"] else
+                                                 (land[0]["id"] if land else "")))
             if not prev:
                 report["warnings"].append(f"scene {k + 1}: no set matched '{sc['location'] or sc['name']}'; using {bid}")
         if bid in spare:
             spare.remove(bid)
         place = re.sub(r"^(INT|EXT|I/E|INT\./EXT)\.?\s+", "", sc["location"], flags=re.I)
-        place = re.split(r"\.\s+|\s+[—–-]\s+", place)[0].strip(" .").title() if place else ""
+        place = titled(re.split(r"\.\s+|\s+[—–-]\s+", place)[0].strip(" .")) if place else ""
         if place and bid == prev and not sc["location"]:
             place = ""
-        scenes.append(dict(name=sc["name"].title() if sc["name"].isupper() else sc["name"], background=bid,
+        scenes.append(dict(name=titled(sc["name"]) if sc["name"].isupper() else sc["name"], background=bid,
                            place=place if bid != prev else "", stage={}))
         report["scenes"].append(dict(name=sc["name"], location=sc["location"], set=bid))
         prev = bid
@@ -423,7 +443,6 @@ def run(slug):
     for who in rec:
         rec[who] = [f for _, f in sorted(zip([r["file"] for r in report["voices"][who]], rec[who]))]
     # recordings filed by an earlier import (the pack gives them up when they are filed) stay theirs
-    old = json.loads((d / "studio.json").read_text()) if (d / "studio.json").exists() else {}
     before = {c["id"]: (c.get("voice") or {}).get("files") or [] for c in old.get("cast", [])}
     for n in names:
         fs = [f for f in before.get(cast_of[n][0], []) if (vo / f).exists()]
@@ -437,6 +456,9 @@ def run(slug):
         cid, drawing = cast_of[n]
         if n in rec:
             voice = dict(kind="recording", files=rec[n])
+        elif show and (show["by_id"].get(cid) or {}).get("voice"):
+            voice = dict(show["by_id"][cid]["voice"])            # the voice they always have in this show
+            report["voices"][n] = [dict(stand_in=voice["voice"], show=True)]
         else:
             female = _female(cid)
             if female:
@@ -446,6 +468,8 @@ def run(slug):
                 voice = dict(kind="tts", voice=STAND_IN[k_m % len(STAND_IN)], speed=1.0)
                 k_m += 1
             report["voices"][n] = [dict(stand_in=voice["voice"])]
+        if show:
+            _remember(show, cid, drawing, voice if voice["kind"] == "tts" else None)
         cast.append(dict(id=cid, drawing=drawing, voice=voice, caption="", mood=""))
     lines = []
     for i, ln in enumerate(script["lines"]):
@@ -454,7 +478,8 @@ def run(slug):
                           scene=ln["scene"]))
     _stage(scenes, lines)
     sp = dict(title=old.get("title") or script["title"] or slug.replace("-", " ").title(),
-              show=old.get("show") or script["show"], tagline=old.get("tagline", ""), scenes=scenes, cast=cast,
+              show=old.get("show") or (show["title"] if show else script["show"]),
+              tagline=old.get("tagline", ""), scenes=scenes, cast=cast, show_id=old.get("show_id", ""),
               lines=lines, open=2.2, hold=1.3, script_file="script.md")
     P.save_episode(slug, normalize(sp))
     _report(build, report)
@@ -462,6 +487,161 @@ def run(slug):
     print(f"sets: {', '.join(s['background'] for s in scenes)}", flush=True)
     for w in report["warnings"]:
         print("warning: " + w, flush=True)
+
+
+# ---------------------------------------------------------------- shows
+def _show(slug):
+    """a show's cast, sets, voices and directive text (for an episode made in it)"""
+    if not slug:
+        return None
+    f = SHOWS / slug / "show.json"
+    if not f.exists():
+        return None
+    sh = json.loads(f.read_text())
+    sh["slug"] = slug
+    sh["by_id"] = {c["id"]: c for c in sh.get("cast", [])}
+    sh["sets"] = sh.get("sets", [])
+    pack = SHOWS / slug / "pack"
+    sh["directive"] = "\n".join(text_of(p) for p in sorted(pack.rglob("*")) if p.suffix.lower() in DOCS) if pack.exists() else ""
+    return sh
+
+
+def _remember(show, cid, drawing, voice):
+    """a show keeps the voice and drawing each character first got in it, so every episode sounds the same"""
+    f = SHOWS / show["slug"] / "show.json"
+    sh = json.loads(f.read_text())
+    cast = sh.setdefault("cast", [])
+    c = next((x for x in cast if x["id"] == cid), None)
+    if c is None:
+        c = dict(id=cid)
+        cast.append(c)
+    c.setdefault("drawing", drawing)
+    if voice and not c.get("voice"):
+        c["voice"] = voice
+    f.write_text(json.dumps(sh, indent=1, ensure_ascii=False) + "\n")
+    show["by_id"][cid] = c
+
+
+CAST_HEAD = re.compile(r"(cast|characters|starring|regulars|who's who)", re.I)
+FILLER = {"kit", "final", "sheet", "model", "character", "char", "front", "full", "body", "png", "jpg", "new", "v",
+          "copy", "img", "image", "drawing", "art", "turnaround", "pose"}
+
+
+def _picture_name(stem):
+    ws = [w for w in re.split(r"[\s_\-.]+", stem) if w and not w.isdigit() and w.lower().rstrip("0123456789") not in FILLER]
+    return " ".join(w.capitalize() if w.islower() or w.isupper() else w for w in ws)
+
+
+def cast_list(text):
+    """the names a show directive casts: bullets or bold names under a Cast / Characters heading, and any
+    'Speaking cast:' / 'Cast:' line"""
+    names = []
+
+    def add(n):
+        n = re.sub(r"[*_`]", "", n).strip(" .:-—–")
+        if 1 <= len(n.split()) <= 4 and n[:1].isupper() and n not in names and len(n) < 40:
+            names.append(n)
+    rows = text.splitlines()
+    under = False
+    for r in rows:
+        s = r.strip()
+        m = re.match(r"^(?:\*\*)?(?:speaking )?(?:cast|characters|starring)(?:\*\*)?\s*:\s*(.+)$", s, re.I)
+        if m:
+            for part in re.split(r",| and ", re.sub(r"\*\*", "", m.group(1))):
+                add(re.split(r"\s+[(—–-]\s*|\.\s", part.strip())[0])
+            continue
+        if s.startswith("#"):
+            under = bool(CAST_HEAD.search(s))
+            continue
+        if under:
+            m = re.match(r"^(?:[-*•]|\d+[.)])\s+(?:\*\*)?([^*:—–(]+?)(?:\*\*)?\s*(?:[:—–(]|\s-\s|$)", s) \
+                or re.match(r"^\*\*([^*]+?)\*\*", s)
+            if m:
+                add(m.group(1))
+    return names
+
+
+def run_show(slug):
+    """a show's directive and assets -> shows/<slug>/show.json: its title, tagline, cast (characters filed from
+    the pictures, or found in the library), sets, and a stand-in voice for each of them, kept for every episode"""
+    d = SHOWS / slug
+    pack, build = d / "pack", d / "build"
+    build.mkdir(parents=True, exist_ok=True)
+    report = dict(directive=[], characters={}, sets=[], warnings=[], missing=[])
+    files = unpack(pack)
+    docs = [p for p in files if p.suffix.lower() in DOCS]
+    pics = [p for p in files if p.suffix.lower() in P.IMAGE_TYPES]
+    text = ""
+    for p in docs:
+        try:
+            text += text_of(p) + "\n"
+            report["directive"].append(p.name)
+        except Exception as e:  # noqa: BLE001
+            report["warnings"].append(f"could not read {p.name}: {e}")
+    sh = json.loads((d / "show.json").read_text())
+    if not sh.get("title"):
+        m = re.search(r"^#\s+(.+)$", text, re.M)
+        first = next((ln.strip(" #*") for ln in text.splitlines() if ln.strip()), "")
+        sh["title"] = (m.group(1) if m else first or slug.replace("-", " ")).strip(" *")
+        parts = re.split(r"\s+[—–:\-]\s+", sh["title"], maxsplit=1)
+        if len(parts) == 2 and re.search(r"(show )?bible|directive|series|show", parts[1], re.I):
+            sh["title"] = parts[0]
+        if sh["title"].isupper():
+            sh["title"] = titled(sh["title"])
+    m = re.search(r"^(?:\*\*)?tag ?line(?:\*\*)?\s*:\s*(.+)$", text, re.I | re.M)
+    if m and not sh.get("tagline"):
+        sh["tagline"] = m.group(1).strip(" *")
+    lib = library()
+    names = cast_list(text)
+    cast = {c["id"]: c for c in sh.get("cast", [])}
+    sets = list(sh.get("sets", []))
+    placed = set()
+    for p in pics:
+        if looks_like_set(p) and not any(named_for(p.stem, n.split()[0], n) for n in names):
+            bid = _file_set(p, report)
+            if bid not in sets:
+                sets.append(bid)
+            continue
+        guess = _picture_name(p.stem)
+        full = next((n for n in names if named_for(p.stem, n.split()[0], n) or norm(n) == norm(guess)), None)
+        if not full and guess:
+            full = full_name(guess.split()[0], text) if len(guess.split()) == 1 else guess
+        if not full:
+            report["warnings"].append(f"{p.name}: couldn't tell who this is; name the file after them")
+            continue
+        cid, drawing = _file_character(p, full.split()[0].upper(), full, text, lib, report)
+        cast.setdefault(cid, dict(id=cid))["drawing"] = drawing
+        placed.add(norm(full))
+        lib = library()
+    for n in names:                                   # named in the directive, no picture: the library
+        if norm(n) in placed:
+            continue
+        c = match_library(n.split()[0].upper(), n, text, lib)
+        if c and c["drawings"] and (norm(c["name"]) == norm(n) or len(n.split()) == 1):
+            cast.setdefault(c["id"], dict(id=c["id"], drawing="front" if "front" in c["drawings"] else c["drawings"][0]))
+            report["characters"][n] = dict(id=c["id"], name=c["name"], source="library")
+        else:
+            report["missing"].append(n)
+    k_m = k_f = 0
+    for c in cast.values():                           # a stand-in voice each, for as long as they have no recording
+        if not c.get("voice"):
+            if _female(c["id"]):
+                c["voice"] = dict(kind="tts", voice=STAND_IN_F[k_f % len(STAND_IN_F)], speed=1.0)
+                k_f += 1
+            else:
+                c["voice"] = dict(kind="tts", voice=STAND_IN[k_m % len(STAND_IN)], speed=1.0)
+                k_m += 1
+    sh["cast"] = list(cast.values())
+    sh["sets"] = sets
+    (d / "show.json").write_text(json.dumps(sh, indent=1, ensure_ascii=False) + "\n")
+    _report(build, report)
+    print(f"show: {sh['title']}", flush=True)
+    print("cast: " + ", ".join(c["id"] for c in sh["cast"]), flush=True)
+    print("sets: " + ", ".join(sets), flush=True)
+    for w in report["warnings"]:
+        print("warning: " + w, flush=True)
+    if report["missing"]:
+        print("not found (upload a picture named after them): " + ", ".join(report["missing"]), flush=True)
 
 
 def _stage(scenes, lines):
@@ -603,4 +783,9 @@ def _heard_as(p, lines_of, build):
 
 
 if __name__ == "__main__":
-    run(sys.argv[1])
+    # python3 -m studio.web.autoprod SLUG            an episode's pack
+    # python3 -m studio.web.autoprod --show SLUG     a show's directive and assets
+    if sys.argv[1] == "--show":
+        run_show(sys.argv[2])
+    else:
+        run(sys.argv[1])

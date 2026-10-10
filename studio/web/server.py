@@ -12,8 +12,14 @@ is needed: POST /api/characters?name=Roy%20Keane&filename=roy.png  <bytes>.
     POST /api/characters/<id>/build     {drawing}
     POST /api/characters/<id>/face      {drawing, eyes: [[x, y], [x, y]], mouth: [x, y]}   (built-drawing px)
     POST /api/backgrounds?title=&setting=&filename=     a new set
-    POST /api/productions {title}                      an episode to be produced from a pack: then
-    POST /api/episodes/<slug>/pack?filename=           every file of the pack (script, pictures, recordings, zips)
+    POST /api/login {password}    GET /api/whoami      (STUDIO_PASSWORD set: everything else needs the login)
+    GET  /api/shows  POST /api/shows {title}   GET|PUT|DELETE /api/shows/<slug>
+    POST /api/shows/<slug>/pack?filename=[&offset=&total=]   the show's directive and assets
+    POST /api/shows/<slug>/read                        read them (studio.web.autoprod --show)
+    GET  /api/shows/<slug>/report
+    POST /api/productions {title, show}                an episode to be produced from a pack (in a show): then
+    POST /api/episodes/<slug>/pack?filename=[&offset=&total=]   every file of the pack (script, pictures,
+                                                       recordings, zips), whole or in pieces
     POST /api/episodes/<slug>/produce {quality}        read the pack (studio.web.autoprod) and make the film
     GET  /api/episodes/<slug>/report                   what the import worked out
     GET  /api/episodes  POST /api/episodes {title}
@@ -23,8 +29,11 @@ is needed: POST /api/characters?name=Roy%20Keane&filename=roy.png  <bytes>.
     GET  /api/episodes/<slug>/stills
     GET  /api/jobs  GET /api/jobs/<id>  POST /api/jobs/<id>/cancel
     GET  /thumb?path=<repo path>&h=      GET /file/<repo path>     (library/, episodes/, build/ only)"""
+import hashlib
+import hmac
 import json
 import mimetypes
+import os
 import re
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -63,6 +72,18 @@ def repo_file(rel):
     if not any(str(p).startswith(str((ROOT / s).resolve()) + "/") for s in SERVED) or not p.is_file():
         raise ApiError("not found", 404)
     return p
+
+
+# ---------------------------------------------------------------- the password
+# STUDIO_PASSWORD set (always, when the studio is on the internet): every request but the page itself, its static
+# files and the login needs the cookie the login gives. Unset: open (on your own machine).
+PASSWORD = os.environ.get("STUDIO_PASSWORD", "")
+SECRET = hashlib.sha256(("studio:" + os.environ.get("STUDIO_SECRET", "") + ":" + PASSWORD).encode()).hexdigest()
+OPEN_PATHS = ("", "index.html", "static", "sw.js", "manifest.webmanifest", "healthz", "api/login", "api/whoami")
+
+
+def token():
+    return hmac.new(SECRET.encode(), b"studio-session", hashlib.sha256).hexdigest()
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -129,11 +150,23 @@ class Handler(BaseHTTPRequestHandler):
         b = self.body()
         return json.loads(b) if b else {}
 
+    def authed(self):
+        if not PASSWORD:
+            return True
+        for c in (self.headers.get("Cookie") or "").split(";"):
+            k, _, v = c.strip().partition("=")
+            if k == "studio" and hmac.compare_digest(v, token()):
+                return True
+        return False
+
     def route(self, method):
         u = urlparse(self.path)
         q = {k: v[0] for k, v in parse_qs(u.query).items()}
         parts = [unquote(x) for x in u.path.strip("/").split("/") if x]
         try:
+            path = "/".join(parts[:2]) if parts[:1] == ["api"] else (parts[0] if parts else "")
+            if not self.authed() and path not in OPEN_PATHS:
+                raise ApiError("log in first", 401)
             out = self.dispatch(method, parts, q)
             if out is not None:
                 self.send_json(out)
@@ -169,6 +202,27 @@ class Handler(BaseHTTPRequestHandler):
         if head == "static" and len(parts) == 2 and (STATIC / parts[1]).is_file():
             self.send_file(STATIC / parts[1])
             return None
+        if head in ("sw.js", "manifest.webmanifest"):          # the installable app (served from the root: its scope)
+            self.send_file(STATIC / head, "text/javascript" if head.endswith(".js") else "application/manifest+json")
+            return None
+        if head == "healthz":
+            return dict(ok=True)
+        if parts == ["api", "whoami"]:
+            return dict(authed=self.authed(), password=bool(PASSWORD))
+        if parts == ["api", "login"] and method == "POST":
+            if not PASSWORD or hmac.compare_digest(self.json_body().get("password", ""), PASSWORD):
+                secure = "; Secure" if self.headers.get("X-Forwarded-Proto") == "https" else ""
+                b = json.dumps(dict(ok=True)).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(b)))
+                self.send_header("Set-Cookie", f"studio={token()}; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax{secure}")
+                self.end_headers()
+                self.wfile.write(b)
+                return None
+            import time
+            time.sleep(1.0)                                    # slow down guessing
+            raise ApiError("wrong password", 403)
         if head == "file":
             self.send_file(repo_file("/".join(parts[1:])))
             return None
@@ -196,7 +250,10 @@ class Handler(BaseHTTPRequestHandler):
                                    q.get("crop", "1") == "1")
             return dict(id=bid)
         if what == "productions" and method == "POST":
-            return dict(slug=P.new_production(self.json_body().get("title", "")))
+            b = self.json_body()
+            return dict(slug=P.new_production(b.get("title", ""), b.get("show", "")))
+        if what == "shows":
+            return self.shows(method, rest, q)
         if what == "episodes":
             return self.episodes(method, rest, q)
         if what == "jobs":
@@ -251,6 +308,57 @@ class Handler(BaseHTTPRequestHandler):
             return dict(path=str(f.relative_to(ROOT)), meta=meta, marks=marks)
         raise ApiError("not found", 404)
 
+    def pack_upload(self, slug, q, root):
+        """a file of a pack, whole or in pieces (offset, total: a phone's upload of a big zip survives a dropped
+        connection and any limit on a request's size)"""
+        if not (root / slug).exists():
+            raise ApiError("no such production", 404)
+        name = q.get("filename", "file")
+        data = self.body()
+        if "total" not in q:
+            return dict(file=P.add_to_pack(slug, data, name, root))
+        off, total = int(q.get("offset", 0)), int(q["total"])
+        part = root / slug / "build" / "uploads" / (P.sha(name.encode())[:16] + ".part")
+        part.parent.mkdir(parents=True, exist_ok=True)
+        have = part.stat().st_size if part.exists() else 0
+        if off == 0:
+            part.write_bytes(b"")
+            have = 0
+        if off != have:
+            return dict(offset=have)                         # resume from what arrived
+        with open(part, "ab") as f:
+            f.write(data)
+        have += len(data)
+        if have < total:
+            return dict(offset=have)
+        out = P.add_to_pack(slug, part.read_bytes(), name, root)
+        part.unlink()
+        return dict(file=out, offset=have)
+
+    def shows(self, method, rest, q):
+        if not rest:
+            if method == "POST":
+                return dict(slug=P.new_show(self.json_body().get("title", "")))
+            return P.shows()
+        slug, sub = rest[0], (rest[1] if len(rest) > 1 else "")
+        if not sub:
+            if method == "GET":
+                return P.load_show(slug)
+            if method == "PUT":
+                P.load_show(slug)
+                return P.save_show(slug, self.json_body())
+            if method == "DELETE":
+                P.delete_show(slug)
+                return dict(ok=True)
+        if sub == "pack" and method == "POST":
+            return self.pack_upload(slug, q, P.SHOWS)
+        if sub == "read" and method == "POST":
+            P.load_show(slug)
+            return dict(job=J.QUEUE.add(J.read_show(slug)).id)
+        if sub == "report" and method == "GET":
+            return P.report(slug, P.SHOWS) or {}
+        raise ApiError("not found", 404)
+
     def episodes(self, method, rest, q):
         if not rest:
             if method == "POST":
@@ -268,7 +376,7 @@ class Handler(BaseHTTPRequestHandler):
                 P.delete_episode(slug)
                 return dict(ok=True)
         if sub == "pack" and method == "POST":
-            return dict(file=P.add_to_pack(slug, self.body(), q.get("filename", "file")))
+            return self.pack_upload(slug, q, P.EPISODES)
         if sub == "produce" and method == "POST":
             if not (P.EPISODES / slug / "pack").exists():
                 raise ApiError("upload the pack first")

@@ -12,6 +12,17 @@ import time
 from studio.paths import BUILD, ROOT
 
 PY = sys.executable
+
+
+def cores():
+    """the cores this machine lets the studio use (STUDIO_JOBS overrides: a host's container may see more cores
+    than it is given)"""
+    if os.environ.get("STUDIO_JOBS"):
+        return str(int(os.environ["STUDIO_JOBS"]))
+    try:
+        return str(len(os.sched_getaffinity(0)))
+    except AttributeError:
+        return str(os.cpu_count() or 4)
 LOGS = BUILD / "web" / "jobs"
 
 
@@ -137,7 +148,6 @@ def web(slug, *args):
 def make_episode(slug, draft=True, pack=False):
     """the whole film: (the pack read and filed,) the drawings, the voices and lip sync, the edit, the mix, the
     picture"""
-    cores = str(os.cpu_count() or 4)
     steps = ([("Read the pack: script, cast, sets, voices", [PY, "-m", "studio.web.autoprod", slug])] if pack else []) + [("Cut out the cast", web(slug, "cast")),
              ("Voices and lip sync", web(slug, "voices")),
              ("The edit", film(slug, "timeline")),
@@ -147,7 +157,7 @@ def make_episode(slug, draft=True, pack=False):
                   ("Keep the draft", web(slug, "finish", "--draft"))]
         env = {"EP_RES": "960x540"}
     else:
-        steps += [("Render (1920 x 1080)", film(slug, "render", "--jobs", cores)),
+        steps += [("Render (1920 x 1080)", film(slug, "render", "--jobs", cores())),
                   ("Contact sheet", film(slug, "sheet")),
                   ("Lip sheet", film(slug, "lips"))]
         env = {}
@@ -161,7 +171,7 @@ def _draft(job, slug):
                                     "sys.path.insert(0,str(d));import importlib;"
                                     "print(importlib.import_module('film.timeline').TL['total'])", slug],
                                    cwd=ROOT, capture_output=True, text=True, check=True).stdout)
-    cmd = film(slug, "render", "--jobs", str(os.cpu_count() or 4), "--range", "0", f"{tl:.3f}")
+    cmd = film(slug, "render", "--jobs", cores(), "--range", "0", f"{tl:.3f}")
     env = dict(os.environ, PYTHONUNBUFFERED="1", **job.env)
     with open(job.log, "a") as log:
         log.write(f"$ {' '.join(cmd)}\n")
@@ -183,3 +193,9 @@ def build_character(cid, drawing):
     return Job(f"Cut out {cid}: {drawing}", [("Cut out, upscale, find the face",
                                                [PY, "-m", "studio.film.art", cid, drawing, "--force"])],
                "character", cid)
+
+
+def read_show(slug):
+    return Job(f"Show: {slug}", [("Read the show's directive: cast, sets, voices",
+                                   [PY, "-m", "studio.web.autoprod", "--show", slug]),
+                                  ("Cut out the cast", [PY, "-m", "studio.web.steps", slug, "show-cast"])], "show", slug)

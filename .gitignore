@@ -9,3 +9,4 @@ __pycache__/
 # episode working files (the finished video and its sources are committed)
 episodes/*/build/
 episodes/*/*_preview*.mp4
+shows/*/build/

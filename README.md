@@ -20,7 +20,15 @@ The Appeals Department. Gary Neville, Roy Keane and Jamie Carragher are still on
 python3 -m studio.web            # then open http://localhost:8000   (--host 0.0.0.0 --port N to share it)
 ```
 
-**Produce from a director's pack** (the Episodes page): drop in the director's script, a picture of each
+**On a phone:** the studio runs on a server and installs on the phone's home screen as an app (password
+protected). `DEPLOY.md` has the steps: one Blueprint on Render (`render.yaml`), or any Docker host (`Dockerfile`).
+
+**Shows** (the Shows page): upload a show's directive (the show bible: title, tagline, cast list) with a picture of
+each character and its sets, and the show keeps that cast, those sets and a stand-in voice for each character
+(`shows/<slug>/show.json`). Each episode is then produced inside the show from its own directive or script: the
+show's characters, sets and voices are used without being uploaded again, and its title goes on the title card.
+
+**Produce from a director's pack** (a show's page, or the Episodes page for a one-off): drop in the director's script, a picture of each
 character, the sets and the voice recordings (or one zip), press *Produce*, and the studio makes the film with
 nobody choosing anything (`studio/web/autoprod.py`):
 

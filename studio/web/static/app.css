@@ -116,3 +116,48 @@ video { width: 100%; border-radius: 8px; background: #000; }
 .packlist { margin-top: 10px; }
 .tabs { margin: 6px 0 0; }
 .scenehead { margin: 12px 0 2px; padding-bottom: 4px; border-bottom: 1px solid var(--line); }
+
+/* ---------------------------------------------------------------- shows, login */
+.showcast { display: flex; height: 150px; background: #e8e3da; overflow: hidden; }
+.showcast .pic { flex: 1; aspect-ratio: auto; background: center bottom / contain no-repeat; }
+.login { max-width: 360px; margin: 12vh auto 0; display: flex; flex-direction: column; gap: 12px; text-align: center; }
+.login img { width: 96px; height: 96px; margin: 0 auto; border-radius: 22px; }
+.filenames { word-break: break-all; }
+.tabs-nav .ico { display: none; }
+
+/* ---------------------------------------------------------------- phones: a bottom tab bar, full-width panels */
+@media (max-width: 720px) {
+  body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+  .top { padding: calc(10px + env(safe-area-inset-top)) 16px 10px; backdrop-filter: none; background: var(--bg); }
+  .top .brand { font-size: 13px; }
+  nav.tabs-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0;
+    background: rgba(18, 19, 22, .97); border-top: 1px solid var(--line); padding: 4px 4px calc(4px + env(safe-area-inset-bottom)); }
+  nav.tabs-nav a { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 2px; border-radius: 10px; font-size: 11px; position: relative; }
+  nav.tabs-nav .ico { display: block; font-size: 20px; line-height: 1.1; }
+  nav.tabs-nav .badge { position: absolute; top: 2px; right: 18%; }
+  main { padding: 14px 12px; }
+  h1 { font-size: 22px; }
+  .panel { padding: 12px; border-radius: 12px; }
+  input[type=text], input[type=number], input[type=password], select, textarea { font-size: 16px; }   /* no zoom on focus */
+  .btn { padding: 9px 14px; }
+  .btn.small { padding: 6px 10px; font-size: 13px; }
+  .row > input[type=text], .row > select { flex: 1 1 100%; }
+  .row > .btn.primary { flex: 1 1 100%; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .grid.wide { grid-template-columns: 1fr !important; }
+  .drop.big { padding: 26px 12px; }
+  .modal { padding: 0; align-items: stretch; }
+  .modal-box { border-radius: 0; max-height: 100vh; height: 100%; padding: calc(16px + env(safe-area-inset-top)) 14px 24px; }
+  .line { grid-template-columns: 1fr 1fr; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .line > :nth-child(1) { display: none; }
+  .line > :nth-child(3) { grid-column: 1 / -1; order: -1; }
+  .line > :nth-child(n+3) { grid-column: auto; }
+  .line.hint { display: none; }
+  .castrow { grid-template-columns: 44px 1fr; }
+  .castrow .face { width: 44px; height: 58px; }
+  .stage .actor .lbl { font-size: 9px; }
+  .shots { grid-template-columns: repeat(2, 1fr); }
+  .showcast { height: 120px; }
+}
+input[type=password] { background: #0f1013; border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; outline: none; }
+body.locked nav.tabs-nav { display: none; }

@@ -10,4 +10,6 @@ ap.add_argument("--host", default="127.0.0.1", help="0.0.0.0 to let other machin
 ap.add_argument("--port", type=int, default=8000)
 a = ap.parse_args()
 os.chdir(ROOT)
+if a.host not in ("127.0.0.1", "localhost") and not os.environ.get("STUDIO_PASSWORD") and not os.environ.get("STUDIO_OPEN"):
+    raise SystemExit("the studio is open to the network: set STUDIO_PASSWORD (or STUDIO_OPEN=1 on a private network)")
 serve(a.host, a.port)

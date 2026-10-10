@@ -10,7 +10,7 @@ from pathlib import Path
 import yaml
 from PIL import Image
 
-from studio.paths import BACKGROUNDS, BUILD, CHARACTERS, EPISODES, ROOT
+from studio.paths import BACKGROUNDS, BUILD, CHARACTERS, EPISODES, ROOT, SHOWS
 from studio.web.auto import normalize
 
 SETTINGS = ["stadiums", "training-ground", "club", "tv-and-media", "home", "spa-and-pool", "pub-and-restaurant",
@@ -316,6 +316,7 @@ def episodes():
         mp4 = d / f"{d.name}.mp4"
         prev = d / f"{d.name}_preview.mp4"
         out.append(dict(slug=d.name, title=(sp or {}).get("title") or d.name.replace("-", " ").title(), web=sp is not None,
+                        show=(sp or {}).get("show_id", ""),
                         video=rel(mp4) if mp4.exists() else None, preview=rel(prev) if prev.exists() else None))
     return out
 
@@ -415,23 +416,26 @@ def delete_episode(slug):
     shutil.rmtree(d)
 
 
-def new_production(title):
-    """an empty episode waiting for its pack"""
-    slug = kebab(title) or "new-episode"
+def new_production(title, show=""):
+    """an empty episode waiting for its pack (in a show, or on its own)"""
+    if show and not (SHOWS / show / "show.json").exists():
+        raise ValueError(f"no show {show}")
+    slug = kebab(title) or (f"{show}-episode" if show else "new-episode")
     base, k = slug, 2
     while (EPISODES / slug).exists():
         slug = f"{base}-{k}"
         k += 1
     (EPISODES / slug / "pack").mkdir(parents=True)
-    if title.strip():
-        (EPISODES / slug / "studio.json").write_text(json.dumps(dict(title=title.strip(), cast=[], lines=[],
-                                                                     scenes=[]), indent=1) + "\n")
+    if title.strip() or show:
+        (EPISODES / slug / "studio.json").write_text(json.dumps(dict(title=title.strip(), show_id=show, cast=[],
+                                                                     lines=[], scenes=[]), indent=1) + "\n")
     return slug
 
 
-def add_to_pack(slug, data, filename):
-    """one file of a production pack, as delivered (byte for byte; the same file twice is kept once)"""
-    d = EPISODES / slug / "pack"
+def add_to_pack(slug, data, filename, root=EPISODES):
+    """one file of a production pack (an episode's, or a show's with root=SHOWS), as delivered (byte for byte; the
+    same file twice is kept once)"""
+    d = root / slug / "pack"
     d.mkdir(parents=True, exist_ok=True)
     name = re.sub(r"[/\\]", "_", filename).strip(". ") or "file"
     digest = sha(data)
@@ -447,6 +451,57 @@ def add_to_pack(slug, data, filename):
     return p.name
 
 
-def report(slug):
-    f = EPISODES / slug / "build" / "import.json"
+def report(slug, root=EPISODES):
+    f = root / slug / "build" / "import.json"
     return json.loads(f.read_text()) if f.exists() else None
+
+
+# ---------------------------------------------------------------- shows
+def shows():
+    out = []
+    if SHOWS.exists():
+        for d in sorted(SHOWS.iterdir()):
+            f = d / "show.json"
+            if f.exists():
+                sh = json.loads(f.read_text())
+                eps = [e for e in episodes() if e["show"] == d.name]
+                out.append(dict(slug=d.name, title=sh.get("title") or d.name, tagline=sh.get("tagline", ""),
+                                cast=[c["id"] for c in sh.get("cast", [])], sets=sh.get("sets", []), episodes=eps))
+    return out
+
+
+def new_show(title):
+    slug = kebab(title) or "new-show"
+    base, k = slug, 2
+    while (SHOWS / slug).exists():
+        slug = f"{base}-{k}"
+        k += 1
+    (SHOWS / slug / "pack").mkdir(parents=True)
+    (SHOWS / slug / "show.json").write_text(json.dumps(dict(title=title.strip(), tagline="", cast=[], sets=[]),
+                                                       indent=1) + "\n")
+    return slug
+
+
+def load_show(slug):
+    f = SHOWS / slug / "show.json"
+    if not f.exists():
+        raise ValueError(f"no show {slug}")
+    sh = json.loads(f.read_text())
+    sh["slug"] = slug
+    sh["episodes"] = [e for e in episodes() if e["show"] == slug]
+    sh["pack"] = sorted(p.name for p in (SHOWS / slug / "pack").glob("*") if p.is_file())
+    return sh
+
+
+def save_show(slug, sh):
+    keep = {k: v for k, v in sh.items() if k not in ("slug", "episodes", "pack")}
+    (SHOWS / slug / "show.json").write_text(json.dumps(keep, indent=1, ensure_ascii=False) + "\n")
+    return load_show(slug)
+
+
+def delete_show(slug):
+    """the show's own folder; its episodes are kept (they become stand-alone)"""
+    d = SHOWS / slug
+    if not (d / "show.json").exists():
+        raise ValueError(f"no show {slug}")
+    shutil.rmtree(d)
