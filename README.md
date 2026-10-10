@@ -21,7 +21,9 @@ python3 -m studio.web            # then open http://localhost:8000   (--host 0.0
 ```
 
 **On a phone:** the studio runs on a server and installs on the phone's home screen as an app (password
-protected). `DEPLOY.md` has the steps: one Blueprint on Render (`render.yaml`), or any Docker host (`Dockerfile`).
+protected). `DEPLOY.md` has the steps; in short, tap
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/ab19902020/AnimnationStuido-),
+choose a password, and open the link Render gives you (any Docker host works too: `Dockerfile`).
 
 **Shows** (the Shows page): upload a show's directive (the show bible: title, tagline, cast list) with a picture of
 each character and its sets, and the show keeps that cast, those sets and a stand-in voice for each character

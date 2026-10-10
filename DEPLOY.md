@@ -6,17 +6,20 @@ protected. Everything is done from the phone; no PC is needed at any point.
 
 ## 1. Put the studio on a server (once, about 15 minutes)
 
-The repository comes ready for [Render](https://render.com) (`render.yaml`). On your phone's browser:
+On your phone, tap this button (it sets everything up from `render.yaml`):
 
-1. Go to **render.com**, sign up with **GitHub** (the account that has this repository) and add a payment card.
-   The studio needs the **Pro Plus** size (8 GB of memory, 4 CPUs) and a 50 GB disk: rendering a film takes the
-   memory, and the disk holds the library, your shows and finished films. Check Render's pricing page for the
-   current monthly cost before you start.
-2. Tap **New** > **Blueprint**, pick this repository (`animnationstuido-`) and the branch to run (the one with
-   this file in it, normally `main` once the studio branch is merged).
-3. Render asks for **STUDIO_PASSWORD**: choose the password the app will open with. Tap **Apply**.
-4. The first build takes about 10 minutes. When it says **Live**, tap the address at the top
-   (`https://animation-studio-....onrender.com`).
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/ab19902020/AnimnationStuido-)
+
+1. Sign up or log in to Render (with GitHub is quickest) and add a payment card. The studio runs on the **Pro Plus**
+   size (8 GB of memory, 4 CPUs) with a 50 GB disk: rendering a film needs the memory, and the disk holds the
+   library, your productions and finished films. Render shows the monthly cost before you confirm.
+2. Render asks for **STUDIO_PASSWORD**: choose the password the app will open with. Tap **Apply** / **Deploy**.
+3. The first build takes about 10 minutes. When it says **Live**, tap the address at the top
+   (`https://animation-studio-....onrender.com`). That is your studio's link: it works in any browser.
+
+(Without the button: render.com > **New** > **Blueprint** > this repository.) The same image is built and tested on
+GitHub on every change (`.github/workflows/studio-image.yml`: it starts the studio and produces a short episode
+through it).
 
 Any other host that runs a Docker image with a persistent disk works too (the `Dockerfile`):
 
