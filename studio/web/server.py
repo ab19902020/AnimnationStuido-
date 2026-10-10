@@ -172,6 +172,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(out)
         except ApiError as e:
             self.send_json(dict(error=str(e)), e.code)
+        except FileExistsError as e:
+            self.send_json(dict(error=str(e), exists=True), 409)
         except (ValueError, KeyError, FileNotFoundError) as e:
             self.send_json(dict(error=str(e)), 400)
         except Exception as e:  # noqa: BLE001

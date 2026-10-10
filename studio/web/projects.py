@@ -199,12 +199,13 @@ def set_face(cid, name, eyes, mouth):
 
 def add_character(name, data, filename, role=""):
     """a new character from one uploaded picture (a single drawing, or a model sheet to cut drawings from)"""
+    name = name.strip() or name_from_file(filename)
     cid = kebab(name)
     if not cid:
-        raise ValueError("a character needs a name")
+        raise ValueError("a character needs a name: name the picture after them")
     d = CHARACTERS / cid
     if (d / "character.yaml").exists():
-        raise ValueError(f"{cid} is already in the library: add a drawing to it instead")
+        raise FileExistsError(f"{name} is already in the cast library")
     ext = (re.search(r"\.[a-z0-9]+$", filename.lower()) or [".png"])[0]
     if ext not in IMAGE_TYPES:
         raise ValueError(f"not a picture: {filename}")
@@ -250,15 +251,49 @@ def add_reference(cid, data, filename):
 
 # ---------------------------------------------------------------- backgrounds
 def backgrounds():
+    """every set, newest first (the ones just added for a production come first)"""
     idx = yaml.safe_load((BACKGROUNDS / "backgrounds.yaml").read_text()) or {}
-    return [dict(id=k, title=v.get("title", k), size=v.get("size"), orientation=v.get("orientation"),
-                 path=f"library/backgrounds/{k}.png") for k, v in idx.items()]
+    out = []
+    for k, v in idx.items():
+        f = BACKGROUNDS / f"{k}.png"
+        out.append(dict(id=k, title=v.get("title", k), size=v.get("size"), orientation=v.get("orientation"),
+                        path=f"library/backgrounds/{k}.png", added=f.stat().st_mtime if f.exists() else 0))
+    return sorted(out, key=lambda b: -b["added"])
+
+
+SETTING_WORDS = [("tv-and-media", "studio podcast tv television media newsroom broadcast"),
+                 ("stadiums", "stadium pitch stand stands tunnel terrace ground"),
+                 ("training-ground", "training carrington gym"),
+                 ("club", "office dressing boardroom changing lounge club"),
+                 ("home", "home house kitchen living bedroom garden lounge dining bathroom flat apartment"),
+                 ("pub-and-restaurant", "pub bar restaurant cafe canteen"),
+                 ("nightlife", "nightclub disco dj party"),
+                 ("spa-and-pool", "spa pool beach sauna"),
+                 ("concert", "concert arena stage backstage"),
+                 ("street", "street road city town car park outside exterior")]
+
+
+def guess_setting(title):
+    ws = set(re.findall(r"[a-z]+", title.lower()))
+    return next((s for s, ks in SETTING_WORDS if ws & set(ks.split())), "street")
+
+
+FILLER = {"kit", "final", "sheet", "model", "character", "char", "front", "full", "body", "png", "jpg", "new", "v",
+          "copy", "img", "image", "drawing", "art", "turnaround", "pose", "bg", "background", "set", "backdrop"}
+
+
+def name_from_file(filename):
+    """a name from an upload's file name: 'carlos_baleba-final.png' -> 'Carlos Baleba'"""
+    stem = re.sub(r"\.[a-z0-9]+$", "", filename, flags=re.I)
+    ws = [w for w in re.split(r"[\s_\-.]+", stem) if w and not w.isdigit() and w.lower().rstrip("0123456789") not in FILLER]
+    return " ".join(w.capitalize() if w.islower() or w.isupper() else w for w in ws)
 
 
 def add_background(title, setting, data, filename, crop=True):
     """a set, filed as library/backgrounds/<setting>/<name>.png; a landscape picture that isn't 16:9 is cropped to
     16:9 about its centre (the episodes are 16:9), a portrait one is kept as it is and marked"""
-    setting = kebab(setting) or "street"
+    title = title.strip() or name_from_file(filename)
+    setting = kebab(setting) if setting and setting != "auto" else guess_setting(title)
     name = kebab(title)
     if not name:
         raise ValueError("a background needs a name")

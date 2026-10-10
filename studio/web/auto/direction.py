@@ -264,7 +264,8 @@ def _captions():
         who = s.get("who")
         if s["kind"] == "single" and who and who not in seen and s["end"] - s["t"] > 1.2:
             seen.add(who)
-            sub = S.CAST[who].get("caption") or str(S.info(who).get("role", "")).capitalize()
+            role = str(S.info(who).get("role", ""))
+            sub = S.CAST[who].get("caption") or ("" if role in ("", "character") else role.capitalize())
             caps.append((s["t"] + 0.25, s["end"] - 0.05, "name", S.name(who).upper(), sub))
     return caps
 

@@ -161,3 +161,16 @@ video { width: 100%; border-radius: 8px; background: #000; }
 }
 input[type=password] { background: #0f1013; border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; outline: none; }
 body.locked nav.tabs-nav { display: none; }
+
+/* ---------------------------------------------------------------- produce: the three steps, bulk adding */
+.step, .step-wrap { position: relative; }
+.stepnum { position: absolute; top: 14px; right: 16px; width: 30px; height: 30px; border-radius: 50%; background: var(--accent);
+  color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; z-index: 2; }
+.step-wrap .stepnum { top: 14px; }
+.bulk { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.bulkrow { display: grid; grid-template-columns: 54px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); }
+.bulkrow .thumb { width: 54px; height: 68px; border-radius: 6px; background: #e8e3da center / contain no-repeat; }
+.bulkrow .thumb.land { height: 34px; background-size: cover; }
+.bulkrow input[type=text] { width: 100%; }
+.missing { display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--bad); border-radius: 8px; margin: 8px 0; }

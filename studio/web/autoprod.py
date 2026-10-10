@@ -262,10 +262,12 @@ def unpack(pack):
     """zips in a pack unpacked beside it (and removed); -> every file in the pack"""
     for z in list(pack.rglob("*.zip")):
         with zipfile.ZipFile(z) as zf:
-            for info in zf.infolist():
-                name = Path(info.filename)
-                if info.is_dir() or name.name.startswith(".") or "__MACOSX" in name.parts:
-                    continue
+            infos = [i for i in zf.infolist() if not i.is_dir() and not Path(i.filename).name.startswith(".")
+                     and "__MACOSX" not in Path(i.filename).parts]
+            tops = {Path(i.filename).parts[0] for i in infos if len(Path(i.filename).parts) > 1}
+            strip = len(tops) == 1 and all(len(Path(i.filename).parts) > 1 for i in infos)   # one folder inside
+            for info in infos:
+                name = Path(*Path(info.filename).parts[1:]) if strip else Path(info.filename)
                 out = (pack / z.stem / name).resolve()
                 if not str(out).startswith(str(pack.resolve())):
                     continue
@@ -289,12 +291,14 @@ def run(slug):
 
     # the script
     best = None
+    texts = {}
     for p in docs:
         try:
             t = text_of(p)
         except Exception as e:  # noqa: BLE001
             report["warnings"].append(f"could not read {p.name}: {e}")
             continue
+        texts[p] = t
         sc = parse_script(t)
         if sc["lines"] and (best is None or len(sc["lines"]) > len(best[1]["lines"])):
             best = (p, sc, t)
@@ -302,6 +306,9 @@ def run(slug):
         raise SystemExit("no script found: upload the director's script (.md, .txt, .docx or .pdf) with lines like "
                          "'GARY: text' or '[L001] GARY: text'")
     sp_path, script, text = best
+    notes = "\n".join(t for p, t in texts.items() if p != sp_path)     # the production notes, the director's notes
+    report["notes"] = [p.name for p in texts if p != sp_path]
+    text = text + "\n" + notes                    # full names and cast lists in the notes tell people apart
     old = json.loads((d / "studio.json").read_text()) if (d / "studio.json").exists() else {}
     show = _show(old.get("show_id"))
     if show:
@@ -368,15 +375,24 @@ def run(slug):
     for k, sc in enumerate(script["scenes"]):
         want = words(sc["location"] + " " + sc["name"]) if (sc["location"] or sc["name"]) else []
         want = [w for w in want if w not in ("int", "ext", "day", "night", "the", "and", "continuous", "later")]
+        said = _notes_on_scene(notes, k + 1, sc["name"])           # what the notes say about this scene
 
         def score(b):
             have = set(words(b["title"] + " " + b["id"].replace("/", " ").replace("-", " ")))
             return sum(1 for w in want if w in have or (w.endswith("s") and w[:-1] in have))
         pool = [b for b in land if b["id"] in sets or (show and b["id"] in show["sets"])] or []
-        pick = max(pool, key=score) if pool and want and score(max(pool, key=score)) > 0 else None
+        rank = lambda b: (score(b), b["added"])                     # ties go to the set added most recently
+        pick = max(pool, key=rank) if pool and want and score(max(pool, key=rank)) > 0 else None
         if not pick and want and land:
-            lb = max(land, key=score)
+            lb = max(land, key=rank)
             pick = lb if score(lb) > 0 else None
+        if not pick and said:                                         # the heading names no set: the notes might
+            want = [w for w in words(said) if len(w) > 3]
+            cands = [b for b in (pool or []) + land]
+            lb = max(cands, key=lambda b: (score(b), b["added"])) if cands else None
+            pick = lb if lb and score(lb) >= 2 else None
+            if pick:
+                report["warnings"].append(f"scene {k + 1}: set {pick['id']} chosen from the production notes")
         if not pick and sc["location"] == "" and prev:            # no slugline: the same place as before
             bid = prev
         elif pick:
@@ -384,6 +400,7 @@ def run(slug):
         elif spare:
             bid = spare[0]
         else:
+            # nothing named: the set added most recently (the one just uploaded for this production)
             bid = prev or (sets[0] if sets else (show["sets"][0] if show and show["sets"] else
                                                  (land[0]["id"] if land else "")))
             if not prev:
@@ -644,6 +661,15 @@ def run_show(slug):
         print("not found (upload a picture named after them): " + ", ".join(report["missing"]), flush=True)
 
 
+def _notes_on_scene(notes, n, name):
+    """the paragraphs of the notes about scene n (by its number or its name)"""
+    if not notes:
+        return ""
+    keys = [rf"\bscene\s*{n}\b"] + ([re.escape(name.lower())] if len(name) > 4 else [])
+    out = [para for para in re.split(r"\n\s*\n", notes) if any(re.search(k, para.lower()) for k in keys)]
+    return " ".join(out)[:4000]
+
+
 def _stage(scenes, lines):
     """where everyone stands: the scene's speakers spread across the set in the order they first speak; a scene on
     the same set as the one before keeps everyone where they were (continuity) and puts newcomers in the gaps"""
@@ -715,18 +741,6 @@ def _file_character(p, name, full, text, lib, report, guessed=False):
     return cid, drawing
 
 
-SETTING_WORDS = [("tv-and-media", "studio podcast tv television media newsroom broadcast"),
-                 ("stadiums", "stadium pitch stand stands tunnel terrace ground"),
-                 ("training-ground", "training carrington gym"),
-                 ("club", "office dressing boardroom changing lounge club"),
-                 ("home", "home house kitchen living bedroom garden lounge dining bathroom flat apartment"),
-                 ("pub-and-restaurant", "pub bar restaurant cafe canteen"),
-                 ("nightlife", "nightclub disco dj party"),
-                 ("spa-and-pool", "spa pool beach sauna"),
-                 ("concert", "concert arena stage backstage"),
-                 ("street", "street road city town car park outside exterior")]
-
-
 def _file_set(p, report):
     data = p.read_bytes()
     digest = P.sha(data)
@@ -739,7 +753,7 @@ def _file_set(p, report):
             return bid
     title = re.sub(r"[_\-]+", " ", p.stem).strip() or "set"
     ws = set(words(title))
-    setting = next((s for s, ks in SETTING_WORDS if ws & set(ks.split())), "street")
+    setting = P.guess_setting(title)
     bid = f"{setting}/{P.kebab(title)}"
     k = 2
     while bid in idx:

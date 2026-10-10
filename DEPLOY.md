@@ -34,21 +34,28 @@ Open the address, enter the password, then:
 
 From then on the **Studio** icon opens it full screen, like any app, and it stays logged in.
 
-## 3. Make shows and episodes
+## 3. Make a production
 
-- **Shows** tab > **Create a show**: upload the show's directive (the show bible: title, tagline, the cast list,
-  the places), a picture of each character named after them (`Barry Plum.png`) and the sets, or one zip of it all.
-  The studio files the characters and sets, finds anyone already in the library, cuts everyone out and gives each
-  character the stand-in voice they will keep in every episode (change it on the show's page).
-- On the show's page, **Produce an episode**: upload the episode's directive or script, plus anything new (a new
-  character's picture, a new set, the actors' recordings: one file per actor, named after them, or let the studio
-  work out whose voice is whose). Choose **Final film** and tap **Produce**. The studio reads the scenes, the
-  lines and the stage directions, casts and stages every scene, cuts the lines out of the recordings for the lip
-  sync, directs, mixes and renders.
-- You can lock the phone: the work carries on on the server. Open the episode again to see how far it has got
-  (the **Jobs** tab shows everything), then watch the film in the app or **Download** it.
-- Everything stays editable on the episode's page: sets and staging per scene (drag the characters), voices, the
-  lines, stills, a quick draft, the final.
+The **Produce** tab (the app opens on it) is the three steps:
+
+1. **New cast members**: pick the pictures of anyone new in this production, one per character, named after them
+   (`Carlos Baleba.png`: the name is read from the file name and can be corrected before adding). Each is cut out
+   and checked; the **Cast** tab shows them, and **Fix face** sets the eyes and mouth if a face isn't found.
+2. **New backgrounds**: pick the new sets, named for the place (`Carrick's kitchen.png`).
+3. **Produce it**: pick the director's zip and the production notes, as they came, choose **Final film** and tap
+   **Produce**. The studio finds the script among the documents, casts every speaker from the cast library (the
+   full names in the notes tell people with the same first name apart), gives each scene the set its heading
+   names (or, failing that, the set the notes describe for it, or the newest one), gives each recording to whoever
+   it is named for or whoever's lines it hears (anyone without one gets a stand-in voice), stages the scenes, cuts
+   out the characters, syncs the lips, directs, mixes and renders.
+
+If the script has someone the cast library doesn't, the episode's page says who, with an **Add their picture**
+button for each and **Produce again**. You can lock the phone while it works: the **Jobs** tab and the episode's
+page show how far it has got; then watch the film in the app or **Download** it. Everything stays editable on the
+episode's page (sets and staging per scene, voices, lines, stills, a quick draft, the final).
+
+A series can also be kept as a **Show** (Episodes > Shows): its cast, sets and stand-in voices are kept and every
+episode produced in it reuses them.
 
 ## Good to know
 

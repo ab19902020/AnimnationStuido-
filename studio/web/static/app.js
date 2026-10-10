@@ -103,15 +103,15 @@ function jobView(j, onCancel) {
 }
 
 // ---------------------------------------------------------------- router
-const VIEWS = { shows: viewShows, show: viewShow, episodes: viewEpisodes, episode: viewEpisode, characters: viewCharacters, character: viewCharacter,
+const VIEWS = { produce: viewProduce, shows: viewShows, show: viewShow, episodes: viewEpisodes, episode: viewEpisode, characters: viewCharacters, character: viewCharacter,
   backgrounds: viewBackgrounds, jobs: viewJobs };
 async function route() {
   document.body.classList.remove("locked");
-  const [v, arg] = (location.hash.slice(1) || "shows").split("/");
-  $$("nav a").forEach(a => a.classList.toggle("on", a.dataset.view === v || (v === "episode" && a.dataset.view === "episodes") || (v === "character" && a.dataset.view === "characters") || (v === "show" && a.dataset.view === "shows")));
+  const [v, arg] = (location.hash.slice(1) || "produce").split("/");
+  $$("nav a").forEach(a => a.classList.toggle("on", a.dataset.view === v || (v === "episode" && a.dataset.view === "episodes") || (v === "character" && a.dataset.view === "characters") || ((v === "show" || v === "shows") && a.dataset.view === "episodes")));
   JOBS.watchers.clear();
   app.innerHTML = "";
-  try { await (VIEWS[v] || viewShows)(arg && decodeURIComponent(arg)); }
+  try { await (VIEWS[v] || viewProduce)(arg && decodeURIComponent(arg)); }
   catch (e) { if (e.message !== "Log in first") put(h("div", { class: "empty" }, e.message)); }
 }
 window.addEventListener("hashchange", route);
@@ -179,9 +179,11 @@ function filePicker(title, sub) {
 const QUALITY = () => h("select", {}, h("option", { value: "final" }, "Final film (1920 x 1080)"), h("option", { value: "draft" }, "Quick draft (960 x 540)"));
 
 // an episode's directive and assets -> produced (in a show when given)
-function packPanel(show) {
-  const pick = filePicker(show ? `New episode of ${show.title}` : "Drop the whole production here",
-    "The episode's directive or script, and any new pictures, sets and voice recordings (or one zip of it all). Tap to choose files.");
+function packPanel(show, shows) {
+  const pick = filePicker(show ? `New episode of ${show.title}` : "The director's zip and production notes",
+    "The director's zip (script, notes, voice recordings, any pictures) and the production notes, as they came. Tap to choose files.");
+  const showSel = !show && shows && shows.length ? h("select", {}, h("option", { value: "" }, "Not part of a show"),
+    shows.map(x => h("option", { value: x.slug }, `Episode of ${x.title}`))) : null;
   const title = h("input", { type: "text", placeholder: "Title (optional: read from the script)" });
   const quality = QUALITY();
   const status = h("div", { class: "hint" });
@@ -189,18 +191,18 @@ function packPanel(show) {
   pick.onChange(fs => go.disabled = !fs.length);
   go.onclick = () => safe(async () => {
     go.disabled = true;
-    const { slug } = await api("POST", "/api/productions", { title: title.value, show: show ? show.slug : "" });
+    const { slug } = await api("POST", "/api/productions", { title: title.value, show: show ? show.slug : (showSel ? showSel.value : "") });
     await uploadPack(`/api/episodes/${slug}`, pick.files(), t => status.textContent = t);
     const r = await api("POST", `/api/episodes/${slug}/produce`, { quality: quality.value });
     sessionStorage.setItem("follow-" + slug, r.job);
     location.hash = "episode/" + slug;
   }).catch(() => { go.disabled = false; });
   return h("div", { class: "panel hero" },
-    h("h2", {}, show ? "Produce an episode" : "Produce from a director's pack"),
+    h("h2", {}, show ? "Produce an episode" : "Produce it"),
     h("p", { class: "hint" }, show
       ? `Characters and sets from ${show.title} are used automatically, with the voices they always have. Only upload what's new for this episode: the script, plus pictures of new characters, new sets and the actors' recordings.`
-      : "The studio reads the script (scenes, lines, stage directions), works out who every speaker is (a picture named for them, or the library), sorts the pictures into characters and sets, gives each recording to whoever it is named for or whoever's lines it hears, stages every scene, then cuts out the characters, syncs the lips, directs, mixes and renders. Name pictures and recordings after the characters (Roy.png, 02-roy-keane.mp3) to be sure."),
-    pick.el, h("div", { class: "row", style: { marginTop: "10px" } }, title, quality, h("span", { class: "spacer" }), go), status);
+      : "The studio finds the script among the documents (scenes, lines, deliveries, stage directions), casts every speaker from the cast library, gives each scene its set, gives each recording to whoever it is named for or whoever's lines it hears, stages the scenes, then cuts out the characters, syncs the lips, directs, mixes and renders. Anyone it can't find, it asks you for."),
+    pick.el, h("div", { class: "row", style: { marginTop: "10px" } }, title, showSel, quality, h("span", { class: "spacer" }), go), status);
 }
 
 // ---------------------------------------------------------------- shows
@@ -311,8 +313,8 @@ async function viewEpisodes() {
   const title = h("input", { type: "text", placeholder: "Title of an episode to build by hand" });
   put(
     h("h1", {}, "Episodes"),
-    h("p", { class: "sub" }, "Upload a production and the studio makes the film: the cut-outs, the lip sync, the acting, the camera, the sound and the render."),
-    packPanel(),
+    h("p", { class: "sub" }, "Everything produced, newest first. New production: the Produce tab."),
+    h("div", { class: "row", style: { marginBottom: "14px" } }, h("a", { class: "btn", href: "#produce" }, "+ New production"), h("a", { class: "btn", href: "#shows" }, "Shows")),
     h("div", { class: "panel row" }, title, h("button", { class: "btn", onclick: () => safe(async () => {
       const r = await api("POST", "/api/episodes", { title: title.value });
       location.hash = "episode/" + r.slug;
@@ -397,7 +399,17 @@ async function viewEpisode(slug) {
       h("div", { class: "row" }, h("h2", {}, "What the studio worked out from the pack"), h("span", { class: "spacer" }),
         h("button", { class: "btn small", onclick: () => more.click() }, "Add files to the pack"), more,
         h("button", { class: "btn small", title: "Reads the pack again: the cast, sets and lines are worked out afresh", onclick: () => produce("final") }, "Read the pack again and produce")),
-      (r.missing || []).length ? h("div", { class: "tag bad", style: { fontSize: "13px", padding: "6px 10px" } }, `Needs a picture: ${r.missing.join(", ")} (name the file after them, e.g. ${r.missing[0][0]}${r.missing[0].slice(1).toLowerCase()}.png)`) : null,
+      (r.missing || []).length ? h("div", { class: "missing" }, h("strong", {}, "Not in the cast library yet: add a picture of each, then produce again."),
+        r.missing.map(n => {
+          const nm = h("input", { type: "text", value: n[0] + n.slice(1).toLowerCase(), placeholder: "Their full name" });
+          const f = h("input", { type: "file", accept: "image/*", class: "hidden", onchange: e => safe(async () => {
+            const file = e.target.files[0]; if (!file) return;
+            await api("POST", `/api/characters?name=${encodeURIComponent(nm.value)}&filename=${encodeURIComponent(file.name)}`, undefined, file);
+            toast(`${nm.value} added`); await loadLib(); row.remove();
+          }) });
+          const row = h("div", { class: "row" }, h("span", { class: "tag bad" }, n), nm, h("button", { class: "btn small", onclick: () => f.click() }, "Add their picture"), f);
+          return row;
+        }), h("button", { class: "btn primary small", onclick: () => produce("final") }, "Produce again")) : null,
       h("div", { class: "cols", style: { marginTop: "8px" } },
         h("div", {}, h("h3", {}, "Script"), h("div", {}, r.script || "none"), h("h3", { style: { marginTop: "10px" } }, "Cast"), chars,
           h("h3", { style: { marginTop: "10px" } }, "Scenes"), (r.scenes || []).map((s, i) => h("div", {}, `${i + 1}. ${s.name || s.location || "scene"} → `, h("span", { class: "tag" }, s.set)))),
@@ -681,23 +693,96 @@ async function viewEpisode(slug) {
 }
 
 // ---------------------------------------------------------------- characters
+// ---------------------------------------------------------------- adding cast and sets, many at once
+const nameFromFile = f => f.replace(/\.[a-z0-9]+$/i, "").split(/[\s_\-.]+/)
+  .filter(w => w && !/^\d+$/.test(w) && !["kit", "final", "sheet", "model", "character", "char", "front", "full", "body", "new", "v", "copy", "img", "image", "drawing", "art", "pose", "bg", "background", "set", "backdrop"].includes(w.toLowerCase().replace(/\d+$/, "")))
+  .map(w => w === w.toLowerCase() || w === w.toUpperCase() ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w).join(" ");
+
+function bulkAdder(kind, onDone) {
+  const cast = kind === "cast";
+  let rows = [];
+  const inp = h("input", { type: "file", multiple: true, accept: "image/*", class: "hidden" });
+  const zone = h("div", { class: "drop big" },
+    h("div", { class: "drop-title" }, cast ? "Add cast members" : "Add backgrounds"),
+    h("div", {}, cast ? "One picture per character, named after them (Carlos Baleba.png): a drawing on white or transparent, or a model sheet. Tap to choose, as many as you like."
+      : "Empty sets with nobody in them, named for the place (Carrick's kitchen.png). Landscape, 1920 x 1080 or bigger is best. Tap to choose, as many as you like."), inp);
+  const list = h("div", { class: "bulk" });
+  const go = h("button", { class: "btn primary hidden" });
+  const add = fs => { for (const f of fs) if (f.type.startsWith("image/") || /\.(png|jpe?g|webp)$/i.test(f.name)) rows.push({ file: f, name: nameFromFile(f.name), state: "" }); show(); };
+  zone.onclick = () => inp.click();
+  inp.onchange = () => { add(inp.files); inp.value = ""; };
+  zone.ondragover = e => { e.preventDefault(); zone.classList.add("over"); };
+  zone.ondragleave = () => zone.classList.remove("over");
+  zone.ondrop = e => { e.preventDefault(); zone.classList.remove("over"); add(e.dataTransfer.files); };
+  function show() {
+    list.innerHTML = "";
+    rows.forEach((r, i) => {
+      const url = r.url || (r.url = URL.createObjectURL(r.file));
+      list.append(h("div", { class: "bulkrow" },
+        h("div", { class: "thumb" + (cast ? "" : " land"), style: { backgroundImage: `url(${url})` } }),
+        h("div", {}, r.state ? h("strong", {}, r.name) : h("input", { type: "text", value: r.name, placeholder: cast ? "Their full name" : "What the place is", oninput: e => r.name = e.target.value }),
+          h("div", { class: "hint" }, r.state || r.file.name)),
+        r.state ? (r.link ? h("a", { class: "btn small", href: r.link }, "Open") : null)
+          : h("button", { class: "btn small ghost", onclick: () => { rows.splice(i, 1); show(); } }, "✕")));
+    });
+    const todo = rows.filter(r => !r.state).length;
+    go.textContent = cast ? `Add ${todo} cast member${todo === 1 ? "" : "s"}` : `Add ${todo} background${todo === 1 ? "" : "s"}`;
+    go.classList.toggle("hidden", !todo);
+  }
+  go.onclick = async () => {
+    go.disabled = true;
+    for (const r of rows.filter(r => !r.state)) {
+      if (!r.name.trim()) { toast("Give every picture a name", true); continue; }
+      r.state = "uploading..."; show();
+      try {
+        if (cast) {
+          const res = await api("POST", `/api/characters?name=${encodeURIComponent(r.name)}&filename=${encodeURIComponent(r.file.name)}`, undefined, r.file);
+          r.state = "added: cutting out..."; r.link = "#character/" + res.id;
+          watch(res.job, j => { if (j.state === "done") { r.state = "ready"; show(); } if (j.state === "failed") { r.state = "couldn't be cut out: open it"; show(); } });
+        } else {
+          const res = await api("POST", `/api/backgrounds?title=${encodeURIComponent(r.name)}&setting=auto&filename=${encodeURIComponent(r.file.name)}`, undefined, r.file);
+          r.state = "added as " + res.id;
+        }
+      } catch (e) {
+        r.state = /already in/.test(e.message) ? "already in the cast library: used as it is" : "not added: " + e.message;
+      }
+      show();
+    }
+    go.disabled = false;
+    await loadLib();
+    onDone && onDone();
+  };
+  return h("div", {}, zone, list, h("div", { class: "row", style: { marginTop: "8px" } }, h("span", { class: "spacer" }), go));
+}
+
+// ---------------------------------------------------------------- the home page: the three steps of a production
+async function viewProduce() {
+  await loadLib();
+  const shows = await api("GET", "/api/shows").catch(() => []);
+  const recent = await api("GET", "/api/episodes");
+  put(h("h1", {}, "New production"),
+    h("p", { class: "sub" }, "Add the new cast and backgrounds, then hand over the director's zip and production notes: the studio does the rest."),
+    h("div", { class: "panel step" }, h("div", { class: "stepnum" }, "1"), h("h2", {}, "New cast members"),
+      h("p", { class: "hint" }, "Anyone in this production who isn't in the cast library yet. Already there? Skip this."), bulkAdder("cast")),
+    h("div", { class: "panel step" }, h("div", { class: "stepnum" }, "2"), h("h2", {}, "New backgrounds"),
+      h("p", { class: "hint" }, "The sets this production needs that aren't in the library yet. Each scene gets the set its heading or slugline names (INT. CARRICK'S KITCHEN finds 'Carrick's kitchen'); a scene that names none gets the newest one."), bulkAdder("sets")),
+    h("div", { class: "step-wrap" }, h("div", { class: "stepnum" }, "3"), packPanel(null, shows)),
+    recent.filter(e => e.web).length ? h("div", { class: "panel" }, h("h2", {}, "Recent productions"),
+      h("div", { class: "grid wide" }, recent.filter(e => e.web).slice(-6).reverse().map(e => h("div", { class: "card", onclick: () => location.hash = "episode/" + e.slug },
+        h("div", { class: "meta" }, h("div", { class: "name" }, e.title),
+          e.video ? h("span", { class: "tag ok" }, "finished") : e.preview ? h("span", { class: "tag warn" }, "draft") : h("span", { class: "tag" }, "in production")))))) : null);
+}
+
 async function viewCharacters() {
   await loadLib();
-  const name = h("input", { type: "text", placeholder: "Full name, e.g. Roy Keane" });
-  const role = h("input", { type: "text", placeholder: "Role (pundit, manager...)" });
-  const zone = dropZone("Drop a drawing of the character here, or click to choose one (PNG on white or transparent; a model sheet works too, you pick the drawing after)", "image/*", (f) => safe(async () => {
-    if (!name.value.trim()) { name.focus(); throw new Error("Give the character a name first"); }
-    toast("Uploading...");
-    const r = await api("POST", `/api/characters?name=${encodeURIComponent(name.value)}&role=${encodeURIComponent(role.value)}&filename=${encodeURIComponent(f.name)}`, undefined, f);
-    location.hash = "character/" + r.id;
-  }));
-  put(h("h1", {}, "Characters"),
+  put(h("h1", {}, "Cast"),
     h("p", { class: "sub" }, "Every character in the library. A new one is cut out of its picture whole (never chopped into limbs), upscaled 4x and given face landmarks so the eyes, brows and mouth can act."),
-    h("div", { class: "panel" }, h("h2", {}, "Add a character"), h("div", { class: "fields", style: { marginBottom: "10px" } }, name, role), zone),
+    h("div", { class: "panel" }, bulkAdder("cast", route)),
     h("div", { class: "grid" }, LIB.characters.map(c => h("div", { class: "card", onclick: () => location.hash = "character/" + c.id },
       h("div", { class: "pic", style: { backgroundImage: `url(${charThumb(c.id)})` } }),
       h("div", { class: "meta" }, h("div", { class: "name" }, c.name), h("div", { class: "small" }, c.role || " "),
         !c.drawings.length ? h("span", { class: "tag" }, "no drawings yet") : c.drawings.some(d => d.built) ? h("span", { class: "tag ok" }, "ready") : h("span", { class: "tag" }, `${c.drawings.length} to cut`),
+        c.drawings.some(d => d.face && !(d.face.eyes === 2 && d.face.mouth)) ? h("span", { class: "tag bad" }, "check face") : null,
         c.style === "provisional" ? h("span", { class: "tag warn" }, "stand-in") : null)))));
 }
 
@@ -831,19 +916,9 @@ async function viewCharacter(cid) {
 // ---------------------------------------------------------------- backgrounds
 async function viewBackgrounds() {
   await loadLib();
-  const title = h("input", { type: "text", placeholder: "What it is, e.g. Old Trafford tunnel" });
-  const setting = h("select", {}, LIB.settings.map(s => h("option", { value: s }, s)));
-  const crop = h("input", { type: "checkbox", checked: true });
-  const zone = dropZone("Drop an empty set here (no characters in it), or click to choose one. Landscape, 1920 x 1080 or bigger is best.", "image/*", f => safe(async () => {
-    if (!title.value.trim()) { title.focus(); throw new Error("Name the set first"); }
-    toast("Uploading...");
-    const r = await api("POST", `/api/backgrounds?title=${encodeURIComponent(title.value)}&setting=${setting.value}&crop=${crop.checked ? 1 : 0}&filename=${encodeURIComponent(f.name)}`, undefined, f);
-    toast("Filed as " + r.id); title.value = ""; route();
-  }));
   put(h("h1", {}, "Backgrounds"),
-    h("p", { class: "sub" }, "Empty sets. The camera moves inside them: the wide shows the whole set, the close-ups a blurred piece of it behind the speaker."),
-    h("div", { class: "panel" }, h("h2", {}, "Add a set"), h("div", { class: "fields", style: { marginBottom: "10px" } }, title, setting,
-      h("label", { class: "row hint" }, crop, "Crop to 16:9")), zone),
+    h("p", { class: "sub" }, "Empty sets, newest first. The camera moves inside them: the wide shows the whole set, the close-ups a blurred piece of it behind the speaker."),
+    h("div", { class: "panel" }, bulkAdder("sets", route)),
     h("div", { class: "grid wide" }, LIB.backgrounds.map(b => h("div", { class: "card", onclick: () => window.open(fileUrl(b.path)) },
       h("div", { class: "pic land", style: { backgroundImage: `url(${thumbUrl(b.path, 240)})` } }),
       h("div", { class: "meta" }, h("div", { class: "name" }, b.title), h("div", { class: "small" }, b.id),
