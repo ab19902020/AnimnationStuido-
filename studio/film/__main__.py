@@ -126,7 +126,7 @@ def lip_sheet(slug, d):
         for w in pick:
             t = v["start"] + (w["s"] + w["e"]) / 2 if w["w"] in stressed else v["start"] + w["s"] + 0.03
             s = D.shot_at(t)
-            if s["kind"] != "single" or s["who"] != v["speaker"]:
+            if s.get("who") != v["speaker"] or "eye" not in s:    # a close single (or a world shot framed as one)
                 continue
             cap.set(cv2.CAP_PROP_POS_MSEC, t * 1000)
             ok, fr = cap.read()

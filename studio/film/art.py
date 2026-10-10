@@ -252,13 +252,20 @@ def close_mouth(rgba, K, off, cx, cy, rx, ry, fit=False):
         m = np.zeros(rgb.shape[:2], np.uint8)
         cv2.ellipse(m, (int(X), int(Y)), (int(RX), int(RY)), 0, 0, 360, 255, -1)
         rgb = cv2.inpaint(rgb, m, 9, cv2.INPAINT_TELEA)
-    w = rx * K * 0.78
+    # the closed line; with fit it is shorter and finer, inside the width the lip sync opens, so no end of it is left
+    # beside an open mouth
+    w = rx * K * (0.6 if fit else 0.78)
     yl = Y - ry * K * 0.25
     pts = np.array([[X - w, yl + 0.10 * w], [X - 0.45 * w, yl - 0.02 * w], [X, yl - 0.05 * w],
                     [X + 0.45 * w, yl - 0.02 * w], [X + w, yl + 0.10 * w]], np.float32)
     lay = np.zeros(rgb.shape[:2], np.float32)
-    cv2.polylines(lay, [np.int32(np.round(pts * 8))], False, 1.0, max(4, int(round(0.4 * K * 4))), cv2.LINE_AA, 3)
-    lay = cv2.GaussianBlur(lay, (0, 0), 0.7)[..., None]
+    lw = max(3, int(round(0.28 * K * 4))) if fit else max(4, int(round(0.4 * K * 4)))
+    cv2.polylines(lay, [np.int32(np.round(pts * 8))], False, 1.0, lw, cv2.LINE_AA, 3)
+    lay = cv2.GaussianBlur(lay, (0, 0), 0.7)
+    if fit:                                     # tapering to nothing at its ends, as a drawn closed mouth does
+        dx = np.abs(np.arange(lay.shape[1], dtype=np.float32) - X) / w
+        lay *= np.clip(1.3 - dx ** 2, 0, 1)[None, :]
+    lay = lay[..., None]
     ink = ink_of(rgba)[::-1]
     rgb = (rgb * (1 - lay) + ink * lay).astype(np.uint8)
     out = rgba.copy()

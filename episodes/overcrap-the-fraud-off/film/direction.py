@@ -78,7 +78,7 @@ def push(cam, f):
 LAYERS = lambda *acts: [("near", "chairs"), ("actors", list(acts)), ("occl", "table")]
 
 
-def single(t, who, pose, ed_screen=112.0, push_to=1.04, punch=None, blur=2.6, end=None):
+def single(t, who, pose, ed_screen=112.0, push_to=1.04, punch=None, blur=4.5, end=None):
     """a close single: the camera pushed in on his chair, his eyes 40 % down the frame with look room towards the
     other man, the wall behind softened; punch = (t, factor), a 3-frame snap in on a punchline"""
     a = seat(who, pose)
@@ -91,7 +91,7 @@ def single(t, who, pose, ed_screen=112.0, push_to=1.04, punch=None, blur=2.6, en
         u = (tp - t) / max(1e-3, t1 - t)
         cp = push(c0, 1 + (push_to - 1) * u)
         cams = [(t, c0), (tp, cp), (tp + 0.1, push(cp, f)), (t1, push(cp, f * (1 + (push_to - 1) * 0.3)))]
-    return world(t, "S", c0, cams=cams, layers=LAYERS(a), drift=0.5, blur=blur)
+    return world(t, "S", c0, cams=cams, layers=LAYERS(a), drift=0.5, blur=blur, who=who, eye=(sx, 432), ed=ed_screen)
 
 
 def two(t, jpose, mpose, cam=(838, 470, 1.35), push_to=1.03, dur=2.0, blur=1.2, **kw):
