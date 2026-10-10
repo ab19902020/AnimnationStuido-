@@ -46,11 +46,13 @@ class Face:
     (for a profile: xl..xr runs from the mouth corner to the lips' front)."""
 
     def __init__(self, img, mouth=None, chin=None, eyes=(), facing="front", jaw=1.0, ink=None, lid=None, brow_gain=1.0,
-                 pupils=True):
+                 pupils=True, mouth_style=None):
         self.img = img.astype(np.float32) / 255 if img.dtype == np.uint8 else img.astype(np.float32)
         self.H, self.W = self.img.shape[:2]
         self.mouth, self.chin, self.eyes = mouth, chin, [tuple(e) for e in eyes]
         self.facing, self.jaw, self.brow_gain = facing, jaw, brow_gain
+        # "bold": the open mouth outlined all round in the art's heavy ink (bold dark-outline kits), lower teeth small
+        self.bold = mouth_style == "bold"
         self.ink = INK if ink is None else np.float32(ink)
         # the face box that any effect can touch
         pts = []
@@ -256,6 +258,8 @@ class Face:
             wtop = cv2.GaussianBlur(wtop.astype(np.float32), (0, 0), 0.7)[..., None]
             shade = np.clip((Y - top) / np.maximum(th, 1), 0, 1)[..., None]
             col = col * (1 - wtop) + TEETH * (1 - 0.12 * shade) * wtop
+        if self.bold:
+            tb *= 0.35
         if tb > 0:
             thb = np.minimum(0.10 * mw, 0.30 * (bot - top)) * tb
             wbt = ((bot - Y) < thb) & (np.abs(X - xc) < 0.34 * mw)
@@ -268,10 +272,20 @@ class Face:
         inside = np.abs(X - xc) < (xr - xl) * 0.55
         edge = np.maximum(edge, np.clip(1 - d_top / lw, 0, 1) * (g > 0.02) * inside)
         edge = np.maximum(edge, 0.7 * np.clip(1 - d_bot / (lw * 0.8), 0, 1) * (g > 0.02) * inside)
+        if self.bold:
+            # a heavy outline all round the opening, corners included, straddling its edge like the drawn mouths
+            mb = ((Y >= top) & (Y < bot) & (g > 0.001)).astype(np.uint8)
+            lwb = max(2.0, 0.055 * mw)
+            d_out = cv2.distanceTransform(1 - mb, cv2.DIST_L2, 3)
+            d_in = cv2.distanceTransform(mb, cv2.DIST_L2, 3)
+            band = np.where(mb > 0, np.clip(1 - d_in / (0.35 * lwb), 0, 1), np.clip(1 - (d_out - 0.6 * lwb) / 1.2, 0, 1))
+            band *= np.clip(Hc / (0.05 * mw), 0, 1)                 # grows in as the mouth opens
+            edge = np.maximum(edge, band.astype(np.float32))
         edge = cv2.GaussianBlur(edge, (0, 0), 0.6)[..., None]
         mm = m[..., None]
         rgb = out[..., :3] * (1 - mm) + col * mm
-        rgb = rgb * (1 - edge * 0.85) + self.ink * edge * 0.85
+        ek = 0.95 if self.bold else 0.85
+        rgb = rgb * (1 - edge * ek) + self.ink * edge * ek
         res = out.copy(); res[..., :3] = rgb
         return res
 

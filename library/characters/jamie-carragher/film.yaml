@@ -4,15 +4,16 @@
 # is sized by the same eye distance, `ed: 59`, so heads match from cut to cut whichever way the eyes look. `jaw`
 # opens the mouths wider than the default: their mouths are drawn small for the face (a moustache and stubble
 # hide the rest), so at a normal speaking level the default jaw drop is only a slit; the shouts open more, the wide
-# smirks less. Mouths drawn narrower than 36 px get `marks: mouth` 40 px wide about their own centre, so every pose
-# opens alike.
+# smirks less. `marks: mouth` puts the corners at the ends of the drawn mouth line (a smirk or frown that ran on past
+# the corners was dragged into curls), or 40 px wide about a small closed mouth's centre; the jaw is scaled so every
+# pose opens to about the same height. `mouth_style: bold` outlines the open mouth in the kit's heavy ink.
 drawings:
   front: {kit: casual/front, faces: F}          # the old provisional kit
-  shrug: {sheet: reference/poses-seated-1.png, box: [21, 5, 585, 684], faces: F, main: true, ed: 59, jaw: 1.35}
-  knees: {sheet: reference/poses-seated-1.png, box: [613, 33, 1032, 686], faces: F, main: true, ed: 59, jaw: 1.5}
-  thumb: {sheet: reference/poses-seated-1.png, box: [81, 683, 503, 1369], faces: F, main: true, ed: 59, jaw: 1.8, marks: {mouth: [277.0, 848.8, 317.0, 848.8, 297.0, 851.2]}}
-  arms: {sheet: reference/poses-seated-1.png, box: [478, 682, 1122, 1368], faces: F, main: true, ed: 59, close_mouth: [795, 848, 21, 10], close_fit: true, jaw: 1.8, marks: {mouth: [775.1, 846.2, 815.1, 846.2, 795.1, 845.0]}}
-  crossed: {sheet: reference/poses-seated-2.png, box: [93, 9, 529, 707], faces: R, main: true, ed: 59, jaw: 1.8}
-  point: {sheet: reference/poses-seated-2.png, box: [564, 15, 1104, 708], faces: R, main: true, ed: 59, close_mouth: [752, 217, 32, 20], close_fit: true, jaw: 2.0, marks: {mouth: [731.9, 213.2, 771.9, 213.2, 751.9, 211.0]}}
-  fist: {sheet: reference/poses-seated-2.png, box: [41, 712, 557, 1383], faces: R, main: true, ed: 59, close_mouth: [364, 905, 24, 13], close_fit: true, jaw: 1.8, marks: {mouth: [343.9, 902.7, 383.9, 902.7, 363.9, 901.0]}}
+  shrug: {sheet: reference/poses-seated-1.png, box: [21, 5, 585, 684], faces: F, main: true, ed: 59, jaw: 1.15, mouth_style: bold, marks: {mouth: [246, 168, 309, 178, 277, 177]}}
+  knees: {sheet: reference/poses-seated-1.png, box: [613, 33, 1032, 686], faces: F, main: true, ed: 59, jaw: 1.5, mouth_style: bold, marks: {mouth: [799, 226.4, 846, 231.4, 822, 227.4]}}
+  thumb: {sheet: reference/poses-seated-1.png, box: [81, 683, 503, 1369], faces: F, main: true, ed: 59, jaw: 1.35, mouth_style: bold, marks: {mouth: [262, 836, 313, 853, 288, 846]}}
+  arms: {sheet: reference/poses-seated-1.png, box: [478, 682, 1122, 1368], faces: F, main: true, ed: 59, close_mouth: [795, 848, 21, 10], close_fit: true, jaw: 1.8, mouth_style: bold, marks: {mouth: [775.1, 846.2, 815.1, 846.2, 795.1, 845.0]}}
+  crossed: {sheet: reference/poses-seated-2.png, box: [93, 9, 529, 707], faces: R, main: true, ed: 59, jaw: 1.8, mouth_style: bold}
+  point: {sheet: reference/poses-seated-2.png, box: [564, 15, 1104, 708], faces: R, main: true, ed: 59, close_mouth: [752, 217, 32, 20], close_fit: true, jaw: 2.0, mouth_style: bold, marks: {mouth: [731.9, 213.2, 771.9, 213.2, 751.9, 211.0]}}
+  fist: {sheet: reference/poses-seated-2.png, box: [41, 712, 557, 1383], faces: R, main: true, ed: 59, close_mouth: [364, 905, 24, 13], close_fit: true, jaw: 1.8, mouth_style: bold, marks: {mouth: [343.9, 902.7, 383.9, 902.7, 363.9, 901.0]}}
   laugh: {sheet: reference/poses-seated-2.png, box: [676, 701, 1081, 1384], faces: R, main: true, ed: 59, plain: true}

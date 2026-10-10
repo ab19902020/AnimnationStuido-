@@ -9,7 +9,9 @@ Kinds of shot (built with the helpers in studio.film.shots):
   group   several characters composited like a single (blurred set behind, furniture edge in front)
   insert  a full-frame close-up drawn by the episode's props.py (a screen, a sign, a document)
   black / title   black with closing captions / the title card
-Any shot with `still=True` is a freeze frame: it holds its first frame (a comic freeze before the cut to black)."""
+Any shot with `still=True` is a freeze frame: it holds its first frame (a comic freeze before the cut to black).
+A world shot with `shakes=[(t0, t1, px)]` jolts on a shout; with `shadow={...}` it grounds its actors: contact
+shadows on the furniture they sit in, pools under their shoes (see shadows())."""
 import importlib
 import math
 import os
@@ -210,6 +212,11 @@ def render_world(s, t):
     P = plate(s["plate"])
     cx, cy, z = cam_at(s, t)
     dx, dy = drift(t, s, s["drift"])
+    for t0, t1, amt in s.get("shakes", []):                 # a jolt on a shout, dying away over (t0, t1)
+        if t0 <= t < t1:
+            sx, sy = shake(t, amt * (1 - (t - t0) / (t1 - t0)) ** 1.5)
+            dx += sx
+            dy += sy
     sc = P.scale(z)
     cx, cy = P.clamp(cx - dx / sc, cy - dy / sc, z)
     sharp = P.render(cx, cy, z)
@@ -230,6 +237,7 @@ def render_world(s, t):
             img = getattr(X, val)(img, s, t, M, sc)
             continue
         lay = np.zeros((OH, OW, 4), np.float32)
+        soles = []
         for a in val:
             who, draw, (px, py), ed_p, mirror = a[:5]
             opt = a[5] if len(a) > 5 else {}
@@ -239,8 +247,41 @@ def render_world(s, t):
             st = PERF.state(who, t, world_resolver(s, who, pos), s["t"]) if d.has_face else {}
             Ms = actor_matrix(info, ex, ey, k, mirror, st.get("lean", 0.0), st.get("sink", 0.0))
             E.place(lay, d, face_state(st, info, mirror) if st else {}, Ms, clip=opt.get("clip"))
+            if s.get("shadow"):
+                from studio.film.cast import feet
+                fx, fy = feet(draw)
+                soles.append((Ms[0, 0] * fx + Ms[0, 2], Ms[1, 1] * fy + Ms[1, 2], ed_p * sc))
+        if s.get("shadow"):
+            img = shadows(img, s["shadow"], lay[..., 3], soles, P, cx, cy, z)
         img = img * (1 - lay[..., 3:4]) + lay[..., :3]
     return G.grade(img, s.get("grade", "studio"), t)
+
+
+def shadows(img, sh, alpha, soles, P, cx, cy, z):
+    """the actors grounded in a world shot: their silhouettes darken the furniture they sit in (a soft contact
+    shadow, cast a little down and to one side, only on the plate's `on` mask), and a soft pool on the floor under
+    each one's shoes. sh: {on: mask, k, blur, dx, dy (eye distances), floor: strength, spread: half-width in eye
+    distances}"""
+    if not soles:
+        return img
+    ed = float(np.mean([e for _, _, e in soles]))
+    k = sh.get("k", 0.4)
+    if k > 0:
+        dx, dy = sh.get("dx", 0.1) * ed, sh.get("dy", 0.2) * ed
+        a = cv2.warpAffine(alpha, np.float32([[1, 0, dx], [0, 1, dy]]), (OW, OH))
+        a = cv2.GaussianBlur(a, (0, 0), max(1.0, sh.get("blur", 0.35) * ed))
+        recv = P.mask(sh["on"], cx, cy, z) if sh.get("on") else 1.0
+        img = img * (1 - k * np.clip(a * 1.3, 0, 1) * recv)[..., None]
+    fk = sh.get("floor", 0.0)
+    if fk > 0:
+        pool = np.zeros((OH, OW), np.float32)
+        for x, y, e in soles:
+            rx, ry = sh.get("spread", 2.3) * e, 0.32 * e
+            cv2.ellipse(pool, (int(x * 4), int((y - 0.08 * e) * 4)), (int(rx * 4), int(ry * 4)), 0, 0, 360, 1.0, -1,
+                        cv2.LINE_AA, 2)
+        pool = cv2.GaussianBlur(pool, (0, 0), max(1.0, 0.22 * ed))
+        img = img * (1 - fk * pool)[..., None]
+    return img
 
 
 def render_group(s, t):

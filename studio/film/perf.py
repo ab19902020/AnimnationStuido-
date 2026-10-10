@@ -21,7 +21,10 @@ An episode's perf.py builds one Performance with its data:
   FORCED {who: [t]} blinks on cue;  NOBLINK {who: [(t0, t1)]} no blinks in holds (looks into the lens)
   SHUT   {who: [(t0, t1)]} eyes closed (singing a long note with feeling)
   cuts   the shot list's cut times: automatic blinks keep clear of the first 0.4 s after a cut
-  BODY   {who: [(t0, t1, lean, sink, ease-in)]}"""
+  BODY   {who: [(t0, t1, lean, sink, ease-in)]}
+  SQUINT {who: [(t0, t1, amount)]} lids partly down (smug, suspicious); SHAKE {who: [(t0, t1, hz, amount)]} the body
+         bobbing (a laugh); darts: amplitude of the small eye darts (saccades) round wherever they look, 0 = none; SHOUT {line id: k} opens
+         the mouth k times wider on a shouted line, its narrow shapes swapped for wider ones (SHOUTED)"""
 import math
 
 import numpy as np
@@ -43,6 +46,8 @@ TAGS = dict(
     annoyed=(-0.4, -0.25), exhausted=(0.2, -0.3), salesman=(0.35, 0.45), sarcastic=(-0.3, 0.15), dry=(-0.2, 0.0),
     hopeful=(0.45, 0.3), precise=(0.1, -0.05), cold=(-0.35, -0.15), pleased=(0.2, 0.5), indignant=(0.6, -0.35))
 BLINK_SHAPE = [0.45, 0.95, 1.0, 0.7, 0.3]
+# on a shouted line (SHOUT) the narrow mouth shapes open up: "oo" to "o", "o" to "ah", the tongue / teeth shapes to "e"
+SHOUTED = {"U": "O", "O": "AI", "CDG": "E", "I": "E", "R": "O", "L": "AI"}
 
 
 def sm(x):
@@ -63,7 +68,7 @@ def bump(u):
 class Performance:
     def __init__(self, TL, lines, who, spk, meta, line_wav, base=None, gaze=None, expr=None, nods=None, turn=None,
                  forced=None, noblink=None, body=None, smile_bias=None, tags=None, rest_target=None, seed=200,
-                 cuts=(), shut=None):
+                 cuts=(), shut=None, squint=None, shake=None, darts=0.0, shout=None):
         self.TL, self.L, self.WHO, self.SPK = TL, lines, list(who), spk
         self.META = meta
         self.line_wav = line_wav
@@ -76,6 +81,10 @@ class Performance:
         self.NOBLINK = {w: list((noblink or {}).get(w, [])) for w in self.WHO}
         self.SHUT = {w: list((shut or {}).get(w, [])) for w in self.WHO}
         self.BODY = {w: list((body or {}).get(w, [])) for w in self.WHO}
+        self.SQUINT = {w: list((squint or {}).get(w, [])) for w in self.WHO}
+        self.SHAKE = {w: list((shake or {}).get(w, [])) for w in self.WHO}
+        self.DARTS = darts
+        self.SHOUT = shout or {}
         self.SMILE_BIAS = smile_bias or {}
         self.TAGS = {**TAGS, **(tags or {})}
         self.rest_target = rest_target or {}
@@ -85,6 +94,7 @@ class Performance:
         self.VIS, self.AMP, self.TALK = self._speech()
         self.BLINKS = self._blinks()
         self.EMPH = self._emph()
+        self.DART = self._darts() if darts else {}
 
     # ------------------------------------------------------------ lip sync
     def _speech(self):
@@ -96,14 +106,17 @@ class Performance:
             who = self.SPK.get(v["speaker"], v["speaker"])
             if who not in ev or self.L[lid].get("missing"):
                 continue
-            ev[who] += face.viseme_events(self.L[lid]["phones"], v["start"])
+            vs = face.viseme_events(self.L[lid]["phones"], v["start"])
+            if lid in self.SHOUT:                # a yell is drawn wide open: each shape swapped for its wider cousin
+                vs = [(a, b, SHOUTED.get(x, x)) for a, b, x in vs]
+            ev[who] += vs
             y, sr = sf.read(self.line_wav(lid), dtype="float32")
             if y.ndim > 1:
                 y = y.mean(1)
             hop = sr // FPS
             rms = np.array([np.sqrt(np.mean(y[i:i + hop] ** 2) + 1e-12) for i in range(0, len(y), hop)])
             ref = np.percentile(rms, 90) + 1e-6
-            a = np.clip(0.55 + 0.55 * rms / ref, 0.5, 1.15)
+            a = np.clip(0.55 + 0.55 * rms / ref, 0.5, 1.15) * self.SHOUT.get(lid, 1.0)
             f0 = int(round(v["start"] * FPS))
             for k, val in enumerate(a):
                 if 0 <= f0 + k < N:
@@ -140,8 +153,35 @@ class Performance:
             out[w] = clean
         return out
 
+    def _darts(self):
+        """per character: [(t, dx, dy)] small jumps of the eyes round their target, every 0.5-1.4 s, held until the
+        next; none in the first 0.35 s after a cut (the eye settles on the new shot first)"""
+        out = {}
+        for k, w in enumerate(self.WHO):
+            rng = np.random.default_rng(self.seed + 50 + k)
+            t, ev = rng.uniform(0.2, 0.8), [(0.0, 0.0, 0.0)]
+            while t < self.TL["total"]:
+                if any(c <= t < c + 0.35 for c in self.CUTS):
+                    t += 0.35
+                    continue
+                ev.append((t, rng.uniform(-1, 1) * self.DARTS, rng.uniform(-0.6, 0.6) * self.DARTS))
+                t += rng.uniform(0.5, 1.4)
+            out[w] = ev
+        return out
+
+    def dart(self, w, t):
+        if not self.DARTS or any(a <= t <= b for a, b in self.NOBLINK[w]):     # a held stare stays put
+            return 0.0, 0.0
+        ev = self.DART[w]
+        i = max(0, int(np.searchsorted([e[0] for e in ev], t, side="right")) - 1)
+        t0, x, y = ev[i]
+        px, py = ev[i - 1][1:] if i > 0 else (0.0, 0.0)
+        u = sm((t - t0) / 0.05)                  # a saccade takes a frame or two
+        return px + (x - px) * u, py + (y - py) * u
+
     def blink(self, w, t):
         shut = max([ramp(t, a, b, 0.1, 0.14) for a, b in self.SHUT[w]] or [0.0])
+        shut = max([shut] + [amt * ramp(t, a, b, 0.12, 0.18) for a, b, amt in self.SQUINT[w]])
         f = t * FPS
         for b in self.BLINKS[w]:
             k = f - b * FPS
@@ -230,6 +270,10 @@ class Performance:
             r = ramp(t, a, b, fin, 0.3)
             lean += le * r
             sink += si * r
+        for a, b, hz, amt in self.SHAKE[w]:
+            r = ramp(t, a, b, 0.06, 0.25)
+            if r > 0:
+                sink += amt * r * abs(math.sin(math.pi * hz * (t - a)))
         return lean, sink
 
     def state(self, w, t, resolve, t0=0.0):
@@ -252,6 +296,9 @@ class Performance:
         lx /= we_s
         ly /= we_s
         tu /= wh_s
+        ddx, ddy = self.dart(w, t)
+        lx += ddx
+        ly += ddy
         brow, smile = self.expression(w, t)
         tilt, nod, turn = self.head(w, t)
         lean, sink = self.body(w, t)

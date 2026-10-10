@@ -1,7 +1,7 @@
 """The soundtrack: the two actors' lines with a little of the studio round them, Jamie's laugh over the open (from
 his own take), the studio's room tone, chair creaks and jacket rustles on the big gestures, a sly low piano bed
-ducked well under the dialogue, a punchy hit on FRAUD and its twin on BLUE NOSE, and a comic sting on the freeze.
-Room tone and music stop dead on the cut to black.
+ducked well under the dialogue (it stops dead on "Brent!" and creeps back in with the rant), a punchy hit on FRAUD
+and its twin on BLUE NOSE, and a comic sting on the freeze. Room tone and music stop dead on the cut to black.
 python3 -m studio.film overcrap-the-fraud-off sound -> build/episode_audio.wav"""
 import json
 
@@ -33,10 +33,12 @@ def ambience(bus):
 
 
 def foley(bus):
-    # the big gestures: Jamie's point at Mark, Mark's laugh, the rant's raised finger, the final points
+    # the big gestures: Jamie's point at Mark, his hand to his chest, Mark's laugh, the lean in, the rant's raised
+    # finger, the point, the final points
     A.ev(bus, "cloth/cloth-c", wt("L001", "you're") - 0.02, -44, pan=-0.3)
-    A.ev(bus, "creaks/creak-small", m("cut_laugh") + 0.08, -48, pan=0.3, semis=-2)
-    A.ev(bus, "cloth/cloth-a", m("cut_laugh") + 0.1, -46, pan=0.3)
+    A.ev(bus, "cloth/cloth-a", wt("L002", "who") - 0.02, -47, pan=-0.25)
+    A.ev(bus, "creaks/creak-small", m("cut_laugh") + 0.06, -47, pan=0.3, semis=-2)
+    A.ev(bus, "cloth/cloth-a", m("cut_laugh") + 0.08, -45, pan=0.3)
     A.ev(bus, "cloth/cloth-e", ls("L005") + 0.15, -48, pan=-0.2)               # Jamie leans in
     A.ev(bus, "creaks/creak-small", ls("L005") + 0.2, -50, pan=-0.2, semis=-3)
     A.ev(bus, "cloth/cloth-f", wt("L006", "played") - 0.05, -46, pan=0.25)
@@ -87,6 +89,10 @@ def bed(bus):
         t += beat
     y = A.lp(y, 2600, 2).astype(np.float32)
     y = A.at_level(y, -33)
+    # the bed stops dead on "Brent!" (the biggest silence of the piece) and creeps back in with the rant
+    tt = np.arange(n) / A.SR
+    g = np.clip(1 - (tt - (le("L005") - 0.02)) / 0.03, 0, 1) + np.clip((tt - wt("L006", "you")) / 0.6, 0, 1)
+    y *= np.clip(g, 0, 1).astype(np.float32)
     y[-int(0.006 * A.SR):] *= np.linspace(1, 0, int(0.006 * A.SR))
     bus.add(np.stack([y, y], 1), 0.0)
 

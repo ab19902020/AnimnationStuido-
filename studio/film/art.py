@@ -25,6 +25,8 @@ Which drawings a character has is library/characters/<id>/film.yaml:
   x8       a second upscale pass for small drawings seen large
   marks    hand-set landmarks where detection can't see them (beards): {eyes, mouth, chin, neck, head}
   head     the head's box [x0, y0, x1, y1] (sheet px) if the automatic one (top of the figure) is wrong
+  mouth_style   bold: the open mouth outlined all round in heavy ink, lower teeth small (bold dark-outline art)
+  jaw      how far the mouth opens (1.0 default)
   plain    no face to animate (backs, walking poses seen small)
   holes    points in paper the drawing encloses that the cut keeps (between an arm and the body)
   main     true: a box on a sheet of drawings on transparent keeps only the figure in its middle (pose sheets
