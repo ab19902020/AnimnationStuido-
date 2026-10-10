@@ -3,13 +3,15 @@
 # The seated pose sheets are drawn to one scale (head height ~255 sheet px in every pose, both men): every drawing
 # is sized by the same eye distance, `ed: 59`, so heads match from cut to cut whichever way the eyes look. `jaw`
 # opens the mouths wider than the default: their mouths are drawn small for the face (a moustache and stubble
-# hide the rest), so at a normal speaking level the default jaw drop is only a slit; the shouts open more.
+# hide the rest), so at a normal speaking level the default jaw drop is only a slit; the shouts open more, the wide
+# smirks less. Mouths drawn narrower than 36 px get `marks: mouth` 40 px wide about their own centre, so every pose
+# opens alike.
 drawings:
-  point: {sheet: reference/poses-seated-1.png, box: [40, 2, 541, 700], faces: F, main: true, ed: 59, close_mouth: [302, 226, 28, 17], close_fit: true, jaw: 2.0}
-  shrug: {sheet: reference/poses-seated-1.png, box: [534, 5, 1118, 699], faces: F, main: true, ed: 59, jaw: 1.8}
+  point: {sheet: reference/poses-seated-1.png, box: [40, 2, 541, 700], faces: F, main: true, ed: 59, close_mouth: [302, 226, 28, 17], close_fit: true, jaw: 2.0, marks: {mouth: [282.1, 222.8, 322.1, 222.8, 302.1, 221.0]}}
+  shrug: {sheet: reference/poses-seated-1.png, box: [534, 5, 1118, 699], faces: F, main: true, ed: 59, jaw: 1.8, marks: {mouth: [812.4, 217.5, 852.4, 217.5, 832.4, 217.0]}}
   laughpoint: {sheet: reference/poses-seated-1.png, box: [66, 685, 558, 1362], faces: F, main: true, ed: 59, plain: true}
-  finger: {sheet: reference/poses-seated-1.png, box: [658, 695, 1077, 1386], faces: F, main: true, ed: 59, close_mouth: [837, 912, 20, 12], close_fit: true, jaw: 1.8}
-  arms: {sheet: reference/poses-seated-2.png, box: [92, 7, 492, 711], faces: F, main: true, ed: 59, jaw: 1.8}
-  shrug2: {sheet: reference/poses-seated-2.png, box: [534, 11, 1109, 704], faces: F, main: true, ed: 59, close_mouth: [813, 214, 30, 18], close_fit: true, jaw: 1.8}
+  finger: {sheet: reference/poses-seated-1.png, box: [658, 695, 1077, 1386], faces: F, main: true, ed: 59, close_mouth: [837, 912, 20, 12], close_fit: true, jaw: 1.8, marks: {mouth: [817.0, 909.8, 857.0, 909.8, 837.0, 908.5]}}
+  arms: {sheet: reference/poses-seated-2.png, box: [92, 7, 492, 711], faces: F, main: true, ed: 59, jaw: 1.4}
+  shrug2: {sheet: reference/poses-seated-2.png, box: [534, 11, 1109, 704], faces: F, main: true, ed: 59, close_mouth: [813, 214, 30, 18], close_fit: true, jaw: 1.8, marks: {mouth: [793.1, 210.6, 833.1, 210.6, 813.1, 208.6]}}
   laugh: {sheet: reference/poses-seated-2.png, box: [70, 703, 641, 1373], faces: F, main: true, ed: 59, plain: true}
-  gun: {sheet: reference/poses-seated-2.png, box: [674, 705, 1099, 1372], faces: F, main: true, ed: 59, jaw: 1.8}
+  gun: {sheet: reference/poses-seated-2.png, box: [674, 705, 1099, 1372], faces: F, main: true, ed: 59, jaw: 1.8, marks: {mouth: [784.4, 909.8, 824.4, 909.8, 804.4, 906.8]}}
