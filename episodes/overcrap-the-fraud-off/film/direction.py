@@ -9,11 +9,16 @@ Everyone is a whole seated drawing sitting in a real chair of the set: every sho
 `world` shot) with the camera moved in, never a figure cut off over a blurred wall. Singles are the camera pushed
 in on one chair (the wall behind softened, the chair kept sharp); two-shots take in both chairs and the table.
 A drawing is seated by its shoes on the floor in front of its chair (`seat`), so every pose sits at the same
-place and size. Each pose changes on a cut, never inside a shot."""
+place and size. Each pose changes on a cut, never inside a shot.
+
+The same edit makes the portrait film for phones (EP_RES=1080x1920, YouTube Shorts): the singles are reframed tall
+(the man in his chair, his eyes a third of the way down), and every two-shot becomes a split screen, Jamie above and
+Mark below, with the show's badge on the divider."""
 import json
 
 from studio.film import ep
 from studio.film.cast import CAST, feet
+from studio.film.engine import VERTICAL
 from studio.film.shots import Marks, card, finish, shot_at as _shot_at, world
 from film.timeline import TL
 
@@ -60,7 +65,8 @@ def eyes_of(a):
     return a[2]
 
 
-S1 = 1920 / 1672                # screen px per plate px at zoom 1
+LW, LH = (1080, 1920) if VERTICAL else (1920, 1080)      # the layout the shots are framed in (screen px)
+S1 = LW / 1672                  # screen px per plate px at zoom 1
 
 
 def framed(a, sx, sy, ed_screen):
@@ -68,7 +74,7 @@ def framed(a, sx, sy, ed_screen):
     z = ed_screen / (a[3] * S1)
     s = S1 * z
     ex, ey = eyes_of(a)
-    return (ex - (sx - 960) / s, ey - (sy - 540) / s, z)
+    return (ex - (sx - LW / 2) / s, ey - (sy - LH / 2) / s, z)
 
 
 def push(cam, f):
@@ -86,8 +92,11 @@ def single(t, who, pose, ed_screen=135.0, push_to=1.04, punch=None, blur=6.5, en
     other man, the wall behind softened; punch = (t, factor), a 3-frame snap in on a punchline; crash = the eye
     distance a crash zoom starts from (it snaps in to ed_screen in 0.14 s)"""
     a = seat(who, pose)
-    sx = 800 if who == "jamie" else 1120
-    c0 = framed(a, sx, 432, ed_screen)
+    if VERTICAL:                # tall: closer, his eyes a third of the way down, look room towards the other man
+        sx, sy, ed_screen, crash = (470 if who == "jamie" else 610), 700, ed_screen * 1.2, crash and crash * 1.2
+    else:
+        sx, sy = (800 if who == "jamie" else 1120), 432
+    c0 = framed(a, sx, sy, ed_screen)
     t1 = end or t + 3.0
     cams = [(t, c0), (t1, push(c0, push_to))]
     if punch:
@@ -96,14 +105,30 @@ def single(t, who, pose, ed_screen=135.0, push_to=1.04, punch=None, blur=6.5, en
         cp = push(c0, 1 + (push_to - 1) * u)
         cams = [(t, c0), (tp, cp), (tp + 0.1, push(cp, f)), (t1, push(cp, f * (1 + (push_to - 1) * 0.3)))]
     if crash:
-        cw = framed(a, sx, 432, crash)
+        cw = framed(a, sx, sy, crash)
         cams = [(t, cw), (t + 0.14, c0), (t1, push(c0, push_to))]
     return world(t, "S", cams[0][1], cams=cams, layers=LAYERS(a), drift=0.5, blur=blur, shadow=SHADOW,
-                 shakes=list(shakes), who=who, eye=(sx, 432), ed=ed_screen)
+                 shakes=list(shakes), who=who, eye=(sx, sy), ed=ed_screen)
+
+
+def split(t, jpose, mpose, push_to=1.03, dur=2.0, still=False):
+    """the portrait two-shot: Jamie in his chair above, Mark in his below, each the middle band of its own view of
+    the set (which may run off the plate outside that band), the badge on the divider"""
+    parts = []
+    for k, (who, pose, sx) in enumerate((("jamie", jpose, 500), ("mark", mpose, 580))):
+        a = seat(who, pose)
+        c0 = framed(a, sx, 700, 78.0)               # his eyes a quarter of the way down his half
+        sub = world(t, "S", c0, cams=[(t, c0), (t + dur, push(c0, push_to))], layers=LAYERS(a), drift=0.35,
+                    blur=1.6, shadow=SHADOW, free=True)
+        sub.update(i=90 + k, end=t + dur)
+        parts.append(sub)
+    return dict(t=t, kind="split", parts=parts, still=still, over=["badge"])
 
 
 def two(t, jpose, mpose, cam=(838, 470, 1.35), push_to=1.03, dur=2.0, blur=1.2, **kw):
-    """both men in their chairs, the table between them"""
+    """both men in their chairs, the table between them (a split screen in the portrait film)"""
+    if VERTICAL:
+        return split(t, jpose, mpose, push_to, dur, kw.get("still", False))
     cams = [(t, cam), (t + dur, push(cam, push_to))]
     return world(t, "S", cam, cams=cams, layers=LAYERS(seat("jamie", jpose), seat("mark", mpose)), drift=0.35,
                  blur=blur, shadow=SHADOW, **kw)

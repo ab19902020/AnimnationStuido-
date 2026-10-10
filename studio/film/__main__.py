@@ -5,7 +5,8 @@
     python3 -m studio.film SLUG timeline              print the dialogue edit (marks, line times)
     python3 -m studio.film SLUG sound                 the mix: build/episode_audio.wav
     python3 -m studio.film SLUG still T [T ...]       single frames: build/stills/
-    python3 -m studio.film SLUG render [--jobs N]     the film: episodes/<slug>/<slug>.mp4 (with the mix); N = cores
+    python3 -m studio.film SLUG render [--jobs N]     the film: episodes/<slug>/<slug>.mp4 (with the mix); N = cores;
+                                                      EP_RES=1080x1920: the portrait film, <slug>-vertical.mp4
                       [--chunks K]      in K pieces, N at a time, the most crowded first (default 6 per job),
                                         as many at once as FILM_MEM_GB (default 12.5) allows
                       [--resume]        keep the pieces a failed render finished
@@ -31,7 +32,7 @@ def prepare():
     from studio.paths import BUILD
     D = importlib.import_module("film.direction")
     keys = set()
-    for s in D.SHOTS:
+    for s in [p for s in D.SHOTS for p in [s] + s.get("parts", [])]:
         if ":" in str(s.get("draw", "")):
             keys.add(s["draw"])
         keys.update(a[1] for a in s.get("actors", []))
@@ -83,8 +84,9 @@ def contact_sheet(slug, d):
     import cv2
     import numpy as np
     D = importlib.import_module("film.direction")
-    cap = cv2.VideoCapture(str(d / f"{slug}.mp4"))
-    W, H = 320, 180
+    from studio.film.engine import SUFFIX
+    cap = cv2.VideoCapture(str(d / f"{slug}{SUFFIX}.mp4"))
+    W, H = (180, 320) if SUFFIX else (320, 180)
     tiles = []
     for s in D.SHOTS:
         for t in (s["t"] + 0.12, (s["t"] + s["end"]) / 2, s["end"] - 0.1):
@@ -98,7 +100,7 @@ def contact_sheet(slug, d):
     while len(tiles) % 6:
         tiles.append(np.zeros((H, W, 3), np.uint8))
     rows = [np.hstack(tiles[i:i + 6]) for i in range(0, len(tiles), 6)]
-    out = ep.path("contact.jpg")
+    out = ep.path(f"contact{SUFFIX}.jpg")
     cv2.imwrite(str(out), np.vstack(rows), [cv2.IMWRITE_JPEG_QUALITY, 88])
     print(out)
 
@@ -114,7 +116,8 @@ def lip_sheet(slug, d):
     P = importlib.import_module("film.perf")
     TL = importlib.import_module("film.timeline").TL
     L = json.loads(ep.path("lines.json").read_text())
-    cap = cv2.VideoCapture(str(d / f"{slug}.mp4"))
+    from studio.film.engine import SUFFIX
+    cap = cv2.VideoCapture(str(d / f"{slug}{SUFFIX}.mp4"))
     vw = cap.get(cv2.CAP_PROP_FRAME_WIDTH) or OW
     k = vw / 1920.0
     tiles = []
@@ -264,7 +267,8 @@ def main():
         if failed:
             raise SystemExit("render failed: see " + ", ".join(str(ep.path(f"render{k}.log")) for k in failed))
         ep.path("parts.txt").write_text("".join(f"file 'part{k}.mp4'\n" for k in range(len(ranges))))
-        out = ep.path("preview.mp4") if preview else d / f"{slug}.mp4"
+        from studio.film.engine import SUFFIX
+        out = ep.path(f"preview{SUFFIX}.mp4") if preview else d / f"{slug}{SUFFIX}.mp4"
         audio = ep.path("episode_audio.wav")
         a_in = ["-ss", f"{f0 / FPS:.3f}", "-i", str(audio)] if preview else ["-i", str(audio)]
         subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", str(ep.path("parts.txt"))]

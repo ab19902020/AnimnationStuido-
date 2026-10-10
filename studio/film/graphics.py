@@ -141,6 +141,9 @@ def caption_layer(kind, a, b):
     S = RS
     if kind == "name":                                    # lower third: red bar, name, role
         x, y = int(96 * S), int(842 * S)
+        if OH > OW:                                       # portrait: above the phone app's own captions and buttons
+            S = OW / 1080
+            x, y = int(64 * S), int(OH * 0.64)
         fn, fr = font(BEBAS, 76 * S), font(INTER, 34 * S, 600)
         wn = dr.textlength(a, font=fn)
         wr = dr.textlength(b, font=fr)

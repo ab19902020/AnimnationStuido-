@@ -8,6 +8,7 @@ Kinds of shot (built with the helpers in studio.film.shots):
   world   characters placed in a plate at true scale (1x plate px) with the plate's own furniture in front
   group   several characters composited like a single (blurred set behind, furniture edge in front)
   insert  a full-frame close-up drawn by the episode's props.py (a screen, a sign, a document)
+  split   a portrait film's split screen: world shots of one actor each, stacked
   black / title   black with closing captions / the title card
 Any shot with `still=True` is a freeze frame: it holds its first frame (a comic freeze before the cut to black).
 A world shot with `shakes=[(t0, t1, px)]` jolts on a shout; with `shadow={...}` it grounds its actors: contact
@@ -218,7 +219,7 @@ def render_world(s, t):
             dx += sx
             dy += sy
     sc = P.scale(z)
-    cx, cy = P.clamp(cx - dx / sc, cy - dy / sc, z)
+    cx, cy = (cx - dx / sc, cy - dy / sc) if s.get("free") else P.clamp(cx - dx / sc, cy - dy / sc, z)
     sharp = P.render(cx, cy, z)
     bg = cv2.GaussianBlur(sharp, (0, 0), s["blur"] * RS) if s.get("blur", 0) > 0 else sharp
     M = P.M(cx, cy, z)
@@ -329,6 +330,22 @@ def render_group(s, t):
     return G.grade(img, s.get("grade", "studio"), t)
 
 
+def render_split(s, t):
+    """a split screen for a portrait film: each part a world shot of one actor (`free`: its view may run off the
+    plate outside the band used), the middle band of each stacked top to bottom, then the episode's `over` props
+    (the divider)"""
+    parts = s["parts"]
+    bh = OH // len(parts)
+    out = np.zeros((OH, OW, 3), np.float32)
+    for k, sub in enumerate(parts):
+        img = render_world(sub, t)
+        y0 = (OH - bh) // 2
+        out[k * bh:(k + 1) * bh] = img[y0:y0 + bh]
+    for fn in s.get("over", []):
+        out = getattr(X, fn)(out, s, t)
+    return out
+
+
 def render_frame(f):
     t = f / FPS
     s = D.shot_at(t)
@@ -345,6 +362,8 @@ def render_frame(f):
         img = render_single(s, t)
     elif kind == "group":
         img = render_group(s, t)
+    elif kind == "split":
+        img = render_split(s, t)
     elif kind == "stage":                                     # a music video's stage (studio/film/stage.py)
         from studio.film import stage
         img = stage.render(s, t)

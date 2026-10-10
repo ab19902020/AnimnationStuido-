@@ -8,7 +8,8 @@ Memory / speed: plates and drawings are kept as uint8. A drawing's premultiplied
 level and reused; each frame only the head region (a small "patch") is re-rendered with the face effects and head
 motion, and warped over the base.
 
-Resolution: EP_RES (default 1920x1080, 16:9). Layouts are written in 1920 x 1080 px and scaled by RS."""
+Resolution: EP_RES (default 1920x1080, 16:9). Layouts are written in 1920 x 1080 px and scaled by RS. EP_RES=1080x1920
+makes a portrait film for phones (VERTICAL): an episode's direction.py frames its shots for it."""
 import math
 import os
 import zlib
@@ -24,6 +25,8 @@ from studio.film.face import Face
 OW, OH = (int(v) for v in os.environ.get("EP_RES", "1920x1080").split("x"))
 FPS = 30
 RS = OW / 1920.0          # resolution scale relative to the 1920 x 1080 layout
+VERTICAL = OH > OW        # a portrait film (9:16 for phones: EP_RES=1080x1920): the direction frames for it, the film
+SUFFIX = "-vertical" if VERTICAL else ""    # is <slug>-vertical.mp4, next to the landscape one
 
 
 def seed(s):
