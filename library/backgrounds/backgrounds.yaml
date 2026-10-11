@@ -177,6 +177,22 @@ tv-and-media/crisis-control-room:
   size: [1672, 941]
   orientation: landscape
   source: Lavish football crisis control room.png
+tv-and-media/overcrap-studio-front:
+  title: Overcrap Daily studio, front (long red-lit desk, two gaming chairs, mic, laptop, mugs; Manchester at night
+    through the window, framed shirts) - Pass Mic ep01 studio_front_a, seats and desk matte in its front_a.json
+  size: [1672, 941]
+  orientation: landscape
+  source: Pass Mic series/ep01/backgrounds/src/studio_front_a.png
+tv-and-media/overcrap-studio-reverse:
+  title: Overcrap Daily studio, reverse (from behind the desk chairs, the sofa, door, shirts and trophies) - Pass Mic ep01
+  size: [1672, 941]
+  orientation: landscape
+  source: Pass Mic series/ep01/backgrounds/src/studio_reverse.png
+tv-and-media/overcrap-studio-wide:
+  title: Overcrap Daily studio, wide (the desk and window from further back, the door on the left) - Pass Mic ep01
+  size: [1672, 941]
+  orientation: landscape
+  source: Pass Mic series/ep01/backgrounds/src/studio_wide.png
 tv-and-media/podcast-studio:
   title: Empty Football Podcast Studio
   size: [1672, 941]

@@ -21,11 +21,13 @@ Which drawings a character has is library/characters/<id>/film.yaml:
   faces    which way the drawing faces: F (front), L / R (turned towards the viewer's left / right), B (back)
   close_mouth   an open mouth (centre and radii, sheet px) painted shut so the lip sync can drive it
   close_fit     true: close_mouth masks the drawn opening itself (rim, teeth, tongue) instead of an ellipse
-  extend   a waist-up drawing's body continued down by this fraction of its height (it never ends in mid-air)
+  extend   a waist-up drawing's body continued down by this fraction of its height (it never ends in mid-air);
+           extend_flat: true continues it as plain cloth (a bust cut across a hoodie's drawstrings and zip)
   x8       a second upscale pass for small drawings seen large
   marks    hand-set landmarks where detection can't see them (beards): {eyes, mouth, chin, neck, head}
   head     the head's box [x0, y0, x1, y1] (sheet px) if the automatic one (top of the figure) is wrong
   mouth_style   bold: the open mouth outlined all round in heavy ink, lower teeth small (bold dark-outline art)
+  mouth_lift    how far the upper lip rises as the mouth opens (share of the opening; 0.1 default, ~0.45 a shout)
   jaw      how far the mouth opens (1.0 default)
   plain    no face to animate (backs, walking poses seen small)
   holes    points in paper the drawing encloses that the cut keeps (between an arm and the body)
@@ -275,7 +277,7 @@ def close_mouth(rgba, K, off, cx, cy, rx, ry, fit=False):
     return out
 
 
-def extend_down(rgba, frac):
+def extend_down(rgba, frac, flat=False):
     """continue a waist-up body below the drawing's edge: its lowest wide row (arms excluded) repeated downwards,
     with the outline down both sides, so the figure runs out of the frame as a solid body"""
     im = cv2.cvtColor(np.ascontiguousarray(rgba[..., :3]), cv2.COLOR_RGB2BGR)
@@ -316,6 +318,11 @@ def extend_down(rgba, frac):
     band[lum < np.median(lum) * 0.45] = cloth
     ink = ink_of(rgba)[::-1]
     lw = max(4, int(0.004 * W + 3))
+    if flat:
+        # one cloth colour, a soft shade towards both sides (a torso, not a stripe of every drawstring and zip above
+        # it), blended in under the drawing's own bottom rows
+        u = np.abs(np.linspace(-1, 1, x1 - x0, dtype=np.float32))
+        band = cloth[None] * (1 - 0.22 * u[:, None] ** 2.5)
     ext = np.zeros((n, W, 3), np.uint8)
     ext[:, x0:x1] = band.astype(np.uint8)
     ea = np.zeros((n, W), np.float32)
@@ -330,6 +337,11 @@ def extend_down(rgba, frac):
     blk[holes] = band.astype(np.uint8)[None].repeat(r + 1 - ry, 0)[holes]
     im[fill] = blk
     a[fill] = np.maximum(a[fill], 1.0)
+    if flat:                                    # the last rows of the drawing fade into the flat cloth
+        k = min(r + 1, max(8, int(0.03 * H)))
+        w = np.linspace(0, 1, k, dtype=np.float32)[:, None, None] ** 1.5
+        seg = im[r + 1 - k:r + 1, x0 + lw:x1 - lw].astype(np.float32)
+        im[r + 1 - k:r + 1, x0 + lw:x1 - lw] = (seg * (1 - w) + band[None, lw:x1 - x0 - lw] * w).astype(np.uint8)
     im2 = np.concatenate([im[:r + 1], ext], 0)
     a2 = np.concatenate([a[:r + 1], ea], 0)
     return np.dstack([cv2.cvtColor(im2, cv2.COLOR_BGR2RGB), (a2 * 255).astype(np.uint8)])
@@ -358,7 +370,7 @@ def make(cid, name, d):
     if d.get("close_mouth"):
         part = close_mouth(part, K, off, *d["close_mouth"], fit=d.get("close_fit", False))
     if d.get("extend"):
-        part = extend_down(part, d["extend"])
+        part = extend_down(part, d["extend"], d.get("extend_flat", False))
     ys, xs = np.nonzero(part[..., 3] > 5)
     bx0, by0 = max(0, xs.min() - 8), max(0, ys.min() - 8)
     bx1, by1 = min(part.shape[1], xs.max() + 9), min(part.shape[0], ys.max() + 9)

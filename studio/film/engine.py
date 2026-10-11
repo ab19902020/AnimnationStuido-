@@ -96,7 +96,8 @@ class Drawing:
     per sheet px}; the part image is RGBA at that scale."""
 
     def __init__(self, name, path, meta, mouth=None, chin=None, eyes=(), facing="front", neck=None, head=None,
-                 jaw=1.0, anchors=None, brow_gain=1.0, ink=None, lid=None, pupils=True, mouth_style=None):
+                 jaw=1.0, anchors=None, brow_gain=1.0, ink=None, lid=None, pupils=True, mouth_style=None,
+                 mouth_lift=None):
         self.name = name
         self.ox, self.oy = meta["off"]
         self.S = meta.get("scale", 4)                    # part px per sheet px
@@ -106,7 +107,8 @@ class Drawing:
         for L in LEVELS[1:]:
             self.u8[L] = cv2.resize(full, None, fx=L, fy=L, interpolation=cv2.INTER_AREA)
         self.spec = dict(mouth=mouth, chin=chin, eyes=eyes, facing=facing, neck=neck, head=head, jaw=jaw,
-                         brow_gain=brow_gain, ink=ink, lid=lid, pupils=pupils, mouth_style=mouth_style)
+                         brow_gain=brow_gain, ink=ink, lid=lid, pupils=pupils, mouth_style=mouth_style,
+                         mouth_lift=mouth_lift)
         self.has_face = bool(mouth or eyes or head)
         self._base = {}
         self._face = {}
@@ -176,7 +178,7 @@ class Drawing:
         ey = [(R(e[0], e[1])[0], R(e[0], e[1])[1], e[2] * s, e[3] * s) for e in sp["eyes"]]
         f = Face(sub, mouth=mo, chin=R(0, sp["chin"])[1] if sp["chin"] else None, eyes=ey, facing=sp["facing"],
                  jaw=sp["jaw"], brow_gain=sp["brow_gain"], ink=sp["ink"], lid=sp["lid"], pupils=sp.get("pupils", True),
-                 mouth_style=sp.get("mouth_style"))
+                 mouth_style=sp.get("mouth_style"), mouth_lift=sp.get("mouth_lift"))
         hb = None
         if sp["head"]:
             h0, h1 = R(sp["head"][0], sp["head"][1]), R(sp["head"][2], sp["head"][3])

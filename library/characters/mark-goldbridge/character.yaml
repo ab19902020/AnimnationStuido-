@@ -3,15 +3,23 @@ short: Goldbridge
 role: pundit
 style: house
 height_cm: 178
-note: United fan-channel host. No kit yet; filmed from the seated pose sheets (reference/poses-seated-*.png). Delivered
-  with The Fraud Off production pack (episodes/overcrap-the-fraud-off).
+note: 'United fan-channel host. No kit yet. Filmed from the seated pose sheets (reference/poses-seated-*.png, in the
+  black blazer, for The Fraud Off) and from Pass Mic''s model sheet (reference/model-sheet-hoodie.png, in the red United
+  hoodie, the original Overcrap Daily look). film.yaml has both sets of drawings.'
 likeness: Short light-brown hair, faded at the sides and swept up at the front, light stubble and a thin moustache,
   big ears, large white cartoon eyes, quick to scowl or crack up.
 outfits:
+  hoodie:
+    description: Red Manchester United zip hoodie with the club badge, black trousers, white trainers (the Overcrap Daily
+      look, Pass Mic ep01).
+    sheets: []
   casual:
     description: Black blazer over a plain black T-shirt, black trousers, white trainers with a black tick.
     sheets: []
 reference:
+  model-sheet-hoodie.png: 'Full model sheet (1672 x 941, Pass Mic ep01 sheets/mark.png), red United hoodie: turnaround, head
+    views, mouth/phoneme set, nine facial expressions (busts), hand set, nine arm and upper-body poses, walk cycle,
+    extra poses (seated at the fan channel desk). Its cut boxes are in Pass Mic''s sheets/layout.json'
   poses-standing-1.png: 'Four standing poses (1122 x 1402, transparent): sarcastic shrug, accusing point to the
     viewer''s right, mocking laugh pointing right, raised finger debate (pack Sheet_01, S01_P01..P04)'
   poses-standing-2.png: 'Four standing poses (transparent): rant point to the viewer''s left, arms spread, fists

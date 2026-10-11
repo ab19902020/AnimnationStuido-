@@ -3,8 +3,9 @@ short: Neville
 role: pundit
 style: provisional
 height_cm: 180
-note: Off-style stand-in (thin outline, Studio Mayhem look). Replace with a dark-outline house-style kit like Haaland's;
-  the new kit drops into the same folder.
+note: 'The kit is an off-style stand-in (thin outline, Studio Mayhem look); replace with a dark-outline house-style kit
+  like Haaland''s, the new kit drops into the same folder. reference/model-sheet.png IS house style (Pass Mic ep01) and
+  is what he is filmed from (film.yaml h_ and u_ drawings).'
 likeness: 'Gary Neville, the man in the CENTRE of the reference: dark side-swept brown hair, long face, thin moustache
   and small chin goatee, large white eyes.'
 outfits:
@@ -15,3 +16,7 @@ outfits:
     - three_quarter
     - side
     - hands
+reference:
+  model-sheet.png: 'Full model sheet (1672 x 941, Pass Mic ep01 sheets/gary.png), house style, black shirt and jacket:
+    turnaround, head views, mouth/phoneme set, nine facial expressions (busts), hand set, nine arm and upper-body poses,
+    walk cycle, extra poses (seated at the pundit desk). Its cut boxes are in Pass Mic''s sheets/layout.json'

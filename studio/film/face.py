@@ -46,13 +46,16 @@ class Face:
     (for a profile: xl..xr runs from the mouth corner to the lips' front)."""
 
     def __init__(self, img, mouth=None, chin=None, eyes=(), facing="front", jaw=1.0, ink=None, lid=None, brow_gain=1.0,
-                 pupils=True, mouth_style=None):
+                 pupils=True, mouth_style=None, mouth_lift=None):
         self.img = img.astype(np.float32) / 255 if img.dtype == np.uint8 else img.astype(np.float32)
         self.H, self.W = self.img.shape[:2]
         self.mouth, self.chin, self.eyes = mouth, chin, [tuple(e) for e in eyes]
         self.facing, self.jaw, self.brow_gain = facing, jaw, brow_gain
         # "bold": the open mouth outlined all round in the art's heavy ink (bold dark-outline kits), lower teeth small
         self.bold = mouth_style == "bold"
+        # how far the upper lip rises as the mouth opens (a share of the opening): a little by default; a shout opens
+        # upwards too, an oval rather than a "D" (which reads as a grin)
+        self.lift = 0.10 if mouth_lift is None else float(mouth_lift)
         self.ink = INK if ink is None else np.float32(ink)
         # the face box that any effect can touch
         pts = []
@@ -192,7 +195,7 @@ class Face:
                     my = my + smile * (0.07 if smile > 0 else 0.13) * mw * np.clip(np.abs(X - xc) / hw, 0, 1.3) ** 2 * wlip
             # the opening itself (output space): between the lip line and the lowered lower lip
             if Hc > 0.6:
-                top = line - Hc * 0.10 * g
+                top = line - Hc * self.lift * g
                 bot = line + Hc * g
                 opening = (Y >= top) & (Y < bot) & (g > 0.001)
         # gaze and brows

@@ -245,9 +245,10 @@ def render_world(s, t):
             d, info = CAST.get(draw)
             ex, ey = M[0, 0] * px + M[0, 2], M[1, 1] * py + M[1, 2]
             k = ed_p * sc / info["ed"]
-            st = PERF.state(who, t, world_resolver(s, who, pos), s["t"]) if d.has_face else {}
+            # a drawing with no face still moves with its actor (a laugh shakes it)
+            st = PERF.state(who, t, world_resolver(s, who, pos), s["t"]) if d.has_face or who in PERF.WHO else {}
             Ms = actor_matrix(info, ex, ey, k, mirror, st.get("lean", 0.0), st.get("sink", 0.0))
-            E.place(lay, d, face_state(st, info, mirror) if st else {}, Ms, clip=opt.get("clip"))
+            E.place(lay, d, face_state(st, info, mirror) if d.has_face else {}, Ms, clip=opt.get("clip"))
             if s.get("shadow"):
                 from studio.film.cast import feet
                 fx, fy = feet(draw)

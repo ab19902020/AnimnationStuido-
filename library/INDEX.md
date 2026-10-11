@@ -22,7 +22,7 @@ Folder = id = the full name in kebab-case. Episodes refer to a character by id.
 | Eric Cantona | [`eric-cantona`](characters/eric-cantona/) | player | home | no kit yet | 1 | 0 |
 | Erling Haaland | [`erling-haaland`](characters/erling-haaland/) | player | home | 4/4 sheets checked | 3 | 0 |
 | Gary Lineker | [`gary-lineker`](characters/gary-lineker/) | presenter | suit | 4/4 sheets checked | 1 | 0 |
-| Gary Neville (stand-in, off-style) | [`gary-neville`](characters/gary-neville/) | pundit | casual | 4/4 sheets checked | 0 | 0 |
+| Gary Neville (stand-in, off-style) | [`gary-neville`](characters/gary-neville/) | pundit | casual | 4/4 sheets checked | 1 | 0 |
 | Harry Maguire | [`harry-maguire`](characters/harry-maguire/) | player | home | no kit yet | 2 | 0 |
 | Jamie Carragher (stand-in, off-style) | [`jamie-carragher`](characters/jamie-carragher/) | pundit | casual | 4/4 sheets checked | 5 | 0 |
 | Jim Ratcliffe | [`jim-ratcliffe`](characters/jim-ratcliffe/) | owner | casual | 4/4 sheets checked | 2 | 0 |
@@ -32,7 +32,7 @@ Folder = id = the full name in kebab-case. Episodes refer to a character by id.
 | Lisandro Martínez | [`lisandro-martinez`](characters/lisandro-martinez/) | player | home | no kit yet | 0 | 0 |
 | Luke Shaw | [`luke-shaw`](characters/luke-shaw/) | player | home | no kit yet | 1 | 0 |
 | Manuel Ugarte | [`manuel-ugarte`](characters/manuel-ugarte/) | player | home | no kit yet | 0 | 0 |
-| Mark Goldbridge | [`mark-goldbridge`](characters/mark-goldbridge/) | pundit | casual | no kit yet | 5 | 0 |
+| Mark Goldbridge | [`mark-goldbridge`](characters/mark-goldbridge/) | pundit | hoodie, casual | no kit yet | 6 | 0 |
 | Mason Mount | [`mason-mount`](characters/mason-mount/) | player | home | no kit yet | 0 | 0 |
 | Matheus Cunha | [`matheus-cunha`](characters/matheus-cunha/) | player | home | 4/4 sheets checked | 3 | 0 |
 | Matthijs de Ligt | [`matthijs-de-ligt`](characters/matthijs-de-ligt/) | player | home | no kit yet | 0 | 0 |
@@ -54,7 +54,7 @@ Puppet kit = the front, three-quarter, side and hands sheets, labelled part by p
 
 ## Backgrounds
 
-41 empty sets, by setting. Landscape fits the 16:9 episodes as they are; **portrait** ones (941x1672) need a landscape version or a crop first. Full details in [backgrounds.yaml](backgrounds/backgrounds.yaml).
+44 empty sets, by setting. Landscape fits the 16:9 episodes as they are; **portrait** ones (941x1672) need a landscape version or a crop first. Full details in [backgrounds.yaml](backgrounds/backgrounds.yaml).
 
 ### Stadiums
 
@@ -89,6 +89,9 @@ Puppet kit = the front, three-quarter, side and hands sheets, labelled part by p
 | id | Set | Shape |
 |---|---|---|
 | [`tv-and-media/crisis-control-room`](backgrounds/tv-and-media/crisis-control-room.png) | Lavish football crisis control room | landscape 1672x941 |
+| [`tv-and-media/overcrap-studio-front`](backgrounds/tv-and-media/overcrap-studio-front.png) | Overcrap Daily studio, front (long red-lit desk, two gaming chairs, mic, laptop, mugs; Manchester at night through the window, framed shirts) - Pass Mic ep01 studio_front_a, seats and desk matte in its front_a.json | landscape 1672x941 |
+| [`tv-and-media/overcrap-studio-reverse`](backgrounds/tv-and-media/overcrap-studio-reverse.png) | Overcrap Daily studio, reverse (from behind the desk chairs, the sofa, door, shirts and trophies) - Pass Mic ep01 | landscape 1672x941 |
+| [`tv-and-media/overcrap-studio-wide`](backgrounds/tv-and-media/overcrap-studio-wide.png) | Overcrap Daily studio, wide (the desk and window from further back, the door on the left) - Pass Mic ep01 | landscape 1672x941 |
 | [`tv-and-media/podcast-studio`](backgrounds/tv-and-media/podcast-studio.png) | Empty Football Podcast Studio | landscape 1672x941 |
 | [`tv-and-media/two-chair-pundit-studio`](backgrounds/tv-and-media/two-chair-pundit-studio.png) | Two-chair pundit studio (red and blue walls, stadium screen, two grey armchairs angled in, round wooden table) | landscape 1672x941 |
 | [`tv-and-media/press-conference-room`](backgrounds/tv-and-media/press-conference-room.png) | Empty Football Press Conference Room | landscape 1672x941 |

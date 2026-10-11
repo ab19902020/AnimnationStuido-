@@ -1,0 +1,101 @@
+{
+  "title": "Consistently Shit",
+  "kind": "production_cue_reference_not_direct_engine_input",
+  "source_repository": "ab19902020/Passmic",
+  "source_scene": "series/ep01",
+  "reference_production": "ab19902020/TV-show-:claude/animated-episode-production-yvajlc:overcrap-daily-ronaldo-vs-messi",
+  "scene_duration": "speech-driven; target 35–40 seconds",
+  "master_format": "1920x1080; portrait derivative requires reframe",
+  "dialogue": [
+    {
+      "id": "MG_01",
+      "speaker": "mark",
+      "text": "That is the WORST half of football I've seen since I was a bloody kid!",
+      "start_shot": "M",
+      "face": "angry_rant",
+      "body": "arms_down",
+      "cues": [
+        {
+          "word": "WORST",
+          "shot": "Mc",
+          "face": "shouting"
+        },
+        {
+          "word": "kid",
+          "body": "both_hands_out"
+        }
+      ]
+    },
+    {
+      "id": "GN_01",
+      "speaker": "gary",
+      "text": "I said three weeks ago that was the worst Manchester United I'd ever seen.",
+      "start_shot": "G",
+      "face": "sad",
+      "body": "crossed_arms",
+      "cues": [
+        {
+          "word": "worst",
+          "shot": "Gc"
+        }
+      ]
+    },
+    {
+      "id": "GN_02",
+      "speaker": "gary",
+      "text": "Turns out they took it as a fucking challenge.",
+      "start_shot": "Gc",
+      "face": "neutral",
+      "body": "arms_down",
+      "cues": []
+    },
+    {
+      "id": "MG_02",
+      "speaker": "mark",
+      "text": "Honestly, Gary, every time we hit rock bottom, these idiots turn up with a bloody shovel!",
+      "start_shot": "2",
+      "face": "angry_rant",
+      "body": "pointing",
+      "cues": [
+        {
+          "word": "shovel",
+          "shot": "Mc",
+          "body": "both_hands_out"
+        }
+      ]
+    },
+    {
+      "id": "MG_03",
+      "speaker": "mark",
+      "text": "Still... at least we're consistent.",
+      "start_shot": "M",
+      "face": "smug",
+      "body": "shrug",
+      "cues": []
+    },
+    {
+      "id": "GN_03",
+      "speaker": "gary",
+      "text": "Yeah.",
+      "start_shot": "Gc",
+      "face": "neutral",
+      "body": "arms_down",
+      "cues": []
+    },
+    {
+      "id": "GN_04",
+      "speaker": "gary",
+      "text": "We are consistent at being shit.",
+      "start_shot": "Gc",
+      "face": "neutral",
+      "body": "arms_down",
+      "cues": []
+    }
+  ],
+  "end_beats": [
+    "0.5s intentional pause after GN_03, adapt to recording",
+    "cut to silent Mark nod",
+    "NEW LOW UNLOCKED screen graphic",
+    "hard cut black"
+  ]
+}
