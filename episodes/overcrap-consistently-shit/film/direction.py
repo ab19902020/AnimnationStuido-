@@ -62,7 +62,9 @@ OCCL = {"S": {"desk": [DESK] + MIC + THINGS}}
 SEAT = {"mark": ((755, 443), 36.0), "gary": ((1200, 455), 26.0)}
 # the slumped drawings (no face to place them by): their head's centre this many eye distances below the seat's eyes,
 # so the drawn desk under the elbow is behind the real one
-SEAT_DY = {"hoodie_slump": 1.9, "slump": 2.6}
+SEAT_DY = {"hoodie_slump": 1.9, "slump": 2.2}
+# ...and sideways (eye distances): Gary's slumped head clear of the mugs on his desk
+SEAT_DX = {"slump": -3.6}
 CID = {"mark": "mark-goldbridge", "gary": "gary-neville"}
 # off-screen eyelines (singles, and each half of a split): screen direction (x: -1 left .. 1 right, y: + down), turn
 EYES = {"mark": dict(gary=(0.85, 0.05, 0.25)), "gary": dict(mark=(-0.85, 0.05, -0.25))}
@@ -78,7 +80,7 @@ def seat(who, pose):
     """an actor at his seat: the drawing placed by the point between its eyes (a faceless one by its head)"""
     key = f"{CID[who]}:{pose}"
     (x, y), ed = SEAT[who]
-    return (who, key, (x, y + SEAT_DY.get(pose, 0.0) * ed), ed, key in MIRROR)
+    return (who, key, (x + SEAT_DX.get(pose, 0.0) * ed, y + SEAT_DY.get(pose, 0.0) * ed), ed, key in MIRROR)
 
 
 def framed(a, sx, sy, ed_screen):
