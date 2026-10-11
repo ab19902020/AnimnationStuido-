@@ -57,7 +57,7 @@ class Cast:
                               brow_gain=sp.get("brow_gain", 1.0), pupils=not sp.get("drawn_pupils", False),
                               mouth_style=sp.get("mouth_style"), mouth_lift=sp.get("mouth_lift"),
                               jaw_drop=sp.get("jaw_drop"), bank=self.bank(cid) if sp.get("mouth_bank") else None,
-                              bank_scale=sp.get("bank_scale", 1.0))
+                              bank_scale=sp.get("bank_scale", 1.0), fixed_eyes=sp.get("fixed_eyes", False))
         em = np.mean([e[:2] for e in eyes], 0)
         ed = abs(eyes[1][0] - eyes[0][0]) if len(eyes) == 2 else (fm["head"][2] - fm["head"][0]) / 4.24
         if faces != "F" and len(eyes) == 2:

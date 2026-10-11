@@ -46,7 +46,8 @@ class Face:
     (for a profile: xl..xr runs from the mouth corner to the lips' front)."""
 
     def __init__(self, img, mouth=None, chin=None, eyes=(), facing="front", jaw=1.0, ink=None, lid=None, brow_gain=1.0,
-                 pupils=True, mouth_style=None, mouth_lift=None, jaw_drop=None, bank=None, bank_scale=1.0):
+                 pupils=True, mouth_style=None, mouth_lift=None, jaw_drop=None, bank=None, bank_scale=1.0,
+                 fixed_eyes=False):
         self.img = img.astype(np.float32) / 255 if img.dtype == np.uint8 else img.astype(np.float32)
         self.H, self.W = self.img.shape[:2]
         self.mouth, self.chin, self.eyes = mouth, chin, [tuple(e) for e in eyes]
@@ -97,7 +98,9 @@ class Face:
             self.lids.append(np.float32(skin) * 0.97 if lid is None else np.float32(lid))
         # the drawn pupils are lifted out and re-placed for the gaze; pupils=False keeps them as drawn and moves them
         # with a gentle warp instead (eye whites drawn with shading, where a flat paint-out shows as a grey ring)
-        self.pupils = [self._find_pupil(e) for e in self.eyes] if pupils else [None] * len(self.eyes)
+        # fixed eyes: the drawn eyes kept exactly as drawn (they only blink)
+        self.fixed_eyes = fixed_eyes
+        self.pupils = [self._find_pupil(e) for e in self.eyes] if (pupils and not fixed_eyes) else [None] * len(self.eyes)
         self._fills = {}
         # a bank of drawn mouths (studio/film/mouths.py): open shapes are swapped in from it over the drawing with its
         # own mouth taken out; closed shapes keep the drawing's own mouth
@@ -221,6 +224,8 @@ class Face:
         """-> float32 RGBA image (straight colour) with all effects applied."""
         if self.box is None:
             return self.img
+        if self.fixed_eyes:
+            look = (0.0, 0.0)
         o, ws, tt, tb, tg, pk, st = VIS.get(vis, VIS["REST"])
         o = o * amp * self.jaw
         cell = self.bank_cell(vis, amp, smile) if self.bank else None

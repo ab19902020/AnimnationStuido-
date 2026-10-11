@@ -38,6 +38,9 @@ Which drawings a character has is library/characters/<id>/film.yaml:
            the body underneath (see head_on_body); marks need crown, chin and neck on both
   plain    no face to animate (backs, walking poses seen small)
   holes    points in paper the drawing encloses that the cut keeps (between an arm and the body)
+  defringe true: a drawing cut from a white sheet loses the paper fringe round its outline (defringe())
+  crisp    amount: the ink lines of a small drawing seen large sharpened (0.5 to 1)
+  fixed_eyes   true: the eyes stay as drawn (blinks only), for small drawn pupils that move badly
   main     true: a box on a sheet of drawings on transparent keeps only the figure in its middle (pose sheets
            whose neighbouring poses reach into the box)
   auto_holes  false: keep flat paper-coloured patches inside the figure (cream boots, a white shirt drawn flat);
@@ -396,6 +399,51 @@ def extend_down(rgba, frac, flat=False):
     return np.dstack([cv2.cvtColor(im2, cv2.COLOR_BGR2RGB), (a2 * 255).astype(np.uint8)])
 
 
+def defringe(rgba, K):
+    """paper left round a drawing cut from a white sheet: light, colourless pixels that touch the transparent
+    background are taken off, layer by layer (up to 2 sheet px deep), so no white fringe or speck shows against a
+    dark set; whites inside the outline (eyes, teeth, a collar) never touch the background and stay"""
+    hsv = cv2.cvtColor(np.ascontiguousarray(rgba[..., :3]), cv2.COLOR_RGB2HSV)
+    S, V = hsv[..., 1].astype(np.int16), hsv[..., 2].astype(np.int16)
+    a = rgba[..., 3].copy()
+    paper = (V > 175) & (S < 60)
+    k3 = np.ones((3, 3), np.uint8)
+    for _ in range(int(2 * K)):
+        clear = (a < 128).astype(np.uint8)
+        edge = (cv2.dilate(clear, k3) > 0) & (a >= 128) & paper
+        if not edge.any():
+            break
+        a[edge] = 0
+    # paper trapped inside the outline near its edge (between hair strands, a finger and the thumb): see-through.
+    # Eye whites, teeth and a t-shirt under a collar sit well inside the figure and stay
+    solid = (a >= 128).astype(np.uint8)
+    dist = cv2.distanceTransform(solid, cv2.DIST_L2, 3)
+    pk = (paper & (a >= 128)).astype(np.uint8)
+    n, lab, st, _ = cv2.connectedComponentsWithStats(pk, 8)
+    if n > 1:
+        mind = np.full(n, 1e9, np.float32)
+        np.minimum.at(mind, lab[pk > 0], dist[pk > 0])
+        drop = [k for k in range(1, n) if mind[k] < 3.0 * K and st[k, cv2.CC_STAT_AREA] < (6 * K) ** 2]
+        if drop:
+            gone = np.isin(lab, drop)
+            gone = cv2.dilate(gone.astype(np.uint8), k3) > 0
+            a[gone & paper] = 0
+    # the outline's own soft edge: half-transparent pixels keep the ink's colour, never the paper's
+    soft = (a > 0) & (a < 250)
+    out = rgba.copy()
+    out[..., 3] = np.where(soft & paper, 0, a)
+    return out
+
+
+def crisp(rgba, K, amount=0.7):
+    """the ink lines of a drawing upscaled from a small sheet sharpened (an unsharp mask a sheet px wide)"""
+    rgb = rgba[..., :3].astype(np.float32)
+    blur = cv2.GaussianBlur(rgb, (0, 0), 0.6 * K)
+    out = rgba.copy()
+    out[..., :3] = np.clip(rgb + amount * (rgb - blur), 0, 255).astype(np.uint8)
+    return out
+
+
 def second_pass(rgba):
     """4x part -> 8x: Real-ESRGAN again (16x), halved"""
     big = upscale_rgba(rgba)
@@ -545,6 +593,10 @@ def make(cid, name, d):
     if d.get("x8"):
         part = second_pass(part)
         K = 8
+    if d.get("defringe"):                         # cut from a white sheet: no paper left round it
+        part = defringe(part, K)
+    if d.get("crisp"):
+        part = crisp(part, K, d["crisp"])
     if d.get("head_on"):                         # a close-up head on a body drawing (Pass Mic's close-ups)
         part, off = head_on_body(cid, d, part, off, K)
     return part, dict(off=off, scale=K, size=[int(part.shape[1]), int(part.shape[0])],
