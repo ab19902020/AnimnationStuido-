@@ -50,7 +50,8 @@ class Cast:
                               eyes=eyes, neck=tuple(fm["neck"]) if fm.get("neck") else None, head=tuple(fm["head"]),
                               facing="front" if faces in ("F", "L", "R") else "front", jaw=sp.get("jaw", 1.0),
                               brow_gain=sp.get("brow_gain", 1.0), pupils=not sp.get("drawn_pupils", False),
-                              mouth_style=sp.get("mouth_style"), mouth_lift=sp.get("mouth_lift"))
+                              mouth_style=sp.get("mouth_style"), mouth_lift=sp.get("mouth_lift"),
+                              jaw_drop=sp.get("jaw_drop"))
         em = np.mean([e[:2] for e in eyes], 0)
         ed = abs(eyes[1][0] - eyes[0][0]) if len(eyes) == 2 else (fm["head"][2] - fm["head"][0]) / 4.24
         if faces != "F" and len(eyes) == 2:

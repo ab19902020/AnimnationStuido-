@@ -21,6 +21,8 @@ Which drawings a character has is library/characters/<id>/film.yaml:
   faces    which way the drawing faces: F (front), L / R (turned towards the viewer's left / right), B (back)
   close_mouth   an open mouth (centre and radii, sheet px) painted shut so the lip sync can drive it
   close_fit     true: close_mouth masks the drawn opening itself (rim, teeth, tongue) instead of an ellipse
+  close_jaw     [mouth line y, chin y as drawn, lift]: with close_mouth, the dropped jaw of a drawn shout pulled back
+                up by `lift` sheet px (the marks' chin and neck are given where they end up)
   extend   a waist-up drawing's body continued down by this fraction of its height (it never ends in mid-air);
            extend_flat: true continues it as plain cloth (a bust cut across a hoodie's drawstrings and zip)
   x8       a second upscale pass for small drawings seen large
@@ -28,6 +30,7 @@ Which drawings a character has is library/characters/<id>/film.yaml:
   head     the head's box [x0, y0, x1, y1] (sheet px) if the automatic one (top of the figure) is wrong
   mouth_style   bold: the open mouth outlined all round in heavy ink, lower teeth small (bold dark-outline art)
   mouth_lift    how far the upper lip rises as the mouth opens (share of the opening; 0.1 default, ~0.45 a shout)
+  jaw_drop      how much of the opening the chin moves down for (1 default; less keeps a long jaw from stretching)
   jaw      how far the mouth opens (1.0 default)
   plain    no face to animate (backs, walking poses seen small)
   holes    points in paper the drawing encloses that the cut keeps (between an arm and the body)
@@ -236,6 +239,30 @@ def opening_mask(rgb, X, Y, RX, RY, K):
     return cv2.dilate(m, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * K + 1, 2 * K + 1))) * 255
 
 
+def close_jaw(rgba, K, off, cx, line_y, chin_y, half_w, lift):
+    """a drawing whose mouth was drawn wide open has its jaw dropped with it: once the mouth is painted shut, pull the
+    jaw back up by `lift` sheet px. Everything below the mouth line moves up, most under the mouth and fading out
+    sideways past the cheeks and downwards below the chin, so the chin, the jaw line and the face's outline come up
+    together and the collar stays where it is"""
+    H, W = rgba.shape[:2]
+    Y, X = np.mgrid[0:H, 0:W].astype(np.float32)
+    xc, yl, yc = (cx - off[0]) * K, (line_y - off[1]) * K, (chin_y - off[1]) * K
+    hw, L = half_w * K, lift * K
+    sx = np.clip(1 - np.clip((np.abs(X - xc) - 1.2 * hw) / (2.4 * hw), 0, 1), 0, 1)
+    sx = sx * sx * (3 - 2 * sx)
+    def sm(v):
+        v = np.clip(v, 0, 1)
+        return v * v * (3 - 2 * v)
+    sy = sm((Y - yl) / (0.35 * hw)) * (1 - sm((Y - yc) / (1.4 * hw)))
+    F = (sx * sy).astype(np.float32)
+    # the source row of each output pixel: from below by up to L (the jaw moved up), a fixed point for the inverse
+    src = Y + L * F
+    for _ in range(2):
+        Fs = (sx * sm((src - yl) / (0.35 * hw)) * (1 - sm((src - yc - L) / (1.4 * hw)))).astype(np.float32)
+        src = Y + L * Fs
+    return cv2.remap(rgba, X, src, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+
+
 def close_mouth(rgba, K, off, cx, cy, rx, ry, fit=False):
     """paint an open mouth shut on a part (K part px per sheet px): the opening inpainted from the skin round it,
     a soft closed-mouth line drawn across its upper third. fit: the mask is the drawn opening itself (its rim, teeth
@@ -369,6 +396,9 @@ def make(cid, name, d):
         K = 4
     if d.get("close_mouth"):
         part = close_mouth(part, K, off, *d["close_mouth"], fit=d.get("close_fit", False))
+        if d.get("close_jaw"):                    # [mouth line y, chin y (as drawn, open), lift] sheet px
+            ly, cy_, lift = d["close_jaw"]
+            part = close_jaw(part, K, off, d["close_mouth"][0], ly, cy_, d["close_mouth"][2], lift)
     if d.get("extend"):
         part = extend_down(part, d["extend"], d.get("extend_flat", False))
     ys, xs = np.nonzero(part[..., 3] > 5)

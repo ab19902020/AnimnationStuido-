@@ -46,7 +46,7 @@ class Face:
     (for a profile: xl..xr runs from the mouth corner to the lips' front)."""
 
     def __init__(self, img, mouth=None, chin=None, eyes=(), facing="front", jaw=1.0, ink=None, lid=None, brow_gain=1.0,
-                 pupils=True, mouth_style=None, mouth_lift=None):
+                 pupils=True, mouth_style=None, mouth_lift=None, jaw_drop=None):
         self.img = img.astype(np.float32) / 255 if img.dtype == np.uint8 else img.astype(np.float32)
         self.H, self.W = self.img.shape[:2]
         self.mouth, self.chin, self.eyes = mouth, chin, [tuple(e) for e in eyes]
@@ -56,6 +56,9 @@ class Face:
         # how far the upper lip rises as the mouth opens (a share of the opening): a little by default; a shout opens
         # upwards too, an oval rather than a "D" (which reads as a grin)
         self.lift = 0.10 if mouth_lift is None else float(mouth_lift)
+        # how much of the opening the chin moves down for (1 = all of it); below 1 the lower lip opens over the chin's
+        # skin instead, so a big mouth never stretches the jaw long
+        self.drop = 1.0 if jaw_drop is None else float(jaw_drop)
         self.ink = INK if ink is None else np.float32(ink)
         # the face box that any effect can touch
         pts = []
@@ -176,14 +179,15 @@ class Face:
             F = F * (1 - smooth((Y - chin) / (0.45 * mw)))
             F = np.where(below > -1.0, F, 0.0).astype(np.float32)
             # fixed-point for the inverse map: source row = output row - drop at the source
-            dy = Hc * F
+            Hj = Hc * self.drop
+            dy = Hj * F
             for _ in range(2):
                 ys = Y - dy
                 below_s = ys - line
                 wv_s = smooth(below_s / (0.40 * mw))
                 Fs = ((1 - wv_s) * g + wv_s * J) * (1 - smooth((ys - chin) / (0.45 * mw)))
                 Fs = np.where(below_s > -1.0, Fs, 0.0)
-                dy = Hc * Fs.astype(np.float32)
+                dy = Hj * Fs.astype(np.float32)
             my = my - dy
             # purse (O, U) / stretch (E, I, smile): horizontal warp of the lip area
             if pk > 0 or st > 0 or smile != 0:
