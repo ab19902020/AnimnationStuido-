@@ -46,7 +46,7 @@ class Face:
     (for a profile: xl..xr runs from the mouth corner to the lips' front)."""
 
     def __init__(self, img, mouth=None, chin=None, eyes=(), facing="front", jaw=1.0, ink=None, lid=None, brow_gain=1.0,
-                 pupils=True, mouth_style=None, mouth_lift=None, jaw_drop=None):
+                 pupils=True, mouth_style=None, mouth_lift=None, jaw_drop=None, bank=None, bank_scale=1.0):
         self.img = img.astype(np.float32) / 255 if img.dtype == np.uint8 else img.astype(np.float32)
         self.H, self.W = self.img.shape[:2]
         self.mouth, self.chin, self.eyes = mouth, chin, [tuple(e) for e in eyes]
@@ -99,6 +99,11 @@ class Face:
         # with a gentle warp instead (eye whites drawn with shading, where a flat paint-out shows as a grey ring)
         self.pupils = [self._find_pupil(e) for e in self.eyes] if pupils else [None] * len(self.eyes)
         self._fills = {}
+        # a bank of drawn mouths (studio/film/mouths.py): open shapes are swapped in from it over the drawing with its
+        # own mouth taken out; closed shapes keep the drawing's own mouth
+        self.bank = bank if (bank and mouth and self.box is not None) else None
+        if self.bank:
+            self._bank_setup(bank_scale)
 
     def _find_pupil(self, e):
         """the dark pupil inside an eye opening: its mask, sprite and centre, so gaze can move it cleanly"""
@@ -129,6 +134,82 @@ class Face:
         return dict(box=(x0, y0, x1, y1), inner=inner, mask=soft, px=px, py=py, pr=pr, white=np.float32(wc), sprite=spr)
 
     # ------------------------------------------------------------------ mouth geometry
+    def _bank_setup(self, bank_scale):
+        xl, yl, xr, yr, xc, yc = self.mouth
+        mw = xr - xl
+        rcx, rcy, rw, rchin = self.bank["rest"]
+        bs = self.bank["scale"]
+        chin = self.chin if self.chin else yc + 0.9 * mw
+        # the bank's mouths sized to this face: its closed mouth as wide as this one, its mouth-to-chin as deep
+        self.bk = min(mw / (rw * bs), (chin - yc) / (rchin * bs)) * bank_scale
+        # the drawing with its own mouth taken out: what an open mouth goes on. Only the mouth's lines go (anything
+        # darker than the skin round it, near the mouth, that is not clothes), repainted in that skin, so the face's
+        # shading stays and nothing is smudged in from a collar or a sleeve
+        x0, y0, x1, y1 = self.box
+        sub = np.clip(self.img[y0:y1, x0:x1, :3], 0, 1)
+        h, w = sub.shape[:2]
+        reg = np.zeros((h, w), np.uint8)
+        cv2.ellipse(reg, (int(round(xc - x0)), int(round(yc - y0 + 0.12 * mw))), (int(0.8 * mw), int(max(2.0, 0.38 * mw))),
+                    0, 0, 360, 1, -1)
+        u8 = (sub * 255).astype(np.uint8)
+        hsv = cv2.cvtColor(u8, cv2.COLOR_RGB2HSV).astype(np.int16)
+        lum = sub @ np.float32([0.299, 0.587, 0.114])
+        ring = cv2.dilate(reg, np.ones((int(0.3 * mw) | 1, int(0.3 * mw) | 1), np.uint8)) > 0
+        skin = (hsv[..., 0] >= 5) & (hsv[..., 0] <= 25) & (hsv[..., 1] > 40) & (hsv[..., 2] > 130)
+        near = ring & skin
+        col = np.median(sub[near], 0) if near.sum() > 10 else sub[reg > 0].mean(0)
+        clothes = ((hsv[..., 0] <= 4) | (hsv[..., 0] >= 170)) & (hsv[..., 1] > 150)
+        line = (reg > 0) & (lum < 0.84 * float(col @ np.float32([0.299, 0.587, 0.114]))) & ~clothes
+        k = max(3, int(0.08 * mw)) | 1
+        line = cv2.dilate(line.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k)))
+        line = line & (~clothes).astype(np.uint8)
+        a = cv2.GaussianBlur(line.astype(np.float32), (0, 0), max(0.6, 0.03 * mw))[..., None]
+        self.nomouth = self.img.copy()
+        self.nomouth[y0:y1, x0:x1, :3] = sub * (1 - a) + col * a
+        self._bank_cache = {}
+
+    def _bank_sprite(self, name, v):
+        key = (name, round(v, 2))
+        if key not in self._bank_cache:
+            rgba, (rx, ry) = self.bank["cells"][name]
+            k = self.bk
+            spr = cv2.resize(rgba, None, fx=k, fy=k * v, interpolation=cv2.INTER_AREA)
+            self._bank_cache[key] = (spr, rx * k, ry * k * v)
+            if len(self._bank_cache) > 64:
+                self._bank_cache.pop(next(iter(self._bank_cache)))
+        return self._bank_cache[key]
+
+    def bank_cell(self, vis, amp, smile):
+        """which drawn mouth (or None: the drawing's own) for a viseme"""
+        from studio.film.mouths import BANK_OF, SHOUTED
+        c = BANK_OF.get(vis)
+        if c is None:
+            return None
+        if amp > 1.3 and c in SHOUTED and "shout" in self.bank["cells"]:
+            return SHOUTED[c]
+        if smile > 0.45 and c in ("e", "i") and "smile" in self.bank["cells"]:
+            return "smile"
+        return c
+
+    def _paste(self, img, name, amp):
+        xl, yl, xr, yr, xc, yc = self.mouth
+        v = float(np.clip(0.78 + 0.25 * amp, 0.85, 1.12))
+        spr, rx, ry = self._bank_sprite(name, v)
+        h, w = spr.shape[:2]
+        ox, oy = xc - rx, yc - ry
+        ix, iy = int(np.floor(ox)), int(np.floor(oy))
+        M = np.float32([[1, 0, ox - ix], [0, 1, oy - iy]])
+        spr = cv2.warpAffine(spr, M, (w + 1, h + 1), flags=cv2.INTER_LINEAR, borderValue=0)
+        H, W = img.shape[:2]
+        a0, b0 = max(0, iy), max(0, ix)
+        a1, b1 = min(H, iy + h + 1), min(W, ix + w + 1)
+        if a1 <= a0 or b1 <= b0:
+            return img
+        s = spr[a0 - iy:a1 - iy, b0 - ix:b1 - ix]
+        al = s[..., 3:4]
+        img[a0:a1, b0:b1, :3] = img[a0:a1, b0:b1, :3] * (1 - al) + s[..., :3] * al
+        return img
+
     def _lipline(self, X):
         xl, yl, xr, yr, xc, yc = self.mouth
         # quadratic through the corners and the centre
@@ -142,10 +223,17 @@ class Face:
             return self.img
         o, ws, tt, tb, tg, pk, st = VIS.get(vis, VIS["REST"])
         o = o * amp * self.jaw
-        if o < 0.004 and blink <= 0.01 and abs(brow) < 0.01 and abs(smile) < 0.01 and pk == 0 and not any(self.pupils):
+        cell = self.bank_cell(vis, amp, smile) if self.bank else None
+        base = self.img
+        if self.bank:                  # drawn mouths: no painted opening, no warped lips; the open mouth is a swap
+            o, pk, st = 0.0, 0.0, 0.0
+            if cell:
+                base = self.nomouth
+        if cell is None and o < 0.004 and blink <= 0.01 and abs(brow) < 0.01 and abs(smile) < 0.01 and pk == 0 \
+                and not any(self.pupils):
             return self.img
         x0, y0, x1, y1 = self.box
-        sub = self.img[y0:y1, x0:x1]
+        sub = base[y0:y1, x0:x1]
         h, w = sub.shape[:2]
         Y, X = np.mgrid[y0:y1, x0:x1].astype(np.float32)
         mx, my = X.copy(), Y.copy()           # source coords
@@ -190,7 +278,7 @@ class Face:
                 dy = Hj * Fs.astype(np.float32)
             my = my - dy
             # purse (O, U) / stretch (E, I, smile): horizontal warp of the lip area
-            if pk > 0 or st > 0 or smile != 0:
+            if (pk > 0 or st > 0 or smile != 0) and not self.bank:
                 r2 = ((X - xc) / (1.35 * hw)) ** 2 + ((Y - line) / (0.55 * mw)) ** 2
                 wlip = np.clip(1 - r2, 0, 1) ** 1.2
                 k = 1 + pk * 0.42 * amp - st * 0.07 * amp - smile * 0.06
@@ -217,8 +305,10 @@ class Face:
         out = cv2.remap(sub, mx - x0, my - y0, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
         if opening is not None and opening.any():
             out = self._paint_mouth(out, X, Y, line, top, bot, g, Hc, tt, tb, tg, o)
-        res = self.img.copy()
+        res = base.copy()
         res[y0:y1, x0:x1] = out
+        if cell:
+            res = self._paste(res, cell, amp)
         res = self._pupils(res, look)
         if blink > 0.01:
             sub2 = res[y0:y1, x0:x1]

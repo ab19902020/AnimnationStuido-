@@ -1,13 +1,25 @@
 # Drawings this character is filmed in (studio/film/art.py): each is cut whole from its sheet, upscaled 4x and
 # given face landmarks. Check build/film/gary-neville_check.jpg after any change.
+# His drawn mouths (the model sheet's mouth / phoneme set) for the lip sync (studio/film/mouths.py)
+mouths:
+  sheet: reference/model-sheet.png
+  rest: [1211, 153.3, 45, 33.4]
+  cells:
+    a: {box: [1307, 136, 1367, 175], ref: [1337.3, 153.3]}
+    e: {box: [1430, 138, 1492, 172], ref: [1461.7, 153.3]}
+    i: {box: [1566, 140, 1622, 165], ref: [1595, 153.3]}
+    o: {box: [1185, 243, 1215, 279], ref: [1200, 258.3]}
+    u: {box: [1282, 246, 1315, 274], ref: [1298.3, 258.3]}
+    smile: {box: [1360, 240, 1432, 271], ref: [1396.7, 258.3]}
+    shout: {box: [1575, 233, 1622, 285], ref: [1601.7, 258.3]}
 drawings:
   front: {kit: casual/front, faces: F}
   q34:   {kit: casual/three_quarter, faces: R}
   side:  {kit: casual/side, faces: R}
-  # the house-style model sheet (Pass Mic ep01): boxes from its layout.json; busts (h_) and upper bodies (u_), cut
-  # from the sheet panel's bottom edge and continued down (extend) behind the desk; a second upscale pass (x8)
-  h_neutral: {sheet: reference/model-sheet.png, box: [19, 431, 137, 581], faces: F, main: true, x8: true, extend: 1.4, extend_flat: true, auto_holes: false, head: [33, 432, 125, 556], marks: {eyes: [[68.2, 503.8, 8.1, 5.6], [94, 503.8, 8.8, 5.6]], mouth: [70.2, 535.8, 91.5, 535, 81, 536.2], chin: 555.8, neck: [81, 568]}, jaw: 1.25, mouth_style: bold, mouth_lift: 0.25}
-  h_sad: {sheet: reference/model-sheet.png, box: [499, 427, 634, 580], faces: F, main: true, x8: true, extend: 1.4, extend_flat: true, auto_holes: false, head: [512, 432, 608, 547], marks: {eyes: [[559.8, 504.2, 8.2, 4.8], [585.2, 496.0, 7.0, 5.6]], mouth: [570.2, 528.2, 594, 525.8, 582.8, 530], chin: 547, neck: [585, 560]}, jaw: 1.25, mouth_style: bold, mouth_lift: 0.25}
-  h_facepalm: {sheet: reference/model-sheet.png, box: [989, 427, 1135, 581], faces: F, main: true, x8: true, extend: 1.4, extend_flat: true, auto_holes: false, plain: true, head: [1020, 432, 1110, 560], ed: 26}
-  h_confused: {sheet: reference/model-sheet.png, box: [736, 429, 863, 581], faces: F, main: true, x8: true, extend: 1.4, extend_flat: true, auto_holes: false, head: [751, 432, 846, 555], marks: {eyes: [[786.5, 494.5, 10, 6.2], [813.2, 497, 8.1, 6.2]], mouth: [781.5, 530.8, 802.8, 529.5, 791.5, 532], chin: 554.5, neck: [795, 565]}, jaw: 1.25, mouth_style: bold, mouth_lift: 0.25}
-  u_crossed: {sheet: reference/model-sheet.png, box: [353, 637, 446, 774], faces: F, main: true, x8: true, extend: 1.4, extend_flat: true, head: [374, 641, 437, 716], marks: {eyes: [[395, 683.8, 5.6, 3.5], [411.9, 683.1, 3.4, 3.4]], mouth: [400, 703.5, 411.9, 704.4, 405.6, 705.4], chin: 713.5, neck: [405, 720]}, jaw: 1.25, mouth_style: bold, mouth_lift: 0.25}
+  # Pass Mic's model sheet (house style, black shirt and jacket): whole upper-body poses as drawn, arms and hands
+  # complete; the face acts on the drawing. Each is checked whole in build/film/gary-neville_check.jpg
+  arms: {sheet: reference/model-sheet.png, box: [20, 638, 110, 778], faces: F, x8: true, head: [36, 644, 93, 714], marks: {eyes: [[60.7, 685.4, 4.6, 3.4], [77.1, 685.4, 4.6, 3.4]], mouth: [62.6, 706.9, 75.4, 706.6, 69, 706], chin: 714.3, neck: [69, 722]}, ed: 15.0, jaw: 1.25, mouth_bank: true}
+  crossed: {sheet: reference/model-sheet.png, box: [352, 634, 446, 778], faces: F, x8: true, head: [374, 641, 437, 716], marks: {eyes: [[395, 683.8, 5.6, 3.5], [411.9, 683.1, 3.4, 3.4]], mouth: [400, 703.5, 411.9, 704.4, 405.6, 705.4], chin: 713.5, neck: [405, 720]}, ed: 15.5, jaw: 1.25, mouth_bank: true}
+  both: {sheet: reference/model-sheet.png, box: [193, 636, 358, 778], faces: F, x8: true, head: [254, 644, 312, 718], marks: {eyes: [[283.7, 687.1, 6.2, 3.8], [300.1, 685.7, 4.0, 3.8]], mouth: null, chin: null}, ed: 15.9}
+  shrug: {sheet: reference/model-sheet.png, box: [438, 639, 558, 778], faces: F, x8: true, head: [470, 645, 524, 717], marks: {eyes: [[494.6, 690.7, 6.6, 3.2], [512.9, 686.7, 3.9, 3.4]], mouth: [504, 710.3, 517, 707.1, 510.7, 707.4], chin: 717, neck: [510, 724]}, ed: 15.4, jaw: 1.25, mouth_bank: true}
+  slump: {sheet: reference/model-sheet.png, box: [780, 810, 1000, 915], faces: F, x8: true, plain: true, head: [893, 814, 987, 900], ed: 15.5}

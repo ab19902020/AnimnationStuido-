@@ -1,7 +1,8 @@
 """The acting: each line's delivery, who it is said to and its stressed words, and the beats between: Gary's slow,
 unimpressed blink at the rant, Mark's slump, Gary staring into the middle distance then looking to Mark, the held
-deadpan, Mark's wheeze, Gary's side-eye at the pointing finger, Mark's hopeful brows, the look, the pause, the eyes
-coming round to the lens and holding there, Mark's slow nod. See studio/film/perf.py."""
+deadpan, Mark's silent wheeze (his drawn grin held open, shoulders going), Gary's side-eye at the pointing finger,
+Mark's hopeful brows and grin, the look, the pause, the eyes coming round to the lens and holding there, Mark's slow
+nod. See studio/film/perf.py."""
 import json
 
 from studio.film import ep
@@ -45,21 +46,23 @@ EXPR = {
              (m("cut_mark2"), m("cut_palm"), -0.5, -0.25, 0.15),                   # side-eye at the finger
              (le("L005"), ls("L006"), 0.25, -0.2, 0.25)],                          # ...really?
     "mark": [(m("slump"), m("cut_gary1"), 0.6, -0.4, 0.15),                        # defeated
-             (le("L003"), m("cut_mark2"), 0.3, 0.6, 0.1),
+             (le("L003"), m("cut_mark2"), 0.3, 0.9, 0.1),                          # the wheeze: a big grin
              (ls("L005") - 0.1, le("L005") + 0.1, 0.75, 0.35, 0.15),               # hopeful brows
              (m("cut_nod"), m("toast"), 0.55, -0.35, 0.2)],
 }
 NODS = {"mark": [(m("cut_nod") + 0.12, 2, 3.2)]}                                    # yes. yes.
-# the body: Mark slumps after the rant and sinks into the nod; Gary sinks into his hand
-BODY = {"mark": [(m("slump") - 0.02, m("cut_gary1"), 0.0, 0.5, 0.35), (m("cut_nod"), m("toast"), 0.0, 0.25, 0.4)],
-        "gary": [(m("cut_palm"), m("cut_mark3"), 0.0, 0.35, 0.3)]}
+# the body: Mark sinks into the nod
+BODY = {"mark": [(m("cut_nod"), m("toast"), 0.0, 0.25, 0.4)]}
 SHAKE = {"mark": [(m("cut_laugh"), m("cut_mark2"), 7.5, 0.14)]}                    # the wheeze
+# the wheeze: his drawn grin held open with no voice; the hopeful grin on "consistent"
+MOUTH = {"mark": [(m("cut_laugh") + 0.08, m("cut_mark2") - 0.05, "E", 1.0)]}
 SQUINT = {"gary": [(m("cut_mark2"), m("cut_palm"), 0.3)],                          # side-eye
-          "mark": [(ls("L005") + 0.6, le("L005") + 0.05, 0.15)]}
+          "mark": [(m("cut_laugh") + 0.05, m("cut_mark2"), 0.55),                   # laughing eyes
+                   (ls("L005") + 0.6, le("L005") + 0.05, 0.15)]}
 SHUT = {"gary": [(wt("L001", "seen") + 0.25, wt("L001", "seen") + 0.55)]}          # one long, slow, unimpressed blink
 FORCED = {"gary": [m("turn") + 0.02], "mark": [m("slump") + 0.2]}
 NOBLINK = {"gary": [(m("turn") + 0.2, m("end"))], "mark": [(m("toast"), m("end"))]}
 
 PERF = Performance(TL, L, WHO, SPK, META, lambda lid: ep.path("lines", f"{lid}.wav"), base=BASE, gaze=GAZE,
                    expr=EXPR, nods=NODS, body=BODY, forced=FORCED, noblink=NOBLINK, rest_target=REST, shut=SHUT,
-                   squint=SQUINT, shake=SHAKE, darts=0.08, cuts=[s["t"] for s in SHOTS])
+                   squint=SQUINT, shake=SHAKE, mouth=MOUTH, darts=0.08, cuts=[s["t"] for s in SHOTS])

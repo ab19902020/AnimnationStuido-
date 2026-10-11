@@ -10,6 +10,18 @@
 # The hoodie drawings (h_, u_): his chin moves only part of the way when he talks (`jaw_drop`) and the upper lip lifts
 # (`mouth_lift`), so the mouth opens without his jaw growing long; h_shout was drawn with the jaw dropped, so once its
 # mouth is painted shut the jaw comes back up (`close_jaw`).
+# His drawn mouths (the model sheet's mouth / phoneme set) for the hoodie drawings' lip sync (studio/film/mouths.py)
+mouths:
+  sheet: reference/model-sheet-hoodie.png
+  rest: [1232, 150, 38.3, 35]
+  cells:
+    a: {box: [1322, 135, 1378, 178], ref: [1352, 150]}
+    e: {box: [1440, 136, 1500, 178], ref: [1470, 150]}
+    i: {box: [1564, 143, 1618, 170], ref: [1592, 150]}
+    o: {box: [1195, 243, 1227, 283], ref: [1210, 259]}
+    u: {box: [1292, 245, 1322, 280], ref: [1306.7, 259]}
+    smile: {box: [1365, 240, 1437, 280], ref: [1400, 259]}
+    shout: {box: [1573, 228, 1635, 287], ref: [1605, 259]}
 drawings:
   point: {sheet: reference/poses-seated-1.png, box: [40, 2, 541, 700], faces: F, main: true, ed: 59, close_mouth: [302, 226, 28, 17], close_fit: true, jaw: 2.0, mouth_style: bold, marks: {mouth: [282.1, 222.8, 322.1, 222.8, 302.1, 221.0]}}
   shrug: {sheet: reference/poses-seated-1.png, box: [534, 5, 1118, 699], faces: F, main: true, ed: 59, jaw: 1.5, mouth_style: bold, marks: {mouth: [808, 207, 857, 221, 832, 204]}}
@@ -19,12 +31,12 @@ drawings:
   shrug2: {sheet: reference/poses-seated-2.png, box: [534, 11, 1109, 704], faces: F, main: true, ed: 59, close_mouth: [813, 214, 30, 18], close_fit: true, jaw: 1.8, mouth_style: bold, marks: {mouth: [793.1, 210.6, 833.1, 210.6, 813.1, 208.6]}}
   laugh: {sheet: reference/poses-seated-2.png, box: [70, 703, 641, 1373], faces: F, main: true, ed: 59, plain: true}
   gun: {sheet: reference/poses-seated-2.png, box: [674, 705, 1099, 1372], faces: F, main: true, ed: 59, jaw: 1.55, mouth_style: bold, marks: {mouth: [776, 906, 822, 914, 798, 903]}}
-  # the house-style model sheet (Pass Mic ep01): boxes from its layout.json; busts (h_) and upper bodies (u_), cut
-  # from the sheet panel's bottom edge and continued down (extend) behind the desk; a second upscale pass (x8)
-  h_angry: {sheet: reference/model-sheet-hoodie.png, box: [136, 447, 264, 598], faces: F, main: true, x8: true, extend: 1.4, extend_flat: true, auto_holes: false, head: [158, 450, 262, 568], marks: {eyes: [[203.6, 519.4, 7.0, 4.4], [236.2, 522.6, 7.4, 4.4]], mouth: [195, 549.5, 228, 549.5, 211.5, 550.5], chin: 566, neck: [211, 578]}, close_mouth: [211.75, 553, 17, 11.5], close_fit: true, jaw: 1.2, mouth_style: bold, mouth_lift: 0.55, jaw_drop: 0.4}
-  h_shout: {sheet: reference/model-sheet-hoodie.png, box: [263, 446, 404, 598], faces: F, main: true, x8: true, extend: 1.4, extend_flat: true, auto_holes: false, head: [290, 449, 392, 574], marks: {eyes: [[334, 507.4, 9.0, 6.2], [362.8, 511.8, 8.8, 6.0]], mouth: [323, 541.5, 357, 541.5, 340, 542.5], chin: 565, neck: [340, 585]}, close_mouth: [340.25, 546.25, 18, 18], close_fit: true, jaw: 1.2, mouth_style: bold, mouth_lift: 0.55, jaw_drop: 0.4, close_jaw: [541.5, 574, 9]}
-  h_sad: {sheet: reference/model-sheet-hoodie.png, box: [542, 451, 665, 597], faces: F, main: true, x8: true, extend: 1.4, extend_flat: true, auto_holes: false, head: [548, 452, 640, 570], marks: {eyes: [[594.8, 527.4, 7.6, 5.2], [622, 517.2, 7.0, 5.6]], mouth: [602, 549.5, 624.5, 543.2, 613.2, 548.2], chin: 569.5, neck: [612, 582]}, jaw: 1.05, mouth_style: bold, mouth_lift: 0.35, jaw_drop: 0.5}
-  h_laugh: {sheet: reference/model-sheet-hoodie.png, box: [896, 448, 1020, 598], faces: F, main: true, x8: true, extend: 1.4, extend_flat: true, auto_holes: false, plain: true, head: [917, 452, 1015, 572], ed: 28}
-  h_smug: {sheet: reference/model-sheet-hoodie.png, box: [412, 448, 529, 598], faces: F, main: true, x8: true, extend: 1.4, extend_flat: true, auto_holes: false, head: [420, 450, 520, 572], marks: {eyes: [[473.6, 522.6, 8.2, 5.0], [500.2, 514.8, 7.6, 5.6]], mouth: [477, 544, 506, 539.5, 491, 545], chin: 572, neck: [485, 584]}, jaw: 1.05, mouth_style: bold, mouth_lift: 0.35, jaw_drop: 0.5}
-  u_point: {sheet: reference/model-sheet-hoodie.png, box: [107, 663, 201, 802], faces: F, main: true, x8: true, extend: 1.4, extend_flat: true, head: [138, 668, 197, 748], marks: {eyes: [[160.6, 710.6, 4.4, 3.5], [181.2, 715.6, 3.4, 3.1]], mouth: [156.5, 734.5, 172.5, 734.5, 164.5, 735.2], chin: 745, neck: [165, 752]}, close_mouth: [164.4, 736.25, 10, 7], close_fit: true, jaw: 1.2, mouth_style: bold, mouth_lift: 0.55, jaw_drop: 0.4}
-  u_shrug: {sheet: reference/model-sheet-hoodie.png, box: [424, 665, 547, 802], faces: F, main: true, x8: true, extend: 1.4, extend_flat: true, head: [467, 670, 528, 746], marks: {eyes: [[497.5, 711.9, 4.7, 3.4], [516.2, 716.9, 3.8, 3.4]], mouth: [498.1, 731.9, 513.1, 733.8, 505.6, 732.5], chin: 743, neck: [505, 750]}, jaw: 1.05, mouth_style: bold, mouth_lift: 0.35, jaw_drop: 0.5}
+  # Pass Mic's model sheet (red United hoodie): whole upper-body poses as drawn, arms, hands and ears complete; the
+  # face acts on the drawing (studio/film/face.py). Each is checked whole in build/film/mark-goldbridge_check.jpg
+  hoodie_arms: {sheet: reference/model-sheet-hoodie.png, box: [14, 658, 112, 806], faces: F, x8: true, head: [32, 667, 96, 745], marks: {eyes: [[54.8, 712.5, 4.2, 3.0], [75.4, 712.5, 4.6, 3.2]], mouth: [57.1, 733.9, 73.1, 733.6, 65.2, 731.1], chin: 744.6, neck: [65, 752]}, ed: 20.8, jaw: 1.25, mouth_bank: true}
+  hoodie_point: {sheet: reference/model-sheet-hoodie.png, box: [104, 660, 230, 806], faces: F, x8: true, head: [138, 668, 197, 748], marks: {eyes: [[160.6, 710.6, 4.4, 3.5], [181.2, 715.6, 3.4, 3.1]], mouth: [156.5, 734.5, 172.5, 734.5, 164.5, 735.2], chin: 745, neck: [165, 752]}, close_poly: [[151, 736], [155, 730.5], [162, 728.5], [170, 729.5], [175.5, 732.5], [176.5, 738], [174, 742], [165, 743.5], [156, 743], [151.5, 740]], close_mouth: [164.4, 736.25, 10, 7], ed: 20.7, jaw: 1.4, mouth_bank: true}
+  hoodie_both: {sheet: reference/model-sheet-hoodie.png, box: [193, 656, 352, 806], faces: F, x8: true, head: [249, 667, 319, 743], marks: {eyes: [[275.6, 708.6, 6.4, 3.8], [297, 713.5, 5.8, 4.0]], mouth: null, chin: null}, ed: 20.2}
+  hoodie_crossed: {sheet: reference/model-sheet-hoodie.png, box: [347, 660, 428, 806], faces: F, x8: true, head: [356, 667, 417, 744], marks: {eyes: [[384, 711.2, 5.6, 3.0], [404.6, 713.2, 5.0, 3.2]], mouth: [383.6, 730, 398.2, 729.3, 391.3, 728], chin: 743.8, neck: [391, 752]}, ed: 20.6, jaw: 1.25, mouth_bank: true}
+  hoodie_shrug: {sheet: reference/model-sheet-hoodie.png, box: [421, 662, 550, 806], faces: F, x8: true, head: [467, 670, 528, 746], marks: {eyes: [[497.5, 711.9, 4.7, 3.4], [516.2, 716.9, 3.8, 3.4]], mouth: [498.1, 731.9, 513.1, 733.8, 505.6, 732.5], chin: 743, neck: [505, 750]}, ed: 19.6, jaw: 1.25, mouth_bank: true}
+  hoodie_fist: {sheet: reference/model-sheet-hoodie.png, box: [538, 660, 654, 806], faces: F, x8: true, head: [573, 668, 634, 742], marks: {eyes: [[602.9, 715.4, 6.0, 4.0], [619.3, 716.9, 4.4, 3.6]], mouth: null, chin: null}, ed: 19.7}
+  hoodie_slump: {sheet: reference/model-sheet-hoodie.png, box: [815, 835, 960, 935], faces: F, x8: true, plain: true, head: [865, 840, 947, 916], ed: 20.2}

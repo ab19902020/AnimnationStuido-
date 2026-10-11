@@ -27,6 +27,11 @@ class Cast:
             self._spec[cid] = yaml.safe_load((CHARACTERS / cid / "film.yaml").read_text())
         return self._spec[cid]
 
+    def bank(self, cid):
+        """the character's drawn mouths (studio/film/mouths.py); each face sizes them to its own mouth"""
+        from studio.film import mouths
+        return mouths.load(cid)
+
     def get(self, key):
         if key in self.d:
             return self.d[key], self.info[key]
@@ -51,7 +56,8 @@ class Cast:
                               facing="front" if faces in ("F", "L", "R") else "front", jaw=sp.get("jaw", 1.0),
                               brow_gain=sp.get("brow_gain", 1.0), pupils=not sp.get("drawn_pupils", False),
                               mouth_style=sp.get("mouth_style"), mouth_lift=sp.get("mouth_lift"),
-                              jaw_drop=sp.get("jaw_drop"))
+                              jaw_drop=sp.get("jaw_drop"), bank=self.bank(cid) if sp.get("mouth_bank") else None,
+                              bank_scale=sp.get("bank_scale", 1.0))
         em = np.mean([e[:2] for e in eyes], 0)
         ed = abs(eyes[1][0] - eyes[0][0]) if len(eyes) == 2 else (fm["head"][2] - fm["head"][0]) / 4.24
         if faces != "F" and len(eyes) == 2:

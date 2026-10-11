@@ -21,6 +21,8 @@ Which drawings a character has is library/characters/<id>/film.yaml:
   faces    which way the drawing faces: F (front), L / R (turned towards the viewer's left / right), B (back)
   close_mouth   an open mouth (centre and radii, sheet px) painted shut so the lip sync can drive it
   close_fit     true: close_mouth masks the drawn opening itself (rim, teeth, tongue) instead of an ellipse
+  close_poly    [[x, y], ...]: an open mouth's traced outline (sheet px) filled with skin first (a mouth that runs into
+                clothes or a hand, where close_fit's colour test can't tell them apart)
   close_jaw     [mouth line y, chin y as drawn, lift]: with close_mouth, the dropped jaw of a drawn shout pulled back
                 up by `lift` sheet px (the marks' chin and neck are given where they end up)
   extend   a waist-up drawing's body continued down by this fraction of its height (it never ends in mid-air);
@@ -32,6 +34,8 @@ Which drawings a character has is library/characters/<id>/film.yaml:
   mouth_lift    how far the upper lip rises as the mouth opens (share of the opening; 0.1 default, ~0.45 a shout)
   jaw_drop      how much of the opening the chin moves down for (1 default; less keeps a long jaw from stretching)
   jaw      how far the mouth opens (1.0 default)
+  head_on  a body drawing this one (an expression bust) is put on: one whole drawing, head and neck from the bust,
+           the body underneath (see head_on_body); marks need crown, chin and neck on both
   plain    no face to animate (backs, walking poses seen small)
   holes    points in paper the drawing encloses that the cut keeps (between an arm and the body)
   main     true: a box on a sheet of drawings on transparent keeps only the figure in its middle (pose sheets
@@ -263,7 +267,25 @@ def close_jaw(rgba, K, off, cx, line_y, chin_y, half_w, lift):
     return cv2.remap(rgba, X, src, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
 
 
-def close_mouth(rgba, K, off, cx, cy, rx, ry, fit=False):
+def close_poly(rgba, K, off, poly):
+    """an open mouth painted shut along a traced outline (sheet px): filled with the skin round it (the median of the
+    skin-coloured pixels in a ring outside the outline, never the clothes or ink next to it), its edge softened"""
+    H, W = rgba.shape[:2]
+    pts = np.float32([[(x - off[0]) * K, (y - off[1]) * K] for x, y in poly])
+    m = np.zeros((H, W), np.uint8)
+    cv2.fillPoly(m, [np.int32(np.round(pts))], 255)
+    ring = cv2.dilate(m, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (6 * K + 1, 6 * K + 1))) & ~m
+    rgb = np.ascontiguousarray(rgba[..., :3])
+    hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV).astype(np.int16)
+    skin = (ring > 0) & (hsv[..., 0] >= 5) & (hsv[..., 0] <= 25) & (hsv[..., 1] > 40) & (hsv[..., 2] > 140)
+    col = np.median(rgb[skin].reshape(-1, 3), 0) if skin.sum() > 10 else np.float32([235, 170, 125])
+    a = cv2.GaussianBlur(m.astype(np.float32) / 255, (0, 0), 0.35 * K)[..., None]
+    out = rgba.copy()
+    out[..., :3] = (rgb * (1 - a) + col * a).astype(np.uint8)
+    return out
+
+
+def close_mouth(rgba, K, off, cx, cy, rx, ry, fit=False, fill=True):
     """paint an open mouth shut on a part (K part px per sheet px): the opening inpainted from the skin round it,
     a soft closed-mouth line drawn across its upper third. fit: the mask is the drawn opening itself (its rim, teeth
     and tongue) rather than an ellipse, so no ink is left at its edge to be smeared into stubble"""
@@ -279,7 +301,7 @@ def close_mouth(rgba, K, off, cx, cy, rx, ry, fit=False):
         dark = np.clip(-grain - 0.9, 0, None) * 26
         w = cv2.GaussianBlur(m.astype(np.float32) / 255, (0, 0), K)[..., None]
         rgb = np.clip(rgb.astype(np.float32) - dark[..., None] * w * np.float32([0.8, 1.0, 1.1]), 0, 255).astype(np.uint8)
-    else:
+    elif fill:
         m = np.zeros(rgb.shape[:2], np.uint8)
         cv2.ellipse(m, (int(X), int(Y)), (int(RX), int(RY)), 0, 0, 360, 255, -1)
         rgb = cv2.inpaint(rgb, m, 9, cv2.INPAINT_TELEA)
@@ -381,6 +403,117 @@ def second_pass(rgba):
     return cv2.resize(big, (w, h), interpolation=cv2.INTER_AREA)
 
 
+def head_on_body(cid, d, part, off, K):
+    """a close-up head (an expression bust) on a body drawing, the way Pass Mic's engine filmed close-ups: the bust
+    keeps its head and neck, its cut-off chest and shoulders fade out over the body drawn underneath, and the body
+    loses its whole head, chin included (on_cut: how far below its chin, in head widths). The two meet at the chin (marks: chin y, neck x on both), the body scaled so the
+    heads are the same height (marks: crown, the top of the hair). One whole drawing comes out, in the bust's sheet
+    coordinates, so its face marks stay as they are.
+      head_on: body drawing   on_k: scale nudge   on_shift: [dx, dy] bust sheet px
+      on_keep: [above chin, below chin, half width] in head widths (default [0.35, 0.1, 0.48]): the face band
+      kept below the ears; on_keep: all keeps the whole bust (a hand on the face), its bottom edge faded;
+      on_clothes: red | dark keeps the head by colour instead (head_mask): no collar or hood is left beside the jaw"""
+    sp = spec_of(cid)["drawings"]
+    bd = sp[d["head_on"]]
+    key = (cid, d["head_on"])
+    if key not in _BODY:
+        _BODY[key] = make(cid, d["head_on"], bd)
+    bpart, bmeta = _BODY[key]
+    Kb, bo = bmeta["scale"], bmeta["off"]
+    mk, bmk = d["marks"], bd["marks"]
+    hw = d["head"][2] - d["head"][0]
+    bhw = bd["head"][2] - bd["head"][0]
+    s = (mk["chin"] - mk["crown"]) / (bmk["chin"] - bmk["crown"]) * d.get("on_k", 1.0)
+    dx, dy = d.get("on_shift", (0.0, 0.0))
+    nx, ny = mk["neck"][0] + dx, mk["chin"] + dy
+    a = s * K / Kb
+    tx = (nx + (bo[0] - bmk["neck"][0]) * s - off[0]) * K
+    ty = (ny + (bo[1] - bmk["chin"]) * s - off[1]) * K
+    # the body without its head: everything above its chin is gone, so none of its jaw shows under the new one
+    bp = bpart.astype(np.float32) / 255
+    cut = (bmk["chin"] + d.get("on_cut", 0.04) * bhw - bo[1]) * Kb
+    yy = np.arange(bp.shape[0], dtype=np.float32)[:, None]
+    bp[..., 3] *= np.clip((yy - cut) / (0.03 * bhw * Kb) + 0.5, 0, 1)
+    H, W = part.shape[:2]
+    bh, bw = bp.shape[:2]
+    u0, v0 = min(0.0, tx), min(0.0, ty)
+    u1, v1 = max(W, tx + a * bw), max(H, ty + a * bh)
+    CW, CH = int(np.ceil(u1 - u0)), int(np.ceil(v1 - v0))
+    body = cv2.warpAffine(bp, np.float32([[a, 0, tx - u0], [0, a, ty - v0]]), (CW, CH), flags=cv2.INTER_CUBIC,
+                          borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+    body = np.clip(body, 0, 1)
+    head = np.zeros((CH, CW, 4), np.float32)
+    ix, iy = int(round(-u0)), int(round(-v0))
+    head[iy:iy + H, ix:ix + W] = part.astype(np.float32) / 255
+    # what the bust keeps
+    hK, cy, cx = hw * K, (mk["chin"] - off[1]) * K + iy, (mk["neck"][0] - off[0]) * K + ix
+    m = np.zeros((CH, CW), np.float32)
+    keep = d.get("on_keep", (0.35, 0.1, 0.48))
+    if d.get("on_clothes"):
+        m[iy:iy + H, ix:ix + W] = head_mask(part, d["on_clothes"], (mk["chin"] - off[1]) * K, hw * K, K)
+        keep = None
+    if keep is None:
+        pass
+    elif keep == "all":
+        m[:iy + H] = 1.0
+        m[iy + int(0.85 * H):iy + H] = np.linspace(1, 0, iy + H - (iy + int(0.85 * H)))[:, None]
+    else:
+        up, down, half = keep
+        m[:int(cy - up * hK)] = 1.0
+        m[max(0, int(cy - up * hK)):int(cy + down * hK), max(0, int(cx - half * hK)):int(cx + half * hK)] = 1.0
+        m = cv2.GaussianBlur(m, (0, 0), 0.04 * hK)
+    # where the bust fades out it only ever shows over the body: none of its shoulders hang in the air beside him
+    ba = cv2.GaussianBlur(body[..., 3], (0, 0), 0.01 * hK)
+    ha = head[..., 3] * np.where(m > 0.985, m, m * ba)
+    out = np.zeros_like(head)
+    out[..., 3] = ha + body[..., 3] * (1 - ha)
+    out[..., :3] = (head[..., :3] * ha[..., None] + body[..., :3] * (body[..., 3] * (1 - ha))[..., None]) / np.maximum(
+        out[..., 3:4], 1e-4)
+    return (np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8), [off[0] + u0 / K, off[1] + v0 / K]
+
+
+_BODY = {}
+
+
+def head_mask(part, clothes, chin, hw, K):
+    """what of a close-up bust goes on the body: its head (hair, ears, face, the jaw's outline) and none of its
+    clothes. clothes: "red" (a hoodie: saturated red) or "dark" (a black jacket: dark below the ears). Clothes are taken
+    out with the ink outlining them, unless the ink also borders skin (the jaw line); below the chin everything goes
+    (the body's own neck and collar show); the head is the biggest piece left, its holes filled. part px."""
+    rgb = np.ascontiguousarray(part[..., :3])
+    a = part[..., 3] > 128
+    hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV).astype(np.int16)
+    Hh, S, V = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+    H, W = a.shape
+    yy = np.arange(H)[:, None]
+    skin = a & (Hh >= 4) & (Hh <= 28) & (S >= 35) & (V >= 110)
+    k = max(3, int(round(1.6 * K))) | 1
+    ker = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k, k))
+    near_skin = cv2.dilate(skin.astype(np.uint8), ker) > 0
+    if clothes == "red":
+        cl = a & ((Hh <= 4) | (Hh >= 168)) & (S >= 150) & (V >= 45)
+    else:                                       # dark, below the ears, and not a line drawn on the skin
+        cl = a & (V < 70) & (yy > chin - 0.3 * hw) & ~near_skin
+    # clothes are what reaches the bust's cut-off bottom edge: never a mouth, a tongue or a line inside the face
+    n, lab, st, _ = cv2.connectedComponentsWithStats(cl.astype(np.uint8), 8)
+    bottom = set(np.unique(lab[-max(3, int(0.02 * H)):])) - {0}
+    cl = np.isin(lab, list(bottom))
+    near_cl = cv2.dilate(cl.astype(np.uint8), ker) > 0
+    ink = a & (V < 90) & ~cl
+    drop = cl | (ink & near_cl & ~near_skin)
+    keep = a & ~drop & (yy < chin + 0.05 * hw)
+    keep = cv2.morphologyEx(keep.astype(np.uint8), cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+    n, lab, st, _ = cv2.connectedComponentsWithStats(keep, 8)
+    if n > 1:
+        keep = (lab == 1 + int(np.argmax(st[1:, cv2.CC_STAT_AREA]))).astype(np.uint8)
+    # holes (the eyes' whites, the mouth, a dark brow cut off by the clothes test) are part of the head
+    inv = (1 - keep).astype(np.uint8)
+    ff = inv.copy()
+    cv2.floodFill(ff, np.zeros((H + 2, W + 2), np.uint8), (0, 0), 0)
+    keep = keep | ff
+    return cv2.GaussianBlur(keep.astype(np.float32), (0, 0), 0.6 * K / 4)
+
+
 def make(cid, name, d):
     """cut, upscale and finish one drawing -> (RGBA part, meta)"""
     if "image" in d:
@@ -394,8 +527,11 @@ def make(cid, name, d):
         part, off = cut_sheet(cid, d["sheet"], d["box"], [tuple(h) for h in d.get("holes", [])],
                               d.get("auto_holes", True), d.get("main", False))
         K = 4
+    if d.get("close_poly"):                       # a traced outline, filled with skin, before the closed line
+        part = close_poly(part, K, off, d["close_poly"])
     if d.get("close_mouth"):
-        part = close_mouth(part, K, off, *d["close_mouth"], fit=d.get("close_fit", False))
+        part = close_mouth(part, K, off, *d["close_mouth"], fit=d.get("close_fit", False),
+                           fill=not d.get("close_poly"))      # a traced outline is filled already: just the line
         if d.get("close_jaw"):                    # [mouth line y, chin y (as drawn, open), lift] sheet px
             ly, cy_, lift = d["close_jaw"]
             part = close_jaw(part, K, off, d["close_mouth"][0], ly, cy_, d["close_mouth"][2], lift)
@@ -409,6 +545,8 @@ def make(cid, name, d):
     if d.get("x8"):
         part = second_pass(part)
         K = 8
+    if d.get("head_on"):                         # a close-up head on a body drawing (Pass Mic's close-ups)
+        part, off = head_on_body(cid, d, part, off, K)
     return part, dict(off=off, scale=K, size=[int(part.shape[1]), int(part.shape[0])],
                       source=d.get("kit") or d.get("sheet"))
 

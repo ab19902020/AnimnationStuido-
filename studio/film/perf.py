@@ -23,8 +23,9 @@ An episode's perf.py builds one Performance with its data:
   cuts   the shot list's cut times: automatic blinks keep clear of the first 0.4 s after a cut
   BODY   {who: [(t0, t1, lean, sink, ease-in)]}
   SQUINT {who: [(t0, t1, amount)]} lids partly down (smug, suspicious); SHAKE {who: [(t0, t1, hz, amount)]} the body
-         bobbing (a laugh); darts: amplitude of the small eye darts (saccades) round wherever they look, 0 = none; SHOUT {line id: k} opens
-         the mouth k times wider on a shouted line, its narrow shapes swapped for wider ones (SHOUTED)"""
+         bobbing (a laugh); darts: amplitude of the small eye darts (saccades) round wherever they look, 0 = none
+  MOUTH  {who: [(t0, t1, viseme, amp)]} a mouth held without a voice (a silent laugh)
+  SHOUT  {line id: k} opens the mouth k times wider on a shouted line, its narrow shapes swapped for wider ones"""
 import math
 
 import numpy as np
@@ -68,7 +69,7 @@ def bump(u):
 class Performance:
     def __init__(self, TL, lines, who, spk, meta, line_wav, base=None, gaze=None, expr=None, nods=None, turn=None,
                  forced=None, noblink=None, body=None, smile_bias=None, tags=None, rest_target=None, seed=200,
-                 cuts=(), shut=None, squint=None, shake=None, darts=0.0, shout=None):
+                 cuts=(), shut=None, squint=None, shake=None, darts=0.0, shout=None, mouth=None):
         self.TL, self.L, self.WHO, self.SPK = TL, lines, list(who), spk
         self.META = meta
         self.line_wav = line_wav
@@ -85,6 +86,7 @@ class Performance:
         self.SHAKE = {w: list((shake or {}).get(w, [])) for w in self.WHO}
         self.DARTS = darts
         self.SHOUT = shout or {}
+        self.MOUTH = mouth or {}
         self.SMILE_BIAS = smile_bias or {}
         self.TAGS = {**TAGS, **(tags or {})}
         self.rest_target = rest_target or {}
@@ -302,5 +304,9 @@ class Performance:
         brow, smile = self.expression(w, t)
         tilt, nod, turn = self.head(w, t)
         lean, sink = self.body(w, t)
-        return dict(vis=self.VIS[w][f], amp=float(self.AMP[w][f]), blink=self.blink(w, t), lookx=lx, looky=ly,
+        vis, amp = self.VIS[w][f], float(self.AMP[w][f])
+        for a, b, v, am in self.MOUTH.get(w, []):         # a mouth held without a voice (a silent laugh)
+            if a <= t < b:
+                vis, amp = v, am
+        return dict(vis=vis, amp=amp, blink=self.blink(w, t), lookx=lx, looky=ly,
                     brow=brow, smile=smile, tilt=tilt, nod=nod, turn=turn + tu, lean=lean, sink=sink)
