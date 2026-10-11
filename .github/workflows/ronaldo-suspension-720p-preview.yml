@@ -1,0 +1,110 @@
+name: Ronaldo suspension — 720p preview (house engine)
+
+on:
+  push:
+    branches:
+      - chatgpt/ronaldo-suspension-comedy-20261011
+    paths:
+      - .github/workflows/ronaldo-suspension-720p-preview.yml
+      - episodes/ronaldo-you-cant-suspend-greatness/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  render-draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      SLUG: ronaldo-you-cant-suspend-greatness
+      EP_RES: 1280x720
+      FILM_MEM_GB: "5"
+      FILM_THREADS: "1"
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+    steps:
+      - name: Checkout the source branch
+        uses: actions/checkout@v4
+      - name: Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install rendering prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg libegl1 libsndfile1 unzip
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Import script into the existing film engine
+        run: |
+          python -m studio.web.autoprod "$SLUG"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path('episodes')/os.environ['SLUG']/'studio.json'
+          s=json.loads(p.read_text())
+          assert len(s['lines'])>=30, f"Expected full script, got {len(s['lines'])}"
+          assert len(s['scenes'])==4, f"Expected 4 connected scenes, got {len(s['scenes'])}"
+          bgs=['club/dressing-room','tv-and-media/press-conference-room','training-ground/carrington-quiet','street/manchester-matchday']
+          for sc,bg in zip(s['scenes'], bgs):
+              sc['background']=bg
+              assert (Path('library/backgrounds')/(bg+'.png')).exists(), bg
+          s['title']=''
+          s['show']=''
+          s['open']=0.65
+          s['scene_open']=0.65
+          s['hold']=0.65
+          p.write_text(json.dumps(s,indent=2))
+          print("CAS‌T:", [(v['id'], v.get('drawing'), v.get('voice',{}).get('voice')) for v in s['cast']])
+          print("SCENES:", [(sc['name'],sc['background']) for sc in s['scenes']])
+          print("LINES:",len(s['lines']))
+          PY
+      - name: Build original character cuts and fetch stand-in speech model
+        run: python -m studio.web.steps "$SLUG" cast
+      - name: Produce rough actor voices and aligned lip sync
+        run: python -m studio.web.steps "$SLUG" voices
+      - name: Mix dialogue and location ambience
+        run: |
+          python -m studio.film "$SLUG" timeline
+          python -m studio.film "$SLUG" sound
+      - name: Render the entire 720p draft with studio.film
+        run: |
+          TOTAL=$(python - <<'PY'
+          import os,sys
+          from studio.film import ep
+          d=ep.use(os.environ['SLUG'])
+          sys.path.insert(0,str(d))
+          from film.timeline import TL
+          print(f"{TL['total']:.4f}")
+          PY
+          )
+          echo "Full episode duration: $TOTAL seconds"
+          python -m studio.film "$SLUG" render --jobs 2 --chunks 8 --range 0 "$TOTAL"
+          python -m studio.web.steps "$SLUG" finish --draft
+          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration,size -of default=noprint_wrappers=1 "episodes/$SLUG/${SLUG}_preview.mp4"
+      - name: Upload generated 720p MP4 and useful production checks
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ronaldo-suspension-720p-house-engine-preview
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+          path: |
+            episodes/ronaldo-you-cant-suspend-greatness/ronaldo-you-cant-suspend-greatness_preview.mp4
+            episodes/ronaldo-you-cant-suspend-greatness/build/import.json
+            episodes/ronaldo-you-cant-suspend-greatness/studio.json
+      - name: Upload import/report diagnostics if any step fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ronaldo-preview-diagnostics
+          if-no-files-found: ignore
+          retention-days: 7
+          path: |
+            episodes/ronaldo-you-cant-suspend-greatness/build/import.json
+            episodes/ronaldo-you-cant-suspend-greatness/studio.json
+            episodes/ronaldo-you-cant-suspend-greatness/build/render*.log
